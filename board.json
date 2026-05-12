@@ -46,15 +46,15 @@
       "slug": "tool",
       "type": "feature",
       "title": "@Tool decorator + function-calling loop",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "primitive",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/tool",
       "pr": null,
       "spec": "specs/tool.md",
       "blocks": [
