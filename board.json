@@ -9,7 +9,7 @@
       "slug": "agent",
       "type": "feature",
       "title": "@Agent decorator",
-      "status": "backlog",
+      "status": "ready",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -537,7 +537,7 @@
       "slug": "anthropic-provider",
       "type": "feature",
       "title": "AnthropicProvider (native SDK, prompt caching, tool use, streaming)",
-      "status": "in_progress",
+      "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -559,7 +559,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
-      "closed_at": null
+      "closed_at": "2026-05-12"
     },
     {
       "id": "AJ-20",
