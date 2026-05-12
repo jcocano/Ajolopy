@@ -2,7 +2,7 @@
   "$schema": "./.board-schema.json",
   "version": 1,
   "updated_at": "2026-05-12",
-  "next_id": 11,
+  "next_id": 58,
   "items": [
     {
       "id": "AJ-1",
@@ -12,12 +12,26 @@
       "status": "ready",
       "priority": "p0",
       "milestone": "v0.1",
-      "labels": ["primitive", "v0.1"],
+      "labels": [
+        "primitive",
+        "v0.1"
+      ],
       "owner": null,
       "branch": null,
       "pr": null,
       "spec": "specs/agent.md",
-      "blocks": ["AJ-2", "AJ-3", "AJ-4", "AJ-5"],
+      "blocks": [
+        "AJ-2",
+        "AJ-3",
+        "AJ-4",
+        "AJ-5",
+        "AJ-23",
+        "AJ-24",
+        "AJ-47",
+        "AJ-48",
+        "AJ-54",
+        "AJ-55"
+      ],
       "blocked_by": [],
       "estimate": null,
       "created_at": "2026-05-12",
@@ -32,13 +46,24 @@
       "status": "backlog",
       "priority": "p0",
       "milestone": "v0.1",
-      "labels": ["primitive", "v0.1"],
+      "labels": [
+        "primitive",
+        "v0.1"
+      ],
       "owner": null,
       "branch": null,
       "pr": null,
       "spec": null,
-      "blocks": ["AJ-6", "AJ-7"],
-      "blocked_by": ["AJ-1"],
+      "blocks": [
+        "AJ-6",
+        "AJ-7",
+        "AJ-48",
+        "AJ-54",
+        "AJ-55"
+      ],
+      "blocked_by": [
+        "AJ-1"
+      ],
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
@@ -52,13 +77,22 @@
       "status": "backlog",
       "priority": "p0",
       "milestone": "v0.1",
-      "labels": ["primitive", "v0.1"],
+      "labels": [
+        "primitive",
+        "v0.1"
+      ],
       "owner": null,
       "branch": null,
       "pr": null,
       "spec": null,
-      "blocks": [],
-      "blocked_by": ["AJ-1"],
+      "blocks": [
+        "AJ-48",
+        "AJ-54"
+      ],
+      "blocked_by": [
+        "AJ-1",
+        "AJ-15"
+      ],
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
@@ -72,13 +106,25 @@
       "status": "backlog",
       "priority": "p1",
       "milestone": "v0.1",
-      "labels": ["primitive", "v0.1"],
+      "labels": [
+        "primitive",
+        "v0.1"
+      ],
       "owner": null,
       "branch": null,
       "pr": null,
       "spec": null,
-      "blocks": [],
-      "blocked_by": ["AJ-1"],
+      "blocks": [
+        "AJ-26",
+        "AJ-27",
+        "AJ-35",
+        "AJ-48",
+        "AJ-55"
+      ],
+      "blocked_by": [
+        "AJ-1",
+        "AJ-25"
+      ],
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
@@ -92,13 +138,18 @@
       "status": "backlog",
       "priority": "p1",
       "milestone": "v0.1",
-      "labels": ["primitive", "v0.1"],
+      "labels": [
+        "primitive",
+        "v0.1"
+      ],
       "owner": null,
       "branch": null,
       "pr": null,
       "spec": null,
       "blocks": [],
-      "blocked_by": ["AJ-1"],
+      "blocked_by": [
+        "AJ-1"
+      ],
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
@@ -112,13 +163,22 @@
       "status": "backlog",
       "priority": "p1",
       "milestone": "v0.1",
-      "labels": ["primitive", "v0.1"],
+      "labels": [
+        "primitive",
+        "v0.1"
+      ],
       "owner": null,
       "branch": null,
       "pr": null,
       "spec": null,
-      "blocks": [],
-      "blocked_by": ["AJ-2"],
+      "blocks": [
+        "AJ-48",
+        "AJ-55"
+      ],
+      "blocked_by": [
+        "AJ-2",
+        "AJ-18"
+      ],
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
@@ -132,13 +192,21 @@
       "status": "backlog",
       "priority": "p1",
       "milestone": "v0.1",
-      "labels": ["primitive", "v0.1"],
+      "labels": [
+        "primitive",
+        "v0.1"
+      ],
       "owner": null,
       "branch": null,
       "pr": null,
       "spec": null,
-      "blocks": [],
-      "blocked_by": ["AJ-2"],
+      "blocks": [
+        "AJ-48",
+        "AJ-55"
+      ],
+      "blocked_by": [
+        "AJ-2"
+      ],
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
@@ -152,13 +220,21 @@
       "status": "backlog",
       "priority": "p0",
       "milestone": "v0.1",
-      "labels": ["primitive", "v0.1"],
+      "labels": [
+        "primitive",
+        "v0.1"
+      ],
       "owner": null,
       "branch": null,
       "pr": null,
       "spec": null,
-      "blocks": ["AJ-9", "AJ-10"],
-      "blocked_by": [],
+      "blocks": [
+        "AJ-9",
+        "AJ-10"
+      ],
+      "blocked_by": [
+        "AJ-11"
+      ],
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
@@ -172,13 +248,21 @@
       "status": "backlog",
       "priority": "p0",
       "milestone": "v0.1",
-      "labels": ["primitive", "v0.1"],
+      "labels": [
+        "primitive",
+        "v0.1"
+      ],
       "owner": null,
       "branch": null,
       "pr": null,
       "spec": null,
-      "blocks": ["AJ-10"],
-      "blocked_by": ["AJ-8"],
+      "blocks": [
+        "AJ-10"
+      ],
+      "blocked_by": [
+        "AJ-8",
+        "AJ-11"
+      ],
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
@@ -192,13 +276,1286 @@
       "status": "backlog",
       "priority": "p1",
       "milestone": "v0.1",
-      "labels": ["primitive", "v0.1"],
+      "labels": [
+        "primitive",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-49"
+      ],
+      "blocked_by": [
+        "AJ-8",
+        "AJ-9",
+        "AJ-15",
+        "AJ-16"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-11",
+      "slug": "di-container",
+      "type": "feature",
+      "title": "DI Container core (type-hint resolution, scopes, forwardRef)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "foundation",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-8",
+        "AJ-9",
+        "AJ-13",
+        "AJ-14",
+        "AJ-46"
+      ],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-12",
+      "slug": "config-service",
+      "type": "feature",
+      "title": "BaseConfig + ConfigService (Pydantic v2, .env loading, startup validation)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "foundation",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-14",
+        "AJ-19",
+        "AJ-20",
+        "AJ-21",
+        "AJ-29",
+        "AJ-36",
+        "AJ-40"
+      ],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-13",
+      "slug": "lifecycle-hooks",
+      "type": "feature",
+      "title": "Lifecycle hooks (on_module_init, on_app_bootstrap, on_app_shutdown)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "foundation",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-14"
+      ],
+      "blocked_by": [
+        "AJ-11"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-14",
+      "slug": "factory-bootstrap",
+      "type": "feature",
+      "title": "AjolopyFactory.create() bootstrap (DI + config + lifecycle + HTTP)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "foundation",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-28",
+        "AJ-33",
+        "AJ-46"
+      ],
+      "blocked_by": [
+        "AJ-11",
+        "AJ-12",
+        "AJ-13",
+        "AJ-15"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-15",
+      "slug": "http-layer",
+      "type": "feature",
+      "title": "HTTP layer over Starlette (ValidationPipe, ExceptionFilter, body/query/path params)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "foundation",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-3",
+        "AJ-10",
+        "AJ-14",
+        "AJ-16",
+        "AJ-17"
+      ],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-16",
+      "slug": "route-decorators",
+      "type": "feature",
+      "title": "Method route decorators (@Get/@Post/@Put/@Patch/@Delete)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "foundation",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-10"
+      ],
+      "blocked_by": [
+        "AJ-15"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-17",
+      "slug": "guards",
+      "type": "feature",
+      "title": "@UseGuards basic auth middleware",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "foundation",
+        "v0.1"
+      ],
       "owner": null,
       "branch": null,
       "pr": null,
       "spec": null,
       "blocks": [],
-      "blocked_by": ["AJ-8", "AJ-9"],
+      "blocked_by": [
+        "AJ-15"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-18",
+      "slug": "llm-provider-abstract",
+      "type": "feature",
+      "title": "LLMProvider abstract base class + provider registry",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "provider",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-6",
+        "AJ-19",
+        "AJ-20",
+        "AJ-21",
+        "AJ-23",
+        "AJ-26"
+      ],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-19",
+      "slug": "anthropic-provider",
+      "type": "feature",
+      "title": "AnthropicProvider (native SDK, prompt caching, tool use, streaming)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "provider",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-54"
+      ],
+      "blocked_by": [
+        "AJ-12",
+        "AJ-18"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-20",
+      "slug": "openai-provider",
+      "type": "feature",
+      "title": "OpenAIProvider (native SDK, structured outputs, embeddings)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "provider",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-22"
+      ],
+      "blocked_by": [
+        "AJ-12",
+        "AJ-18"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-21",
+      "slug": "gemini-provider",
+      "type": "feature",
+      "title": "GeminiProvider (google-genai, multimodal, grounding)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "provider",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-12",
+        "AJ-18"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-22",
+      "slug": "universal-openai-provider",
+      "type": "feature",
+      "title": "UniversalOpenAIProvider (Ollama/Together/Groq/Mistral/DeepSeek/OpenRouter/Bedrock/Azure)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "provider",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-20"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-23",
+      "slug": "fallback-router",
+      "type": "feature",
+      "title": "Cross-provider fallback declarativo (fallback=[...])",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "provider",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-1",
+        "AJ-18"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-24",
+      "slug": "memory-base",
+      "type": "feature",
+      "title": "Memory abstract base class + in-memory and Redis defaults",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "primitive-support",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-54"
+      ],
+      "blocked_by": [
+        "AJ-1"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-25",
+      "slug": "dataset-loader",
+      "type": "feature",
+      "title": "Dataset base class + JSONL loader",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "primitive-support",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-4"
+      ],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-26",
+      "slug": "eval-metrics-builtin",
+      "type": "feature",
+      "title": "Built-in metrics (exact_match, llm_judge, tool_called, intent_match, contains)",
+      "status": "backlog",
+      "priority": "p2",
+      "milestone": "v0.1",
+      "labels": [
+        "primitive-support",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-55"
+      ],
+      "blocked_by": [
+        "AJ-4",
+        "AJ-18"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-27",
+      "slug": "eval-compare",
+      "type": "feature",
+      "title": "ajolopy eval --compare-with regression detection",
+      "status": "backlog",
+      "priority": "p2",
+      "milestone": "v0.1",
+      "labels": [
+        "primitive-support",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-4"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-28",
+      "slug": "otel-instrumentation",
+      "type": "feature",
+      "title": "OpenTelemetry spans for @Agent/@Tool/@Workflow/@MCP/@Stream with gen_ai.* attrs",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "observability",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-30",
+        "AJ-31",
+        "AJ-51",
+        "AJ-54"
+      ],
+      "blocked_by": [
+        "AJ-14"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-29",
+      "slug": "structlog-integration",
+      "type": "feature",
+      "title": "structlog setup (JSON in prod, human-readable in dev, trace_id correlation)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "observability",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-12"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-30",
+      "slug": "pricing-catalog",
+      "type": "feature",
+      "title": "Internal pricing catalog + automatic gen_ai.cost_usd per span",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "observability",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-28"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-31",
+      "slug": "custom-metrics",
+      "type": "feature",
+      "title": "Custom metrics API (metric.timer/counter/gauge)",
+      "status": "backlog",
+      "priority": "p2",
+      "milestone": "v0.1",
+      "labels": [
+        "observability",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-28"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-32",
+      "slug": "cli-new",
+      "type": "feature",
+      "title": "ajolopy new <name> wizard (4 questions, generates full project)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-34",
+        "AJ-47"
+      ],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-33",
+      "slug": "cli-dev",
+      "type": "feature",
+      "title": "ajolopy dev (uvicorn --reload + .env watcher)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-54"
+      ],
+      "blocked_by": [
+        "AJ-14"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-34",
+      "slug": "cli-generate",
+      "type": "feature",
+      "title": "ajolopy generate <kind> <name> scaffolders (agent/tool/workflow/eval/controller/module/service)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-32"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-35",
+      "slug": "cli-eval",
+      "type": "feature",
+      "title": "ajolopy eval runner (filter/ci/compare-with/threshold-override)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-4"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-36",
+      "slug": "cli-env",
+      "type": "feature",
+      "title": "ajolopy env:show / validate / diff",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-12"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-37",
+      "slug": "cli-deploy",
+      "type": "feature",
+      "title": "ajolopy deploy [target] (fly/railway/render/vercel/docker)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-42",
+        "AJ-43",
+        "AJ-44",
+        "AJ-45"
+      ],
+      "blocked_by": [
+        "AJ-41"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-38",
+      "slug": "cli-build",
+      "type": "feature",
+      "title": "ajolopy build (Dockerfile.prod + .dockerignore + instructions)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-41"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-39",
+      "slug": "cli-info",
+      "type": "feature",
+      "title": "ajolopy info (version, config, modules, deps)",
+      "status": "backlog",
+      "priority": "p2",
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-40",
+      "slug": "cli-doctor",
+      "type": "feature",
+      "title": "ajolopy doctor (system + project + env + connectivity diagnostic)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-12"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-41",
+      "slug": "dockerfile-template",
+      "type": "feature",
+      "title": "Dockerfile multi-stage template (deps/development/production) + docker-compose generator",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "deploy",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-37",
+        "AJ-38",
+        "AJ-42",
+        "AJ-43",
+        "AJ-44",
+        "AJ-45",
+        "AJ-52"
+      ],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-42",
+      "slug": "fly-deploy",
+      "type": "feature",
+      "title": "Fly.io deploy target (fly.toml generator + flow)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "deploy",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-37",
+        "AJ-41"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-43",
+      "slug": "railway-deploy",
+      "type": "feature",
+      "title": "Railway deploy target (railway.json generator + flow)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "deploy",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-37",
+        "AJ-41"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-44",
+      "slug": "render-deploy",
+      "type": "feature",
+      "title": "Render deploy target (render.yaml generator + flow)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "deploy",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-37",
+        "AJ-41"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-45",
+      "slug": "vercel-deploy",
+      "type": "feature",
+      "title": "Vercel deploy target (vercel.json + warnings flow)",
+      "status": "backlog",
+      "priority": "p2",
+      "milestone": "v0.1",
+      "labels": [
+        "deploy",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-37",
+        "AJ-41"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-46",
+      "slug": "testing-utils",
+      "type": "feature",
+      "title": "TestingModule + mock_llm_response + pytest fixtures for agents",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "testing",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-11",
+        "AJ-14"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-47",
+      "slug": "docs-quickstart",
+      "type": "docs",
+      "title": "Quickstart (5 min to hello world)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "docs",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-1",
+        "AJ-32"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-48",
+      "slug": "docs-tutorial-3-steps",
+      "type": "docs",
+      "title": "Tutorial — killer demo arc (3 steps: hello, evals, team)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "docs",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-50"
+      ],
+      "blocked_by": [
+        "AJ-1",
+        "AJ-2",
+        "AJ-3",
+        "AJ-4",
+        "AJ-6",
+        "AJ-7"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-49",
+      "slug": "docs-reference",
+      "type": "docs",
+      "title": "Reference docs for each of the 10 primitives",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "docs",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-57"
+      ],
+      "blocked_by": [
+        "AJ-10"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-50",
+      "slug": "docs-example-support",
+      "type": "docs",
+      "title": "Full support-agent example (the 3-step arc end-to-end)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "docs",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-57"
+      ],
+      "blocked_by": [
+        "AJ-48"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-51",
+      "slug": "docs-observability-recipes",
+      "type": "docs",
+      "title": "Observability recipes (Langfuse, Sentry, Grafana, Honeycomb, Datadog)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "docs",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-28"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-52",
+      "slug": "docs-deploy-recipes",
+      "type": "docs",
+      "title": "Deploy recipes (Fly, Railway, Render, Vercel, Docker)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "docs",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-41"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-53",
+      "slug": "docs-site",
+      "type": "chore",
+      "title": "Docs site setup (mkdocs-material or similar)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "docs",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-54",
+      "slug": "dogfood-docsbot",
+      "type": "story",
+      "title": "Dogfood app #1: Ajolopy docs bot (mes 4-5)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "dogfood",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-57"
+      ],
+      "blocked_by": [
+        "AJ-1",
+        "AJ-2",
+        "AJ-3",
+        "AJ-19",
+        "AJ-24",
+        "AJ-28",
+        "AJ-33"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-55",
+      "slug": "dogfood-code-reviewer",
+      "type": "story",
+      "title": "Dogfood app #2: Code Review Agent for GitHub (mes 7-9)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "dogfood",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-1",
+        "AJ-2",
+        "AJ-4",
+        "AJ-6",
+        "AJ-7",
+        "AJ-26"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-56",
+      "slug": "publish-pypi",
+      "type": "chore",
+      "title": "Publish v0.1.0 to PyPI (versioning, release workflow, signed release)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "release",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-12",
+      "updated_at": "2026-05-12",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-57",
+      "slug": "launch-comms",
+      "type": "story",
+      "title": "Public v0.1 launch (HN/X posts, README final, demo video)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "release",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-49",
+        "AJ-50",
+        "AJ-54"
+      ],
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
