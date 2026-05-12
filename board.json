@@ -335,17 +335,17 @@
       "slug": "config-service",
       "type": "feature",
       "title": "BaseConfig + ConfigService (Pydantic v2, .env loading, startup validation)",
-      "status": "backlog",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "foundation",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/config-service",
       "pr": null,
-      "spec": null,
+      "spec": "specs/config-service.md",
       "blocks": [
         "AJ-14",
         "AJ-19",
