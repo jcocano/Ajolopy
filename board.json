@@ -335,7 +335,7 @@
       "slug": "config-service",
       "type": "feature",
       "title": "BaseConfig + ConfigService (Pydantic v2, .env loading, startup validation)",
-      "status": "in_progress",
+      "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -359,7 +359,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
-      "closed_at": null
+      "closed_at": "2026-05-12"
     },
     {
       "id": "AJ-13",
@@ -506,7 +506,7 @@
       "slug": "llm-provider-abstract",
       "type": "feature",
       "title": "LLMProvider abstract base class + provider registry",
-      "status": "in_progress",
+      "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -530,7 +530,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
-      "closed_at": null
+      "closed_at": "2026-05-12"
     },
     {
       "id": "AJ-19",
