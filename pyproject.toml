@@ -1,0 +1,149 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ajolopy"
+version = "0.0.1"
+description = "The Python framework for building AI-native applications in production."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.14"
+authors = [
+    { name = "Jesus Cocaño", email = "jesus.cocano@gmail.com" },
+]
+keywords = ["ai", "framework", "agents", "llm", "mcp", "python"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Typing :: Typed",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/jcocano/ajolopy"
+Repository = "https://github.com/jcocano/ajolopy"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ajolopy"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/ajolopy",
+    "tests",
+    "README.md",
+    "LICENSE",
+    "pyproject.toml",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9.0",
+    "pyright>=1.1.380",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "pre-commit>=4.0.0",
+    "jsonschema>=4.23.0",
+]
+
+# ---------------------------------------------------------------------------
+# ruff — lint + format (replaces black, isort, flake8)
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["src", "tests", "tools"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "N",    # pep8-naming
+    "C4",   # flake8-comprehensions
+    "SIM",  # flake8-simplify
+    "RET",  # flake8-return
+    "RUF",  # ruff-specific
+    "PT",   # flake8-pytest-style
+    "ANN",  # flake8-annotations
+    "TC",   # flake8-type-checking
+    "TID",  # flake8-tidy-imports
+    "ARG",  # flake8-unused-arguments
+    "PTH",  # flake8-use-pathlib
+    "ERA",  # eradicate (no commented-out code)
+    "S",    # flake8-bandit (SAST)
+]
+ignore = [
+    "ANN401",  # framework decorators legitimately need `Any` in some signatures
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests legitimately use bare `assert` (S101) and untyped pytest fixtures.
+"tests/**" = ["ANN", "ARG", "PT011", "S101"]
+# Internal tools intentionally call PATH-resolved binaries (e.g. `git`).
+"tools/**" = ["S603", "S607"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ajolopy", "tools"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+# ---------------------------------------------------------------------------
+# pyright — strict typing (the framework MUST type its own decorators correctly).
+# Matches Anthropic's public Python projects.
+# ---------------------------------------------------------------------------
+[tool.pyright]
+include = ["src", "tests", "tools"]
+extraPaths = ["."]
+pythonVersion = "3.14"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = false
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportImplicitOverride = "warning"
+reportPrivateUsage = "warning"
+executionEnvironments = [
+    { root = "tests", reportMissingParameterType = "none", reportUnknownParameterType = "none", reportPrivateUsage = "none" },
+]
+
+# ---------------------------------------------------------------------------
+# pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+asyncio_mode = "auto"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=ajolopy",
+    "--cov=tools",
+    "--cov-report=term-missing",
+]
+
+# ---------------------------------------------------------------------------
+# coverage
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["src/ajolopy"]
+branch = true
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+    "\\.\\.\\.",
+]

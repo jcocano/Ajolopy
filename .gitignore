@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Note: uv.lock IS committed — only the venv and caches are ignored.
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+
+# Type checkers / linters
+.mypy_cache/
+.dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Misc
+*.log
+
+# AI coding tools — local-only, never committed.
+# The repository must not contain AI prompts, agent configs, or assistant
+# instructions. These files may exist on contributors' machines but are
+# excluded from version control.
+
+# Claude Code
+CLAUDE.md
+.claude/
+
+# Cursor
+.cursor/
+.cursorrules
+.cursorignore
+
+# GitHub Copilot
+.github/copilot-instructions.md
+
+# Aider
+.aider*
+
+# Continue.dev
+.continue/
+
+# Codeium / Windsurf
+.codeium/
+.windsurfrules
+
+# Gemini Code Assist
+GEMINI.md
+.gemini/
+
+# Generic agent runners
+# Note: AGENTS.md (industry-standard, tool-agnostic) IS committed — see repo root.
+.agents/

@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ajolopy.dev/board-schema.json",
+  "title": "Ajolopy work board",
+  "description": "Canonical schema for board.json — the project's PM board.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "updated_at", "next_id", "items"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "integer", "minimum": 1 },
+    "updated_at": { "type": "string", "format": "date" },
+    "next_id": { "type": "integer", "minimum": 1 },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/item" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^AJ-[1-9][0-9]*$" },
+    "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "type": {
+      "enum": ["feature", "story", "fix", "chore", "refactor", "docs"]
+    },
+    "status": {
+      "enum": [
+        "backlog",
+        "ready",
+        "in_progress",
+        "blocked",
+        "in_review",
+        "done",
+        "cancelled"
+      ]
+    },
+    "priority": { "enum": ["p0", "p1", "p2", "p3"] },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "slug",
+        "type",
+        "title",
+        "status",
+        "priority",
+        "milestone",
+        "labels",
+        "owner",
+        "branch",
+        "pr",
+        "spec",
+        "blocks",
+        "blocked_by",
+        "estimate",
+        "created_at",
+        "updated_at",
+        "closed_at"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "slug": { "$ref": "#/$defs/slug" },
+        "type": { "$ref": "#/$defs/type" },
+        "title": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/status" },
+        "priority": { "$ref": "#/$defs/priority" },
+        "milestone": { "type": ["string", "null"] },
+        "labels": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "owner": { "type": ["string", "null"] },
+        "branch": {
+          "type": ["string", "null"],
+          "pattern": "^(feat|story|fix|chore|refactor|docs)/[a-z0-9][a-z0-9-]*$"
+        },
+        "pr": { "type": ["string", "null"] },
+        "spec": {
+          "type": ["string", "null"],
+          "pattern": "^specs/[a-z0-9][a-z0-9-]*\\.md$"
+        },
+        "blocks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/id" },
+          "uniqueItems": true
+        },
+        "blocked_by": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/id" },
+          "uniqueItems": true
+        },
+        "estimate": { "type": ["string", "null"] },
+        "created_at": { "type": "string", "format": "date" },
+        "updated_at": { "type": "string", "format": "date" },
+        "closed_at": { "type": ["string", "null"], "format": "date" }
+      },
+      "allOf": [
+        {
+          "description": "in_progress and in_review require an owner and a branch.",
+          "if": {
+            "properties": {
+              "status": { "enum": ["in_progress", "in_review"] }
+            }
+          },
+          "then": {
+            "properties": {
+              "owner": { "type": "string", "minLength": 1 },
+              "branch": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        {
+          "description": "done and cancelled require a closed_at date.",
+          "if": {
+            "properties": {
+              "status": { "enum": ["done", "cancelled"] }
+            }
+          },
+          "then": {
+            "properties": {
+              "closed_at": { "type": "string", "format": "date" }
+            }
+          }
+        },
+        {
+          "description": "Items past backlog must have a spec file.",
+          "if": {
+            "properties": {
+              "status": {
+                "enum": ["ready", "in_progress", "in_review", "done"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "type": "string",
+                "pattern": "^specs/[a-z0-9][a-z0-9-]*\\.md$"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

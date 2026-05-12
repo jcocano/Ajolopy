@@ -1,0 +1,28 @@
+# Normalize line endings to LF in the index for every text file.
+# Working tree uses native line endings on checkout.
+* text=auto eol=lf
+
+# Explicitly mark sources / configs as text.
+*.py        text diff=python
+*.pyi       text diff=python
+*.toml      text
+*.yml       text
+*.yaml      text
+*.md        text diff=markdown
+*.json      text
+*.sh        text eol=lf
+
+# Lockfiles
+uv.lock     text -diff linguist-generated=true
+
+# Binaries — never CRLF, never diff.
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.pdf       binary
+*.zip       binary
+*.tar       binary
+*.tar.gz    binary
+*.whl       binary
