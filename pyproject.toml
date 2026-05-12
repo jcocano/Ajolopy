@@ -26,6 +26,7 @@ classifiers = [
 ]
 dependencies = [
     "anthropic>=0.101.0",
+    "opentelemetry-api>=1.41.1",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
 ]
@@ -117,7 +118,7 @@ reportUnnecessaryTypeIgnoreComment = "warning"
 reportImplicitOverride = "warning"
 reportPrivateUsage = "warning"
 executionEnvironments = [
-    { root = "tests", reportMissingParameterType = "none", reportUnknownParameterType = "none", reportPrivateUsage = "none" },
+    { root = "tests", reportMissingParameterType = "none", reportUnknownParameterType = "none", reportPrivateUsage = "none", reportUnusedClass = "none", reportUnknownMemberType = "none", reportUnknownVariableType = "none", reportUnknownArgumentType = "none" },
 ]
 
 # ---------------------------------------------------------------------------

@@ -9,15 +9,15 @@
       "slug": "agent",
       "type": "feature",
       "title": "@Agent decorator",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "primitive",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/agent",
       "pr": null,
       "spec": "specs/agent.md",
       "blocks": [

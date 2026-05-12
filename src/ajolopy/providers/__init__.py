@@ -15,7 +15,7 @@ adapter) live in sibling packages and register themselves via
 ``register_provider`` at import time.
 """
 
-from .base import LLMProvider
+from .base import LLMProvider, LLMProviderError
 from .registry import (
     ProviderNotRegisteredError,
     UnknownModelError,
@@ -39,6 +39,7 @@ __all__ = [
     "Chunk",
     "FinishReason",
     "LLMProvider",
+    "LLMProviderError",
     "Message",
     "ProviderNotRegisteredError",
     "Response",
