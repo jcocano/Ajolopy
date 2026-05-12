@@ -5,17 +5,13 @@ cancellation, tool-use deltas.
 """
 
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, cast
 
 import pytest
 
-from ajolopy.providers import Chunk, Message
+from ajolopy.providers import Message
 from ajolopy.providers.anthropic import AnthropicProvider
 
 from .conftest import make_async_client
-
-if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
 
 
 @pytest.mark.asyncio
@@ -98,17 +94,13 @@ async def test_stream_cancellation_does_not_raise() -> None:
     ]
     client = make_async_client(stream_events=events)
     provider = AnthropicProvider(client=client)
-    # The ABC declares AsyncIterator[Chunk]; the implementation is an
-    # AsyncGenerator, so cast for the aclose() escape hatch.
-    iterator = cast(
-        "AsyncGenerator[Chunk]",
-        provider.stream(
-            model="claude-sonnet-4-7",
-            messages=[Message(role="user", content="hi")],
-        ),
+    iterator = provider.stream(
+        model="claude-sonnet-4-7",
+        messages=[Message(role="user", content="hi")],
     )
     first = await iterator.__anext__()
     assert first.delta == "Hi "
-    # Close the iterator early — the underlying context manager's __aexit__
-    # is invoked and no exception leaks.
-    await iterator.aclose()
+    # Close the iterator early — the implementation is an async generator,
+    # so its aclose() invokes the SDK stream's __aexit__. The ABC declares
+    # AsyncIterator[Chunk] which has no aclose, hence the pyright ignore.
+    await iterator.aclose()  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
