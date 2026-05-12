@@ -139,6 +139,12 @@ question to the author, and wait for direction.
   11th requires explicit author approval before any code is written.
 - Commit messages: imperative subject, ~70 chars max, body explains *why*. No
   co-author lines, no AI-tool footers, no mentions of Claude or other agents.
+- **No direct commits or pushes to `main`.** Every change — features, fixes,
+  chores, refactors, docs — lands on `main` through a PR from a typed branch
+  (`feature/<slug>`, `fix/<slug>`, `chore/<slug>`, `refactor/<slug>`,
+  `docs/<slug>`, `story/<slug>`). The `protect-main` pre-push hook enforces
+  this; bypass deliberately with `ALLOW_DIRECT_MAIN_PUSH=1 git push` only for
+  emergency hotfixes or repository surgery, and document the reason.
 - **Do not push** without explicit author approval.
 - **Do not skip pre-commit hooks** (`--no-verify` is forbidden). Fix the
   underlying issue.
