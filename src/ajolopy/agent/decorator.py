@@ -6,17 +6,19 @@ validated at decoration time so misconfigured agents fail at import / boot,
 not at first request.
 """
 
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal
 
-from .runtime import AgentRuntime, FallbackSpec, SystemPrompt
+from .runtime import AgentRuntime
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Callable
 
-T = TypeVar("T")
+    from .runtime import FallbackSpec, SystemPrompt
+
+_DEFAULT_MAX_TOOL_ITERATIONS = 10
 
 
-def Agent(  # noqa: N802 — public surface mirrors the Brief's primitive name.
+def Agent[T](  # noqa: N802 — public surface mirrors the Brief's primitive name.
     *,
     model: str,
     system: SystemPrompt,
@@ -27,12 +29,13 @@ def Agent(  # noqa: N802 — public surface mirrors the Brief's primitive name.
     temperature: float | None = None,
     max_tokens: int | None = None,
     tools: list[type[Any]] | None = None,
+    max_tool_iterations: int = _DEFAULT_MAX_TOOL_ITERATIONS,
 ) -> Callable[[type[T]], type[T]]:
     """Class decorator factory — see ``specs/agent.md`` for the full surface."""
 
     def _decorate(cls: type[T]) -> type[T]:
         runtime = AgentRuntime(
-            agent_name=cls.__name__,
+            agent_cls=cls,
             model=model,
             system=system,
             memory=memory,
@@ -42,13 +45,14 @@ def Agent(  # noqa: N802 — public surface mirrors the Brief's primitive name.
             temperature=temperature,
             max_tokens=max_tokens,
             tools=tools,
+            max_tool_iterations=max_tool_iterations,
         )
 
-        async def run(self: T, message: str) -> str:  # noqa: ARG001 — self only used for binding.
-            return await runtime.run(message)
+        async def run(self: T, message: str) -> str:
+            return await runtime.run(self, message)
 
-        def stream(self: T, message: str) -> AsyncIterator[str]:  # noqa: ARG001
-            return runtime.stream(message)
+        def stream(self: T, message: str) -> AsyncIterator[str]:
+            return runtime.stream(self, message)
 
         cls._agent_runtime = runtime  # type: ignore[attr-defined]
         cls.run = run  # type: ignore[attr-defined]

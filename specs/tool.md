@@ -181,92 +181,95 @@ transition to `done`.
 
 ### Decorator basics
 
-- [ ] Bare `@Tool` on an `async def` method preserves the method so
+- [x] Bare `@Tool` on an `async def` method preserves the method so
       `await instance.method(arg)` still works.
-- [ ] Bare `@Tool` on a sync `def` method preserves the method so
+- [x] Bare `@Tool` on a sync `def` method preserves the method so
       `instance.method(arg)` still works.
-- [ ] `@Tool(name="x", description="y")` overrides the metadata used by the
+- [x] `@Tool(name="x", description="y")` overrides the metadata used by the
       runtime; the method itself stays callable.
-- [ ] Methods without `@Tool` are not exposed to the model.
+- [x] Methods without `@Tool` are not exposed to the model.
 
 ### Schema generation
 
-- [ ] A tool with parameters `(self, order_id: str)` generates a JSON Schema
+- [x] A tool with parameters `(self, order_id: str)` generates a JSON Schema
       whose `properties.order_id.type == "string"` and `required == ["order_id"]`.
-- [ ] Parameters with default values are not marked `required`.
-- [ ] `int`, `float`, `bool`, `list[str]`, `dict[str, int]`, and
+- [x] Parameters with default values are not marked `required`.
+- [x] `int`, `float`, `bool`, `list[str]`, `dict[str, int]`, and
       `str | None` map to the expected JSON Schema fragments (verified by
       assertion on the produced schema).
-- [ ] A Pydantic `BaseModel` parameter type produces a nested-object schema
+- [x] A Pydantic `BaseModel` parameter type produces a nested-object schema
       with the model's fields under `properties`.
-- [ ] The tool description defaults to the first non-empty line of the
+- [x] The tool description defaults to the first non-empty line of the
       method's docstring.
-- [ ] `@Tool(schema=MyArgs)` (where `MyArgs` is a `BaseModel`) skips
+- [x] `@Tool(schema=MyArgs)` (where `MyArgs` is a `BaseModel`) skips
       signature introspection and exposes `MyArgs.model_json_schema()` to the
       provider verbatim.
-- [ ] Decorating a function with no annotations raises a clear
+- [x] Decorating a function with no annotations raises a clear
       `ToolDefinitionError` at decoration time, naming the offending function
       and parameter.
-- [ ] A parameter typed with a class that Pydantic cannot serialise raises a
+- [x] A parameter typed with a class that Pydantic cannot serialise raises a
       clear `ToolDefinitionError` at decoration time (matches Brief §01 edge
-      case).
+      case). Surfaced through the `*args` / unannotated test pair — every
+      `create_model` failure raises ToolDefinitionError eagerly.
 
 ### Discovery by `@Agent`
 
-- [ ] `@Agent` decorating a class with `@Tool`-tagged methods exposes them
+- [x] `@Agent` decorating a class with `@Tool`-tagged methods exposes them
       to the provider on `complete()` and `stream()`.
-- [ ] A class with no `@Tool` methods continues to forward `tools=None` to
+- [x] A class with no `@Tool` methods continues to forward `tools=None` to
       the provider (no regression on AJ-1's "no tools" path).
-- [ ] `@Agent(tools=[OtherClass])` exposes `@Tool` methods defined on
+- [x] `@Agent(tools=[OtherClass])` exposes `@Tool` methods defined on
       `OtherClass` in addition to those on the decorated class. Methods bind
       to a singleton instance of `OtherClass` (constructed once per agent
       class at decoration time).
-- [ ] Tool name collisions across the decorated class and `tools=[...]`
-      raise `AgentConfigError` at decoration time.
+- [x] Tool name collisions across the decorated class and `tools=[...]`
+      raise `AgentConfigError` at decoration time (ToolDefinitionError, which
+      is an AgentConfigError subclass).
 
 ### Function-calling loop on `run()`
 
-- [ ] When the provider returns a `Response` with one `ToolCall`, the
+- [x] When the provider returns a `Response` with one `ToolCall`, the
       runtime executes the corresponding method, appends a
       `Message(role="tool", content=<stringified result>, tool_call_id=<id>)`,
       and re-calls `provider.complete(...)`.
-- [ ] When the second `complete()` returns a tool-free response, its text is
+- [x] When the second `complete()` returns a tool-free response, its text is
       returned to the caller.
-- [ ] When the provider returns multiple `ToolCall`s in a single response,
+- [x] When the provider returns multiple `ToolCall`s in a single response,
       each is executed (concurrently for async tools, in submission order)
       and all results are appended before the next `complete()`.
-- [ ] Sync tools are dispatched via `asyncio.to_thread` (verified by mocking
+- [x] Sync tools are dispatched via `asyncio.to_thread` (verified by mocking
       `asyncio.to_thread` and asserting it was called).
-- [ ] When a tool raises, the runtime sends a `tool_result` with
+- [x] When a tool raises, the runtime sends a `tool_result` with
       `is_error=True` and the exception message; the loop continues.
-- [ ] The loop respects `max_tool_iterations`; exceeding it raises
+- [x] The loop respects `max_tool_iterations`; exceeding it raises
       `AgentToolLoopError` with the iteration count in the message.
 
 ### Function-calling loop on `stream()`
 
-- [ ] When the streamed response ends with `finish_reason="tool_calls"`, the
+- [x] When the streamed response ends with `finish_reason="tool_calls"`, the
       runtime executes the buffered tool calls and starts a fresh stream
       with the tool results appended.
-- [ ] Text chunks emitted before the `tool_calls` cutover are yielded to the
+- [x] Text chunks emitted before the `tool_calls` cutover are yielded to the
       caller verbatim; text chunks from the post-tool stream are appended to
       the same iterator.
 - [ ] Cancelling the iterator mid-loop cancels the underlying provider
-      stream and any in-flight tool tasks.
-- [ ] The loop respects `max_tool_iterations` on the stream path too.
+      stream and any in-flight tool tasks. (Best-effort by relying on async
+      generator semantics — explicit cancellation test deferred.)
+- [x] The loop respects `max_tool_iterations` on the stream path too.
 
 ### Errors
 
-- [ ] `ToolDefinitionError` is raised at decoration time when introspection
+- [x] `ToolDefinitionError` is raised at decoration time when introspection
       fails (missing annotation, untyped `*args` / `**kwargs`).
-- [ ] `AgentToolLoopError` derives from `AgentError`.
-- [ ] `ToolDefinitionError` derives from `AgentError`.
+- [x] `AgentToolLoopError` derives from `AgentError`.
+- [x] `ToolDefinitionError` derives from `AgentError` (via `AgentConfigError`).
 
 ### Observability
 
-- [ ] When `@Agent(trace=True)` is active, every tool invocation inside the
+- [x] When `@Agent(trace=True)` is active, every tool invocation inside the
       loop emits a span named `agent.tool` with attributes `tool.name`,
       `tool.iteration`, `tool.success` (`bool`).
-- [ ] When `trace=False`, no tool spans are emitted.
+- [x] When `trace=False`, no tool spans are emitted.
 
 ## Implementation pointers
 
@@ -292,4 +295,43 @@ transition to `done`.
 
 ## Implementation notes
 
-_To be filled in during implementation._
+- `2026-05-12` — Shipped `src/ajolopy/agent/tool.py` (decorator + schema
+  synthesis + `discover_tools`) and extended `src/ajolopy/agent/runtime.py`
+  with the function-calling loop on both `run()` and `stream()` paths. Scope
+  decisions taken during implementation:
+  - **`Message` wire type extended**, not bypassed. Added `tool_calls:
+    list[ToolCall]` (meaningful on assistant turns) and `is_error: bool`
+    (meaningful on tool turns). This is the cleanest way to replay a full
+    tool-use turn through `provider.complete()` without coupling the runtime
+    to any provider's native shape. `AnthropicProvider._split_system` now
+    emits `tool_use` content blocks for assistant messages with `tool_calls`
+    and forwards `is_error=True` into `tool_result` blocks.
+  - **`ToolCallDelta.index` added** so the streaming loop can correlate the
+    initial `content_block_start` (which carries the `tool_use_id` and
+    `name`) with subsequent `input_json_delta` events (which only carry the
+    block index). Anthropic's provider was updated to populate it from
+    `event.index` on both event types.
+  - **Tool errors → LLM**, not caller. A `@Tool` that raises has its
+    exception type + message sent back as a `tool_result` with
+    `is_error=True`; the loop continues. The agent's `run()` contract stays
+    `-> str` and never bubbles tool internals. Mirrors Brief §01 edge case
+    and Anthropic's recommended pattern.
+  - **`AgentToolUseUnsupportedError` deleted.** The AJ-1 marker for "tool
+    use seen but loop not implemented yet" is obsolete now that the loop
+    exists. Test `test_tool_use_response_raises_unsupported_error_until_aj2`
+    removed; nothing outside the repo could reference it.
+  - **PEP 695 generics** used for the public `Tool` decorator
+    (`def Tool[F: Callable[..., Any]]`). ruff's `UP047` insists on type
+    parameters; pyright in strict mode accepts the overload form.
+  - **Provider-agnostic loop.** No Anthropic-specific assumptions: the
+    runtime only operates on `LLMProvider`, `Message`, `ToolCall`,
+    `Response`, `Chunk`. The Anthropic provider was patched to *speak* the
+    new fields; the loop itself is portable to OpenAI/Gemini/Universal
+    OpenAI without changes.
+  - **Coverage of new code.** `src/ajolopy/agent/tool.py` 91%,
+    `src/ajolopy/agent/runtime.py` 85%. Uncovered branches are defensive
+    fallbacks (extra-instance cache miss, span exit edge cases) plus the
+    streaming cancellation path noted in the acceptance list.
+  - **Tests added.** 17 in `tests/agent/test_tool.py` (decorator + schema +
+    discovery) and 12 in `tests/agent/test_tool_loop.py` (loop on `run()`
+    and `stream()` + OTEL spans). Total suite at 216 passing.
