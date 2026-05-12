@@ -15,6 +15,15 @@ if TYPE_CHECKING:
     from .types import Chunk, Message, Response, Tool
 
 
+class LLMProviderError(RuntimeError):
+    """Base class for errors raised by any concrete ``LLMProvider``.
+
+    Higher-level layers (`@Agent`, fallback orchestration) catch this base
+    class to treat any provider failure uniformly, without importing every
+    provider package.
+    """
+
+
 class LLMProvider(ABC):
     """Provider-agnostic contract for talking to a chat-style LLM."""
 

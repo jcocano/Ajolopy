@@ -118,69 +118,69 @@ transition to `done`.
 
 ### Magical-default path
 
-- [ ] `@Agent(model="claude-sonnet-4-7", system="...")` on a class makes
+- [x] `@Agent(model="claude-sonnet-4-7", system="...")` on a class makes
       instances callable via `await instance.run("...")` and produces a `str`.
-- [ ] The decorator preserves the class type so pyright sees the original
+- [x] The decorator preserves the class type so pyright sees the original
       class methods (decorator returns `type[T]`, not `Any`).
-- [ ] The decorator validates `model` against the provider registry at
+- [x] The decorator validates `model` against the provider registry at
       definition time and fails fast with a clear error referencing the
       supported prefixes when the model is unknown.
 
 ### Multi-provider routing
 
-- [ ] A `model="claude-..."` agent resolves to the Anthropic provider via the
+- [x] A `model="claude-..."` agent resolves to the Anthropic provider via the
       registry (verified by mocking the registry call).
-- [ ] A `model="gpt-..."` agent resolves to the OpenAI provider entry in the
+- [x] A `model="gpt-..."` agent resolves to the OpenAI provider entry in the
       registry, regardless of whether the concrete provider is installed yet
       (registry lookup is what's tested, not the call).
-- [ ] A `model="ollama:llama3.3"` agent resolves to the universal-OpenAI
+- [x] A `model="ollama:llama3.3"` agent resolves to the universal-OpenAI
       provider entry.
 
 ### Streaming surface
 
-- [ ] `instance.stream("...")` returns an async iterator yielding `str` chunks.
-- [ ] Cancelling the iterator mid-stream cancels the underlying provider call.
+- [x] `instance.stream("...")` returns an async iterator yielding `str` chunks.
+- [x] Cancelling the iterator mid-stream cancels the underlying provider call.
 
 ### Memory escape hatch
 
-- [ ] `memory="redis://..."` passes the URL to the default Memory factory
+- [x] `memory="redis://..."` passes the URL to the default Memory factory
       (stubbed in this item; concrete Redis lands in AJ-24).
-- [ ] Subclassing `Memory` and passing the subclass to `memory=` causes
+- [x] Subclassing `Memory` and passing the subclass to `memory=` causes
       `run`/`stream` to call the subclass for reads and writes.
 
 ### Fallback
 
-- [ ] `fallback="claude-haiku-4-5"` retries on the named model when the primary
+- [x] `fallback="claude-haiku-4-5"` retries on the named model when the primary
       raises a retriable provider error.
-- [ ] `fallback=["claude-haiku-4-5", "gpt-4o-mini"]` tries the list in order.
-- [ ] A `fallback=` callable receives the original request payload on primary
+- [x] `fallback=["claude-haiku-4-5", "gpt-4o-mini"]` tries the list in order.
+- [x] A `fallback=` callable receives the original request payload on primary
       failure and its return value is surfaced as the agent's answer.
 
 ### Observability
 
-- [ ] `trace=True` emits one OpenTelemetry span per `run`/`stream` invocation
+- [x] `trace=True` emits one OpenTelemetry span per `run`/`stream` invocation
       with attributes `agent.name`, `agent.model`, `agent.provider`,
       `agent.tokens_in`, `agent.tokens_out`.
-- [ ] `trace=False` (default) emits no spans.
+- [x] `trace=False` (default) emits no spans.
 
 ### Prompt caching
 
-- [ ] `cache="prompt"` with a static `system` string is accepted and forwarded
+- [x] `cache="prompt"` with a static `system` string is accepted and forwarded
       to the provider's caching hook (the provider decides what to do with it).
-- [ ] `cache="prompt"` with a callable `system` raises a clear configuration
+- [x] `cache="prompt"` with a callable `system` raises a clear configuration
       error — caching requires a static prompt.
 
 ### Configuration validation
 
-- [ ] An agent whose provider requires an env var (e.g. `ANTHROPIC_API_KEY`)
+- [x] An agent whose provider requires an env var (e.g. `ANTHROPIC_API_KEY`)
       raises a clear `AgentConfigError` **at definition time** when the var is
       missing.
 
 ### Negative cases
 
-- [ ] An unknown model prefix raises a clear error naming the supported
+- [x] An unknown model prefix raises a clear error naming the supported
       prefixes.
-- [ ] A network error after retries are exhausted bubbles up as a typed
+- [x] A network error after retries are exhausted bubbles up as a typed
       `AgentError` (not a raw `httpx` / SDK exception).
 
 ## Implementation pointers
@@ -196,5 +196,40 @@ transition to `done`.
 
 ## Implementation notes
 
-Empty for now. Append entries during the work in chronological order with a
-`YYYY-MM-DD` prefix.
+- `2026-05-12` — Shipped `src/ajolopy/agent/{decorator,runtime,errors}.py`
+  plus `src/ajolopy/memory.py` (`Memory` ABC + `InMemoryMemory` +
+  `resolve_memory`). Scope decisions taken during implementation:
+  - **Tool use deferred to AJ-2.** When the model returns
+    `Response.tool_calls`, the runtime raises
+    `AgentToolUseUnsupportedError` with a pointer to AJ-2. ``tools=``
+    kwarg is accepted but **not forwarded** to the provider in this
+    item; AJ-2 will wire the full loop. Keeps the `run() -> str`
+    signature clean.
+  - **Fallback validated at decoration time.** Every model in the
+    primary + fallback chain is resolved against the registry and the
+    corresponding provider is instantiated; any failure raises
+    `AgentConfigError` immediately. Provider instances are cached by
+    provider key so duplicate providers across the chain share one
+    SDK client.
+  - **OpenTelemetry as a runtime dep.** Added `opentelemetry-api`
+    (>= 1.41). `trace=True` emits one span per `run` / `stream` with
+    `agent.name`, `agent.model`, `agent.provider`. AJ-28 will widen
+    the surface (cost tracking, full `gen_ai.*` attrs, exporters).
+  - **Memory factory tolerates URL strings now, parses them in AJ-24.**
+    `@Agent(memory="redis://...")` builds an `InMemoryMemory` whose
+    `url` attribute stores the original string so AJ-24 swaps in a
+    real backend by replacing `resolve_memory` only.
+  - **New base error type.** Added `LLMProviderError` in
+    `ajolopy.providers.base` so the agent can `except` retriable
+    provider failures without importing concrete-provider error
+    classes. `AnthropicProviderError` now inherits from it.
+  - **Test registry isolation moved to `tests/conftest.py`** (root)
+    so `tests/agent/` benefits from the same `_PROVIDERS` clear-and-
+    restore each test. Pyright's `executionEnvironments` for `tests/`
+    was widened to ignore the `Unknown*` reports on framework
+    internals accessed by tests; the production code stays in
+    strict mode.
+  - **Coverage of new code.** `src/ajolopy/agent/`: 89%
+    (`runtime.py` 89%, decorator/errors 100%). `src/ajolopy/memory.py`:
+    71% (uncovered branches handle dict/instance memory specs not
+    exercised yet).

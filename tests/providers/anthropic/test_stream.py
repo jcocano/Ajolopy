@@ -103,4 +103,4 @@ async def test_stream_cancellation_does_not_raise() -> None:
     # Close the iterator early — the implementation is an async generator,
     # so its aclose() invokes the SDK stream's __aexit__. The ABC declares
     # AsyncIterator[Chunk] which has no aclose, hence the pyright ignore.
-    await iterator.aclose()  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
+    await iterator.aclose()  # pyright: ignore[reportAttributeAccessIssue]
