@@ -126,6 +126,10 @@ class _ConfigErrorProviderCls(FakeProvider):
     """Provider whose constructor raises — simulates missing env var."""
 
     def __init__(self) -> None:
+        # Initialise the base class so CodeQL's "missing super().__init__()"
+        # check is happy; the immediate raise still makes the provider unusable
+        # the same way a missing ANTHROPIC_API_KEY would.
+        super().__init__()
         msg = "ANTHROPIC_API_KEY missing (simulated)"
         raise LLMProviderError(msg)
 
