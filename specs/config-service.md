@@ -128,45 +128,45 @@ transition to `done`.
 
 ### BaseConfig — required vs optional
 
-- [ ] A `BaseConfig` subclass with a required field and no value present in
+- [x] A `BaseConfig` subclass with a required field and no value present in
       env raises `pydantic.ValidationError` at instantiation, and the error
       message names the missing field.
-- [ ] A `BaseConfig` subclass with an optional field (default value) loads
+- [x] A `BaseConfig` subclass with an optional field (default value) loads
       successfully when the env var is absent, returning the declared
       default.
-- [ ] A `BaseConfig` subclass loads values from a `.env` file when the
+- [x] A `BaseConfig` subclass loads values from a `.env` file when the
       process env var is unset.
-- [ ] Process env vars take precedence over `.env` values (standard
+- [x] Process env vars take precedence over `.env` values (standard
       `pydantic_settings` precedence; pin it with a test so it cannot
       silently regress).
 
 ### Test-environment file
 
-- [ ] When `APP_ENV=test`, values in `.env.test` override `.env` for the same
+- [x] When `APP_ENV=test`, values in `.env.test` override `.env` for the same
       keys.
-- [ ] When `APP_ENV` is anything other than `test`, `.env.test` is ignored
+- [x] When `APP_ENV` is anything other than `test`, `.env.test` is ignored
       even if present.
 
 ### Custom validation hook
 
-- [ ] A subclass with a `@field_validator` raising `ValueError` surfaces the
+- [x] A subclass with a `@field_validator` raising `ValueError` surfaces the
       validator's message in the resulting `ValidationError`.
 
 ### ConfigService method surface
 
-- [ ] `get(key, default)` returns the value when set, the default when not.
-- [ ] `get_int` / `get_bool` / `get_list` coerce string env values to the
+- [x] `get(key, default)` returns the value when set, the default when not.
+- [x] `get_int` / `get_bool` / `get_list` coerce string env values to the
       requested type and raise a clear error on malformed input.
-- [ ] `require(key)` returns the value when set and raises a typed
+- [x] `require(key)` returns the value when set and raises a typed
       `ConfigMissingError` (subclass of `KeyError`) naming the key when not.
-- [ ] `is_production` / `is_development` / `is_test` reflect `APP_ENV` only
+- [x] `is_production` / `is_development` / `is_test` reflect `APP_ENV` only
       — adding an unrelated env var does not change their value.
 
 ### Negative cases
 
-- [ ] Calling `BaseConfig.__init__()` with extra unknown fields raises (no
+- [x] Calling `BaseConfig.__init__()` with extra unknown fields raises (no
       silent dropping of misnamed env vars — surfaces typos at startup).
-- [ ] `ConfigService.get_int("X")` where `X` is set to a non-numeric string
+- [x] `ConfigService.get_int("X")` where `X` is set to a non-numeric string
       raises with a message including both the key and the bad value.
 
 ## Implementation pointers
@@ -181,5 +181,15 @@ transition to `done`.
 
 ## Implementation notes
 
-Empty for now. Append entries during the work in chronological order with a
-`YYYY-MM-DD` prefix.
+- `2026-05-12` — Shipped `src/ajolopy/config/{base,service}.py` plus the
+  `tests/config/` suite. `BaseConfig` overrides
+  `settings_customise_sources` (instead of `__init__`) so pyright still
+  sees the per-subclass field signature; the override swaps in a
+  `DotEnvSettingsSource` built from `_resolve_env_files()` so APP_ENV is
+  read at instance-construction time. Pydantic v2 and pydantic-settings
+  were added as runtime deps via `uv add`. The seven test call-sites that
+  instantiate a `BaseConfig` subclass without explicit kwargs carry
+  `# pyright: ignore[reportCallIssue]` with a one-line justification — the
+  fields come from the dotenv source at runtime, which pyright cannot see.
+  Coverage of the new package: 95% (two branches uncovered exercise
+  exotic value shapes a typed subclass cannot produce).
