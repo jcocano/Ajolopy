@@ -19,6 +19,13 @@ if TYPE_CHECKING:
 def isolate_registry() -> Iterator[None]:
     saved_providers = registry._PROVIDERS.copy()
     saved_routes = list(registry._ROUTES)
+    # Each test starts from a fresh _PROVIDERS table so a previous test
+    # (or a side-effect import like ajolopy.providers.anthropic) can't leak
+    # an existing registration into a test that expects empty state.
+    # _ROUTES keeps the built-in defaults so prefix routing works.
+    registry._PROVIDERS.clear()
+    registry._ROUTES.clear()
+    registry._ROUTES.extend(registry._DEFAULT_ROUTES)
     try:
         yield
     finally:

@@ -105,67 +105,67 @@ network traffic happens in CI.
 
 ### Construction & registration
 
-- [ ] Importing `ajolopy.providers.anthropic` registers
+- [x] Importing `ajolopy.providers.anthropic` registers
       `AnthropicProvider` under the key `"anthropic"` in the registry.
-- [ ] `AnthropicProvider(api_key="sk-...")` constructs successfully and
+- [x] `AnthropicProvider(api_key="sk-...")` constructs successfully and
       exposes an `AsyncAnthropic` instance internally.
-- [ ] `AnthropicProvider(client=<custom>)` uses the supplied client
+- [x] `AnthropicProvider(client=<custom>)` uses the supplied client
       verbatim — no new `AsyncAnthropic` is built.
-- [ ] `AnthropicProvider()` with `ANTHROPIC_API_KEY` set in the env builds
+- [x] `AnthropicProvider()` with `ANTHROPIC_API_KEY` set in the env builds
       a client successfully (no error).
-- [ ] `AnthropicProvider()` with `ANTHROPIC_API_KEY` unset raises
+- [x] `AnthropicProvider()` with `ANTHROPIC_API_KEY` unset raises
       `AnthropicConfigError` at construction time, naming the env var.
 
 ### `complete()`
 
-- [ ] A simple `complete(model="claude-sonnet-4-7", messages=[…])` call
+- [x] A simple `complete(model="claude-sonnet-4-7", messages=[…])` call
       proxies to `client.messages.create(...)` and returns a `Response`
       with `text`, `tokens_in`, `tokens_out`, `finish_reason="stop"`.
-- [ ] Messages with `role="system"` are forwarded as the Anthropic
+- [x] Messages with `role="system"` are forwarded as the Anthropic
       top-level `system` parameter — not as a `messages[]` entry.
-- [ ] `tools=[Tool(...)]` is converted to Anthropic's tool schema and
+- [x] `tools=[Tool(...)]` is converted to Anthropic's tool schema and
       forwarded; if the response includes a `tool_use` content block, the
       returned `Response.tool_calls` contains the corresponding
       `ToolCall`.
-- [ ] `temperature` / `max_tokens` are forwarded as-is to the SDK.
-- [ ] `cache=True` annotates the system message with
+- [x] `temperature` / `max_tokens` are forwarded as-is to the SDK.
+- [x] `cache=True` annotates the system message with
       `cache_control={"type": "ephemeral"}` so prompt caching is enabled.
-- [ ] A retriable SDK error (`anthropic.APIConnectionError` /
+- [x] A retriable SDK error (`anthropic.APIConnectionError` /
       `anthropic.APITimeoutError`) surfaces as a typed
       `AnthropicProviderError` rather than the raw SDK exception.
 
 ### `stream()`
 
-- [ ] `stream(model="claude-sonnet-4-7", messages=[…])` returns an async
+- [x] `stream(model="claude-sonnet-4-7", messages=[…])` returns an async
       iterator that yields `Chunk(delta=…)` for each text delta.
-- [ ] The final `Chunk` carries `finish_reason="stop"` (or the mapped
+- [x] The final `Chunk` carries `finish_reason="stop"` (or the mapped
       equivalent).
-- [ ] Cancelling the iterator mid-stream cancels the underlying SDK
+- [x] Cancelling the iterator mid-stream cancels the underlying SDK
       stream (no orphan HTTP connections in test).
-- [ ] Tool-use deltas are surfaced as `Chunk.tool_call_delta`.
+- [x] Tool-use deltas are surfaced as `Chunk.tool_call_delta`.
 
 ### `embed()`
 
-- [ ] `embed(model="claude-…", text="…")` raises
+- [x] `embed(model="claude-…", text="…")` raises
       `AnthropicEmbeddingsNotSupportedError` with a message pointing users
       to an embeddings-capable provider.
 
 ### `count_tokens()`
 
-- [ ] `count_tokens(model="claude-sonnet-4-7", text="hello")` returns the
+- [x] `count_tokens(model="claude-sonnet-4-7", text="hello")` returns the
       value reported by the SDK's count-tokens endpoint when available.
-- [ ] If the SDK call fails or the endpoint is unreachable, the method
+- [x] If the SDK call fails or the endpoint is unreachable, the method
       falls back to a deterministic 4-chars-per-token estimate and logs
       a warning (verified with `caplog`).
 
 ### Capability flags
 
-- [ ] `supports_prompt_caching()` returns `True`.
-- [ ] `supports_tool_calling()` returns `True`.
+- [x] `supports_prompt_caching()` returns `True`.
+- [x] `supports_tool_calling()` returns `True`.
 
 ### Negative cases
 
-- [ ] A non-Claude model string (`model="gpt-4o-mini"`) passed to any
+- [x] A non-Claude model string (`model="gpt-4o-mini"`) passed to any
       method raises `AnthropicProviderError` with the offending model in
       the message. (The router would normally prevent this, but the
       provider double-checks so subclasses cannot silently route the
@@ -186,5 +186,18 @@ network traffic happens in CI.
 
 ## Implementation notes
 
-Empty for now. Append entries during the work in chronological order with a
-`YYYY-MM-DD` prefix.
+- `2026-05-12` — Shipped `src/ajolopy/providers/anthropic/{provider,errors,__init__}.py`
+  with `anthropic` (SDK 0.101.0) as a new runtime dep. The package import
+  registers `AnthropicProvider` under the `"anthropic"` key via
+  `contextlib.suppress(ValueError)` so the second import inside the same
+  process is a no-op. Mapped Anthropic's `stop_reason` values to the
+  framework's `FinishReason` literal (`end_turn`/`stop_sequence`→`stop`,
+  `max_tokens`→`length`, `tool_use`→`tool_calls`). `count_tokens` is sync
+  per the ABC but the SDK's endpoint is async; the provider runs
+  `asyncio.run` when no loop is active and falls back to a deterministic
+  4-chars-per-token estimate (with a `logging.WARNING`) when it is or when
+  the SDK call fails. Updated `tests/providers/conftest.py` so the parent
+  `isolate_registry` fixture *clears* `_PROVIDERS` at the start of each
+  test (instead of just restoring it at the end) — keeps tests
+  order-independent now that some importable provider packages have
+  registration side effects.

@@ -25,6 +25,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
+    "anthropic>=0.101.0",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
 ]
