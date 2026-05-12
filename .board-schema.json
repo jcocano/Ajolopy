@@ -73,7 +73,7 @@
         "owner": { "type": ["string", "null"] },
         "branch": {
           "type": ["string", "null"],
-          "pattern": "^(feat|story|fix|chore|refactor|docs)/[a-z0-9][a-z0-9-]*$"
+          "pattern": "^(feature|story|fix|chore|refactor|docs)/[a-z0-9][a-z0-9-]*$"
         },
         "pr": { "type": ["string", "null"] },
         "spec": {

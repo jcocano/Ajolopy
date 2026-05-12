@@ -78,7 +78,7 @@ STATUS_DISPLAY_ORDER: tuple[ItemStatus, ...] = (
 )
 
 BRANCH_PREFIX: Mapping[ItemType, str] = {
-    "feature": "feat",
+    "feature": "feature",
     "story": "story",
     "fix": "fix",
     "chore": "chore",

@@ -110,7 +110,7 @@ class TestSchemaValidation:
                 _make_item(
                     status="in_progress",
                     owner=None,
-                    branch="feat/test",
+                    branch="feature/test",
                     spec="specs/test.md",
                 )
             ]
@@ -124,7 +124,7 @@ class TestSchemaValidation:
                 _make_item(
                     status="done",
                     owner="x",
-                    branch="feat/test",
+                    branch="feature/test",
                     spec="specs/test.md",
                     closed_at=None,
                 )
