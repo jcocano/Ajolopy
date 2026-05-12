@@ -102,4 +102,4 @@ jobs:
           chmod +x osv-scanner
           ./osv-scanner --version
       - name: Scan dependencies
-        run: ./osv-scanner -r --skip-git .
+        run: ./osv-scanner scan source -r .
