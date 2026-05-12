@@ -506,15 +506,15 @@
       "slug": "llm-provider-abstract",
       "type": "feature",
       "title": "LLMProvider abstract base class + provider registry",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "provider",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/llm-provider-abstract",
       "pr": null,
       "spec": "specs/llm-provider.md",
       "blocks": [

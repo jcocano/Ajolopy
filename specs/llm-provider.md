@@ -169,46 +169,46 @@ transition to `done`.
 
 ### Interface
 
-- [ ] `LLMProvider` is `ABC`; instantiating it directly raises `TypeError`.
-- [ ] All six abstract methods exist with the documented signatures and pass
+- [x] `LLMProvider` is `ABC`; instantiating it directly raises `TypeError`.
+- [x] All six abstract methods exist with the documented signatures and pass
       `pyright --strict`.
 
 ### Registry
 
-- [ ] `register_provider("anthropic", FakeProvider)` stores the class.
-- [ ] `get_provider_class("anthropic")` returns the registered class.
-- [ ] `register_provider` rejects re-registration of the same key unless
+- [x] `register_provider("anthropic", FakeProvider)` stores the class.
+- [x] `get_provider_class("anthropic")` returns the registered class.
+- [x] `register_provider` rejects re-registration of the same key unless
       `overwrite=True` is passed (prevents silent override at import-time).
-- [ ] `get_provider_class("unknown")` raises a clear `ProviderNotRegistered`
-      error naming the registered keys.
+- [x] `get_provider_class("unknown")` raises a clear
+      `ProviderNotRegisteredError` naming the registered keys.
 
 ### Routing
 
-- [ ] `resolve_provider("claude-sonnet-4-7")` returns `"anthropic"`.
-- [ ] `resolve_provider("gpt-4o-mini")` returns `"openai"`.
-- [ ] `resolve_provider("o1-preview")` returns `"openai"`.
-- [ ] `resolve_provider("gemini-2.5-pro")` returns `"gemini"`.
-- [ ] `resolve_provider("ollama:llama3.3")` returns `"universal-openai"`.
-- [ ] `resolve_provider("groq:llama-3.3-70b")` returns `"universal-openai"`.
-- [ ] `resolve_provider("openrouter:anthropic/claude-3.5-sonnet")` returns
+- [x] `resolve_provider("claude-sonnet-4-7")` returns `"anthropic"`.
+- [x] `resolve_provider("gpt-4o-mini")` returns `"openai"`.
+- [x] `resolve_provider("o1-preview")` returns `"openai"`.
+- [x] `resolve_provider("gemini-2.5-pro")` returns `"gemini"`.
+- [x] `resolve_provider("ollama:llama3.3")` returns `"universal-openai"`.
+- [x] `resolve_provider("groq:llama-3.3-70b")` returns `"universal-openai"`.
+- [x] `resolve_provider("openrouter:anthropic/claude-3.5-sonnet")` returns
       `"universal-openai"`.
-- [ ] `resolve_provider("bogus-model")` raises a clear `UnknownModel` error
+- [x] `resolve_provider("bogus-model")` raises a clear `UnknownModelError`
       naming the supported prefix groups.
-- [ ] `register_route("plugin:*", "custom")` lets users add new patterns; a
+- [x] `register_route("plugin:*", "custom")` lets users add new patterns; a
       subsequent `resolve_provider("plugin:foo")` returns `"custom"`.
 
 ### Types
 
-- [ ] `Message`, `Tool`, `Response`, `Chunk`, `ToolCall`, `ToolCallDelta` are
+- [x] `Message`, `Tool`, `Response`, `Chunk`, `ToolCall`, `ToolCallDelta` are
       exported from `ajolopy.providers` and pass `pyright --strict`.
-- [ ] `Response.finish_reason` is a `Literal` type — invalid string assignments
+- [x] `Response.finish_reason` is a `Literal` type — invalid string assignments
       fail at type-check time.
 
 ### Negative cases
 
-- [ ] A `LLMProvider` subclass missing one of the six abstract methods fails
+- [x] A `LLMProvider` subclass missing one of the six abstract methods fails
       to instantiate (Python's ABC enforcement).
-- [ ] `register_provider` rejects non-`LLMProvider` classes with a clear
+- [x] `register_provider` rejects non-`LLMProvider` classes with a clear
       error.
 
 ## Implementation pointers
@@ -226,5 +226,9 @@ transition to `done`.
 
 ## Implementation notes
 
-Empty for now. Append entries during the work in chronological order with a
-`YYYY-MM-DD` prefix.
+- `2026-05-12` — Shipped `src/ajolopy/providers/{base,registry,types}.py` with
+  zero external dependencies (plain dataclasses, `fnmatch` for routing).
+  Renamed the registry errors to `ProviderNotRegisteredError` /
+  `UnknownModelError` to satisfy ruff `N818`. Test fixture in
+  `tests/providers/conftest.py` snapshots `_PROVIDERS` / `_ROUTES` per test so
+  the global registry stays isolated. Coverage of the new package: 100%.
