@@ -4,22 +4,15 @@ Covers the "Types" acceptance group: exports + Literal enforcement.
 Literal compile-time enforcement is verified at type-check time by pyright;
 this file pins the runtime annotation so that property cannot silently
 regress.
+
+The whole module is accessed via a single ``providers`` alias so CodeQL does
+not flag mixed ``import`` / ``from … import`` styles on the same package.
 """
 
 import typing
 from typing import get_args, get_type_hints
 
 import ajolopy.providers as providers
-from ajolopy.providers import (
-    Chunk,
-    FinishReason,
-    Message,
-    Response,
-    Role,
-    Tool,
-    ToolCall,
-    ToolCallDelta,
-)
 
 
 def test_wire_types_are_publicly_exported() -> None:
@@ -38,16 +31,18 @@ def test_wire_types_are_publicly_exported() -> None:
 
 
 def test_role_literal_values() -> None:
-    assert set(get_args(Role)) == {"system", "user", "assistant", "tool"}
+    assert set(get_args(providers.Role)) == {"system", "user", "assistant", "tool"}
 
 
 def test_finish_reason_literal_values() -> None:
-    assert set(get_args(FinishReason)) == {"stop", "length", "tool_calls", "error"}
+    assert set(get_args(providers.FinishReason)) == {"stop", "length", "tool_calls", "error"}
 
 
 def test_response_finish_reason_annotation_is_literal() -> None:
-    hints = get_type_hints(Response)
-    assert hints["finish_reason"] is FinishReason or set(get_args(hints["finish_reason"])) == {
+    hints = get_type_hints(providers.Response)
+    assert hints["finish_reason"] is providers.FinishReason or set(
+        get_args(hints["finish_reason"])
+    ) == {
         "stop",
         "length",
         "tool_calls",
@@ -56,7 +51,7 @@ def test_response_finish_reason_annotation_is_literal() -> None:
 
 
 def test_chunk_finish_reason_annotation_is_optional_literal() -> None:
-    hints = get_type_hints(Chunk)
+    hints = get_type_hints(providers.Chunk)
     chunk_fr = hints["finish_reason"]
     # Optional[FinishReason] resolves to Union[FinishReason, None]; assert both arms.
     args = get_args(chunk_fr)
@@ -66,7 +61,7 @@ def test_chunk_finish_reason_annotation_is_optional_literal() -> None:
 
 
 def test_message_construction_round_trip() -> None:
-    msg = Message(role="user", content="hi")
+    msg = providers.Message(role="user", content="hi")
     assert msg.role == "user"
     assert msg.content == "hi"
     assert msg.name is None
@@ -74,20 +69,20 @@ def test_message_construction_round_trip() -> None:
 
 
 def test_tool_call_carries_structured_arguments() -> None:
-    tc = ToolCall(id="call_1", name="lookup", arguments={"order_id": "X-1"})
+    tc = providers.ToolCall(id="call_1", name="lookup", arguments={"order_id": "X-1"})
     assert tc.arguments["order_id"] == "X-1"
 
 
 def test_tool_call_delta_supports_partial_arguments() -> None:
-    delta = ToolCallDelta(id="call_1", name="lookup", arguments_delta='{"order_id": "X')
+    delta = providers.ToolCallDelta(id="call_1", name="lookup", arguments_delta='{"order_id": "X')
     assert delta.arguments_delta == '{"order_id": "X'
 
 
 def test_tool_default_construction() -> None:
-    tool = Tool(name="lookup", description="Look up an order", parameters={})
+    tool = providers.Tool(name="lookup", description="Look up an order", parameters={})
     assert tool.name == "lookup"
 
 
 def test_typing_module_resolves_module_aliases() -> None:
     # Defensive: keep this assertion so any future re-export accident surfaces.
-    assert typing.get_origin(Response.__annotations__["tool_calls"]) is list
+    assert typing.get_origin(providers.Response.__annotations__["tool_calls"]) is list
