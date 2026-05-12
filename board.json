@@ -537,17 +537,17 @@
       "slug": "anthropic-provider",
       "type": "feature",
       "title": "AnthropicProvider (native SDK, prompt caching, tool use, streaming)",
-      "status": "backlog",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "provider",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/anthropic-provider",
       "pr": null,
-      "spec": null,
+      "spec": "specs/anthropic-provider.md",
       "blocks": [
         "AJ-1",
         "AJ-54"
