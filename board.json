@@ -306,15 +306,15 @@
       "slug": "di-container",
       "type": "feature",
       "title": "DI Container core (type-hint resolution, scopes, forwardRef)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "foundation",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/di-container",
       "pr": null,
       "spec": "specs/di-container.md",
       "blocks": [
