@@ -16,7 +16,14 @@ import contextlib
 
 from ajolopy.providers.registry import register_provider
 
-from .errors import GeminiConfigError, GeminiProviderError
+from .errors import (
+    GeminiCacheCreateError,
+    GeminiCacheError,
+    GeminiCacheExpiredError,
+    GeminiCacheMinTokensError,
+    GeminiConfigError,
+    GeminiProviderError,
+)
 from .provider import GeminiProvider
 
 # Idempotent: re-registration is rejected by the registry unless overwrite=True.
@@ -27,6 +34,10 @@ with contextlib.suppress(ValueError):
 
 
 __all__ = [
+    "GeminiCacheCreateError",
+    "GeminiCacheError",
+    "GeminiCacheExpiredError",
+    "GeminiCacheMinTokensError",
     "GeminiConfigError",
     "GeminiProvider",
     "GeminiProviderError",

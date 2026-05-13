@@ -1574,15 +1574,15 @@
       "slug": "gemini-cache-config",
       "type": "feature",
       "title": "Configurable cache lifecycle for Gemini (default-off escape hatch)",
-      "status": "ready",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "provider",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/gemini-cache-config",
       "pr": null,
       "spec": "specs/gemini-cache-config.md",
       "blocks": [],

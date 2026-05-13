@@ -275,63 +275,63 @@ transition to `done`. All tests mock the `google-genai` SDK boundary
 
 ### Constructor — defaults
 
-- [ ] `GeminiProvider()` (no caching kwargs) behaves identically to the
+- [x] `GeminiProvider()` (no caching kwargs) behaves identically to the
       AJ-21 release — `cache=True` is a no-op,
       `supports_prompt_caching()` returns `False`, no
       `caches.create` calls are made.
-- [ ] Passing `cache_strategy="auto"` flips
+- [x] Passing `cache_strategy="auto"` flips
       `supports_prompt_caching()` to `True`.
-- [ ] All six caching kwargs default to the documented values.
-- [ ] `cache_ttl_seconds=0` or a negative value raises `ValueError` at
+- [x] All six caching kwargs default to the documented values.
+- [x] `cache_ttl_seconds=0` or a negative value raises `ValueError` at
       construction time naming the offending kwarg. Same for
       `cache_min_tokens <= 0`.
 
 ### `cache_strategy="auto"` — happy path
 
-- [ ] First `complete(..., cache=True)` with content above
+- [x] First `complete(..., cache=True)` with content above
       `cache_min_tokens` triggers `client.aio.caches.create(...)` with
       the configured TTL and the derived cache name.
-- [ ] Subsequent `complete(..., cache=True)` with the same derived key
+- [x] Subsequent `complete(..., cache=True)` with the same derived key
       reuses the existing cache name via `config.cached_content` — no
       new `caches.create` call.
-- [ ] `stream(..., cache=True)` exercises the same lifecycle as
+- [x] `stream(..., cache=True)` exercises the same lifecycle as
       `complete()` (cache reused across complete and stream calls if
       keys match).
 
 ### Cache key strategy
 
-- [ ] Default `"prefix_hash"` derives the key from
+- [x] Default `"prefix_hash"` derives the key from
       `system_instruction + "\n\n" + first user message.content`. Two
       requests with the same prefix share a cache; two requests with
       different prefixes get separate caches.
-- [ ] Callable strategy is invoked with `(messages, system_instruction)`
+- [x] Callable strategy is invoked with `(messages, system_instruction)`
       and its return value is used as the cache identity verbatim.
-- [ ] A callable strategy that raises surfaces the exception as
+- [x] A callable strategy that raises surfaces the exception as
       `GeminiCacheError` with the original chained.
-- [ ] A callable strategy that returns a falsy value (`""`, `None`,
+- [x] A callable strategy that returns a falsy value (`""`, `None`,
       `0`) raises `GeminiCacheError` naming the strategy and the
       offending return value. Empty cache keys collide silently in the
       registry, so we refuse to accept them.
 
 ### Cache minimum tokens
 
-- [ ] `complete(..., cache=True)` with content below `cache_min_tokens`
+- [x] `complete(..., cache=True)` with content below `cache_min_tokens`
       raises `GeminiCacheMinTokensError` with the actual count, the
       threshold, and a hint pointing to the constructor kwarg.
-- [ ] The error fires *before* any `caches.create` SDK call.
+- [x] The error fires *before* any `caches.create` SDK call.
 
 ### Expiry handling
 
-- [ ] `cache_on_expired="recreate"` (default): when a `generate_content`
+- [x] `cache_on_expired="recreate"` (default): when a `generate_content`
       call returns a 404 referencing the cached content, the provider
       transparently calls `caches.create` again, retries once, and
       returns success. Verified by mock + counting SDK invocations.
-- [ ] `cache_on_expired="error"`: the same 404 surfaces as
+- [x] `cache_on_expired="error"`: the same 404 surfaces as
       `GeminiCacheExpiredError` with the cache name in the message; no
       retry happens.
-- [ ] Recreate failures (the second `caches.create` also fails) surface
+- [x] Recreate failures (the second `caches.create` also fails) surface
       as `GeminiCacheCreateError` regardless of `cache_on_expired`.
-- [ ] Streaming + cache expiry: when a `stream(..., cache=True)` call
+- [x] Streaming + cache expiry: when a `stream(..., cache=True)` call
       encounters the 404 mid-iteration, the iterator surfaces
       `GeminiCacheExpiredError` on the offending step **regardless** of
       `cache_on_expired`. Recreate-on-expired only applies to
@@ -342,21 +342,21 @@ transition to `done`. All tests mock the `google-genai` SDK boundary
 
 ### Cleanup
 
-- [ ] `cache_cleanup="on_provider_close"` (default): `await provider.aclose()`
+- [x] `cache_cleanup="on_provider_close"` (default): `await provider.aclose()`
       iterates the cache registry and calls
       `client.aio.caches.delete(name)` for each entry. The registry
       empties after `aclose`.
-- [ ] `cache_cleanup="manual"`: `aclose()` does not delete any caches;
+- [x] `cache_cleanup="manual"`: `aclose()` does not delete any caches;
       the registry persists until the provider is garbage-collected.
-- [ ] A `caches.delete` failure during cleanup logs at WARNING and does
+- [x] A `caches.delete` failure during cleanup logs at WARNING and does
       not raise. Other entries are still cleaned up.
-- [ ] `async with GeminiProvider(cache_strategy="auto") as provider:`
+- [x] `async with GeminiProvider(cache_strategy="auto") as provider:`
       drives `aclose` on exit (`__aenter__` returns `self`,
       `__aexit__` calls `aclose`).
-- [ ] Calling `aclose()` twice is idempotent — the second call is a
+- [x] Calling `aclose()` twice is idempotent — the second call is a
       no-op (registry already empty, no SDK calls). No exception
       raised.
-- [ ] `aclose()` invoked while a `complete(..., cache=True)` call is
+- [x] `aclose()` invoked while a `complete(..., cache=True)` call is
       in flight does not abort the in-flight call. Cleanup observes
       whatever caches exist in the registry at the moment of the
       `aclose` call; caches added afterwards survive until garbage
@@ -365,14 +365,14 @@ transition to `done`. All tests mock the `google-genai` SDK boundary
 
 ### Capability flag
 
-- [ ] `supports_prompt_caching()` returns `False` when
+- [x] `supports_prompt_caching()` returns `False` when
       `cache_strategy="off"`.
-- [ ] `supports_prompt_caching()` returns `True` when
+- [x] `supports_prompt_caching()` returns `True` when
       `cache_strategy="auto"`.
 
 ### Concurrency
 
-- [ ] Two concurrent `asyncio.Task`s calling
+- [x] Two concurrent `asyncio.Task`s calling
       `complete(..., cache=True)` with the same derived key issue two
       independent `caches.create` calls (verified by SDK call count).
       Both calls succeed and each call returns a `Response`. The
@@ -414,6 +414,98 @@ transition to `done`. All tests mock the `google-genai` SDK boundary
 
 ## Implementation notes
 
-<!-- Filled during implementation. Capture scope decisions taken at
-write time, edge-case findings, coverage numbers, and any test-only
-quirks. -->
+Summary: AJ-58 lands as an additive layer on top of AJ-21 — the
+`GeminiProvider` constructor gains six caching kwargs (all defaulted to
+the AJ-21-compatible no-op posture), the public surface gains
+`aclose()` / `__aenter__` / `__aexit__`, and the `complete()` / `stream()`
+hot paths grow a cache-aware branch that activates only when both
+`cache_strategy="auto"` and `cache=True` are set. The seven open design
+decisions in §"Open design decisions" were adopted **as written**:
+
+1. `cache_strategy` defaults to `"off"`; the provider keeps AJ-21's
+   behaviour until callers opt in.
+2. `cache_ttl_seconds=3600` (matches the SDK's documented default).
+3. `cache_min_tokens=1024` (Flash-class threshold; Pro users override).
+4. `cache_key_strategy="prefix_hash"` — SHA-256 over the joined system
+   instruction + first user message.
+5. `cache_on_expired="recreate"` — transparent retry on `complete()`;
+   `stream()` raises `GeminiCacheExpiredError` regardless because the
+   iterator cannot replay already-yielded deltas.
+6. `cache_cleanup="on_provider_close"` — pairs with the new `aclose()`
+   plus async-context-manager protocol.
+7. No internal lock — concurrent first-call races emit two
+   `caches.create` calls and track both names in the registry; tested
+   under `asyncio.gather` so the contract is explicit.
+
+### Scope decisions taken at write time
+
+- `aclose()` is provider-specific in v0.1 (not on `LLMProvider`).
+  Anthropic and OpenAI providers stay stateless; promoting `aclose()`
+  to the ABC is a separate item if a future provider grows server-side
+  state worth managing.
+- The minimum-tokens gate reuses `self.count_tokens(...)` on the joined
+  prefix string. When `count_tokens` falls back to its char-based
+  estimate (running event loop, SDK transport error) the gate uses the
+  estimate as-is — we never issue a second SDK round-trip just to
+  decide whether to cache.
+- The cache-expiry detour probes the SDK exception's integer `code`
+  attribute (`== 404`) rather than relying on `genai_errors.NotFound`.
+  The shipped SDK class hierarchy maps every 4xx onto the same
+  `APIError` base, and the AJ-21 mocks construct `APIError` directly;
+  the integer-code probe keeps the mocks honest and survives future
+  SDK reorganisation.
+- `aclose()` takes a snapshot of the cache registry and `clear()`s it
+  *before* awaiting any `caches.delete` call. That gives the spec's
+  required behaviour for the in-flight-complete-during-aclose case: a
+  `register()` issued after the snapshot lands in a fresh registry,
+  which idempotent re-entrant `aclose()` calls then leave alone.
+- `_aio_caches` follows the same `cast("Any", ...)` workaround that
+  AJ-21 used for `_aio_models`. AJ-59 owns the broader typing cleanup;
+  this PR did not touch that surface.
+- Cache content sent to `caches.create` mirrors what `complete()`
+  forwards to `generate_content`. Re-running `_convert_messages` inside
+  the create call shares the conversion path and keeps the cached
+  payload byte-identical to the prompt, which matches Google's
+  recommended "cache exactly what the upcoming call would have sent."
+
+### SDK boundary surprises
+
+- `genai_types.CreateCachedContentConfig.ttl` is a duration string
+  (`"3600s"`), not an integer; the provider converts `cache_ttl_seconds`
+  at the call site and the test asserts on the string form.
+- `client.aio.caches.create(...)` returns a `CachedContent` Pydantic
+  model whose `.name` field is `"cachedContents/<server-id>"`. The
+  provider stores the full string verbatim and threads it back via
+  `GenerateContentConfig.cached_content` (camelCased on the wire by
+  the SDK).
+- `client.aio.caches.delete(...)` accepts the cache name as a keyword
+  `name=` argument — positional usage produces a different error path
+  than the unit tests would observe.
+- `AsyncMock.side_effect` becomes an iterator once a list is assigned,
+  so any test that wants to re-read the configured queue must capture
+  the list before it gets consumed.
+
+### Coverage (per `pytest --cov=src/ajolopy/providers/gemini`)
+
+| File | Coverage |
+|---|---|
+| `gemini/__init__.py` | 100% |
+| `gemini/errors.py` | 100% |
+| `gemini/cache.py` | 92% |
+| `gemini/provider.py` | 94% |
+
+Uncovered fragments in `provider.py` are the AJ-21 defensive branches
+that AJ-58 did not touch (the `_finish_reason_to_str` fallthrough, the
+best-effort `aclose()` on the SDK stream iterator, the `count_tokens`
+SDK fallback after a non-`int` total, etc.) plus the defensive
+unreachable arm of `_derive_cache_key` for a hypothetical unrecognised
+literal. The uncovered fragments in `cache.py` are the empty-list
+fallbacks on `CacheRegistry.latest()` and `CacheRegistry.drop_name()`
+that the live code paths never trigger but defence-in-depth keeps.
+
+### Test count
+
+`tests/providers/gemini/` ships 82 tests across 9 files — 40 of them
+are AJ-58-specific (39 in `test_cache_lifecycle.py` plus one new
+`test_supports_prompt_caching_flips_true_when_strategy_is_auto` in
+`test_capabilities.py`). The 42 AJ-21 tests still pass unchanged.
