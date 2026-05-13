@@ -1,7 +1,8 @@
 """Ajolopy — the Python framework for building AI-native applications in production."""
 
 from .agent import Agent, Tool
+from .stream import Stream
 
 __version__ = "0.0.1"
 
-__all__ = ["Agent", "Tool", "__version__"]
+__all__ = ["Agent", "Stream", "Tool", "__version__"]
