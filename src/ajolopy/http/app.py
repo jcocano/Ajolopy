@@ -9,7 +9,7 @@ the introspection module added by a subsequent commit.
 
 import asyncio
 import inspect
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Iterable, Sequence
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
@@ -47,6 +47,7 @@ def create_app(
     routes: list[Route] | None = None,
     exception_filters: Sequence[FilterSpec] | None = None,
     pipe: Pipe | None = None,
+    streams: Iterable[type | object] | None = None,
 ) -> Starlette:
     """Create a Starlette app wired with the framework's defaults.
 
@@ -65,12 +66,23 @@ def create_app(
     against Starlette's native API (escape hatch). Use
     :func:`add_route` for routes that should go through the framework's
     pipe + filter pipeline.
+
+    ``streams=[Cls, instance, ...]`` forwards to
+    :func:`ajolopy.stream.mount_streams` so every ``@Stream``-marked
+    method on the provided classes / instances becomes an SSE route on
+    the app. The kwarg is opt-in; ``None`` leaves the app unchanged.
     """
     extra_routes: list[Route] = list(routes) if routes is not None else []
     user_specs: Sequence[FilterSpec] = exception_filters if exception_filters is not None else ()
     handlers = _build_exception_handlers(user_specs)
     app = Starlette(routes=extra_routes, exception_handlers=handlers)
     setattr(app.state, _PIPE_STATE_ATTR, pipe if pipe is not None else ValidationPipe())
+    if streams is not None:
+        # Lazy import: ajolopy.stream depends on ajolopy.http, so the
+        # reverse direction must stay deferred to avoid a cycle.
+        from ajolopy.stream import mount_streams
+
+        mount_streams(app, streams)
     return app
 
 

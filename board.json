@@ -77,17 +77,17 @@
       "slug": "stream",
       "type": "feature",
       "title": "@Stream decorator (SSE on @Agent and @Workflow)",
-      "status": "backlog",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "primitive",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/stream",
       "pr": null,
-      "spec": null,
+      "spec": "specs/stream.md",
       "blocks": [
         "AJ-48",
         "AJ-54"
