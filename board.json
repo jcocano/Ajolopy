@@ -220,7 +220,7 @@
       "slug": "module",
       "type": "feature",
       "title": "@Module decorator (DI container root)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -229,7 +229,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/module",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/33",
       "spec": "specs/module.md",
       "blocks": [
         "AJ-9",
@@ -241,7 +241,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-13",
-      "closed_at": null
+      "closed_at": "2026-05-13"
     },
     {
       "id": "AJ-9",
@@ -594,7 +594,7 @@
       "slug": "gemini-provider",
       "type": "feature",
       "title": "GeminiProvider (google-genai, multimodal, grounding)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -603,7 +603,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/gemini-provider",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/32",
       "spec": "specs/gemini-provider.md",
       "blocks": [
         "AJ-58",
@@ -616,7 +616,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-13",
-      "closed_at": null
+      "closed_at": "2026-05-13"
     },
     {
       "id": "AJ-22",
