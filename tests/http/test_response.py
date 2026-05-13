@@ -2,7 +2,6 @@
 
 from typing import TYPE_CHECKING
 
-import pytest
 from pydantic import BaseModel
 from starlette.responses import PlainTextResponse, StreamingResponse
 from starlette.testclient import TestClient
@@ -92,14 +91,25 @@ def test_none_return_produces_204():
     assert response.content == b""
 
 
-def test_unsupported_return_type_surfaces_as_error():
+def test_unsupported_return_type_surfaces_as_500_with_no_leak():
     async def handler(_request: Request) -> int:
         return 42  # ints are not a documented return type.
 
     app = create_app()
     add_route(app, "GET", "/x", handler)
+    # raise_server_exceptions=False: ServerErrorMiddleware re-raises after
+    # running our handler so production servers log via Uvicorn; in tests we
+    # just inspect the response.
+    response = TestClient(app, raise_server_exceptions=False).get("/x")
 
-    # The unsupported-return TypeError bubbles up of the endpoint coroutine;
-    # Starlette's TestClient raises it through the underlying httpx layer.
-    with pytest.raises(TypeError, match="int"):
-        TestClient(app, raise_server_exceptions=True).get("/x")
+    # The TypeError from _serialise_response is caught by the default
+    # catch-all Exception filter; the body must not leak the underlying
+    # message ("int" / "expected dict, BaseModel, ...").
+    assert response.status_code == 500
+    assert response.json() == {
+        "statusCode": 500,
+        "error": "Internal Server Error",
+        "message": "Internal Server Error",
+    }
+    assert "int" not in response.text
+    assert "dict" not in response.text

@@ -9,7 +9,7 @@ the introspection module added by a subsequent commit.
 
 import asyncio
 import inspect
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
@@ -18,9 +18,12 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from .errors import HttpHandlerConfigError
+from .filters import DEFAULT_FILTERS, ExceptionFilter, get_catches
 
 if TYPE_CHECKING:
     from starlette.requests import Request
+
+type FilterSpec = ExceptionFilter[Any] | type[ExceptionFilter[Any]]
 
 _ALLOWED_METHODS: frozenset[str] = frozenset(
     {"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
@@ -36,8 +39,19 @@ form lands with the params commit.
 """
 
 
-def create_app(*, routes: list[Route] | None = None) -> Starlette:
+def create_app(
+    *,
+    routes: list[Route] | None = None,
+    exception_filters: Sequence[FilterSpec] | None = None,
+) -> Starlette:
     """Create a Starlette app wired with the framework's defaults.
+
+    The default exception filters (``HttpException`` → JSON envelope,
+    ``pydantic.ValidationError`` → 422, catch-all ``Exception`` → logged
+    500) are always registered first. Pass user filters via
+    ``exception_filters=[...]`` (classes are instantiated with no args;
+    pre-built instances are accepted as well). User filters that
+    ``@Catch`` the same class as a default override the default.
 
     Pass ``routes=[Route(...)]`` to register additional routes directly
     against Starlette's native API (escape hatch). Use
@@ -45,7 +59,38 @@ def create_app(*, routes: list[Route] | None = None) -> Starlette:
     pipe + filter pipeline.
     """
     extra_routes: list[Route] = list(routes) if routes is not None else []
-    return Starlette(routes=extra_routes)
+    user_specs: Sequence[FilterSpec] = exception_filters if exception_filters is not None else ()
+    handlers = _build_exception_handlers(user_specs)
+    return Starlette(routes=extra_routes, exception_handlers=handlers)
+
+
+def _build_exception_handlers(
+    user_filters: Sequence[FilterSpec],
+) -> dict[Any, Callable[..., Awaitable[Response]]]:
+    """Compose the Starlette ``exception_handlers`` mapping.
+
+    Defaults are added first; user filters follow. Each ``@Catch`` entry
+    is inserted under every exception class it targets, with later
+    insertions overwriting earlier ones for the same class.
+    """
+    handlers: dict[Any, Callable[..., Awaitable[Response]]] = {}
+    for spec in (*DEFAULT_FILTERS, *user_filters):
+        instance = spec() if isinstance(spec, type) else spec
+        adapter = _adapt_filter(instance)
+        for exc_cls in get_catches(type(instance)):
+            handlers[exc_cls] = adapter
+    return handlers
+
+
+def _adapt_filter(
+    instance: ExceptionFilter[Any],
+) -> Callable[[Any, Exception], Awaitable[Response]]:
+    """Wrap a filter instance into Starlette's ``(request, exc)`` callable shape."""
+
+    async def handler(request: Any, exc: Exception) -> Response:
+        return await instance.catch(exc, request)
+
+    return handler
 
 
 def add_route(
