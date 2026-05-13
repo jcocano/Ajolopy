@@ -289,110 +289,110 @@ can transition to `done`.
 
 ### Decorator — metadata stamping
 
-- [ ] `@Module(providers=[Foo])` returns the class unchanged.
-- [ ] The decorated class exposes `_ajolopy_module` (a frozen dataclass)
+- [x] `@Module(providers=[Foo])` returns the class unchanged.
+- [x] The decorated class exposes `_ajolopy_module` (a frozen dataclass)
       with all eight fields populated (defaults for omitted lists are
       empty tuples, not shared list instances).
-- [ ] `_ajolopy_module.global_` is `False` by default and `True` when
+- [x] `_ajolopy_module.global_` is `False` by default and `True` when
       `global_=True` is passed.
-- [ ] `@Module(providers=[], exports=[NotAProvider])` raises
+- [x] `@Module(providers=[], exports=[NotAProvider])` raises
       `ModuleConfigError` at decoration time naming `NotAProvider`.
-- [ ] `@Module(imports=[NotAModule])` does **not** raise at decoration
+- [x] `@Module(imports=[NotAModule])` does **not** raise at decoration
       time (validation is deferred to `compile_module`, because
       `forwardRef` can legitimately reference a not-yet-decorated class).
-- [ ] `@Module(providers=[None])` and `@Module(providers=["not a type"])`
+- [x] `@Module(providers=[None])` and `@Module(providers=["not a type"])`
       raise `ModuleConfigError` at decoration time naming the offending
       entry. Same for `controllers=`, `agents=`, `workflows=`, `evals=`,
       `exports=`, and `imports=` (with the caveat that `imports=`
       additionally accepts `ForwardRef` sentinels).
-- [ ] Re-decorating a class — `@Module(...) @Module(...) class X: ...` —
+- [x] Re-decorating a class — `@Module(...) @Module(...) class X: ...` —
       raises `ModuleConfigError` referencing the already-decorated class.
       The decorator inspects `__ajolopy_module` on the target before
       stamping.
-- [ ] `_ajolopy_module` is **not** inherited by subclasses: `class B(A): ...`
+- [x] `_ajolopy_module` is **not** inherited by subclasses: `class B(A): ...`
       where `A` is `@Module`-decorated does not gain its parent's module
       metadata. Subclassing is allowed (the decorator returns the class
       unchanged) but subclasses must be re-decorated explicitly to count
       as modules. Verified by `assert getattr(B, "_ajolopy_module", None) is None`.
-- [ ] `CompiledModule` is a frozen dataclass — mutating `compiled.controllers`
+- [x] `CompiledModule` is a frozen dataclass — mutating `compiled.controllers`
       or any other field raises `dataclasses.FrozenInstanceError`.
 
 ### `forwardRef`
 
-- [ ] `forwardRef(lambda: SomeModule)` returns a `ForwardRef` sentinel
+- [x] `forwardRef(lambda: SomeModule)` returns a `ForwardRef` sentinel
       object that `compile_module` recognises.
-- [ ] Calling the thunk during compile yields the module class; the
+- [x] Calling the thunk during compile yields the module class; the
       compiler proceeds as if the thunk's result was in the original
       `imports=` list.
-- [ ] A thunk that returns a non-`@Module` class raises
+- [x] A thunk that returns a non-`@Module` class raises
       `UnresolvedForwardRefError` with the offending object in the
       message.
-- [ ] A thunk that raises an exception surfaces as
+- [x] A thunk that raises an exception surfaces as
       `UnresolvedForwardRefError` with the original exception chained.
 
 ### `compile_module` — happy path
 
-- [ ] `compile_module(AppModule)` returns a `CompiledModule` whose
+- [x] `compile_module(AppModule)` returns a `CompiledModule` whose
       `container` resolves every provider declared anywhere in the graph.
-- [ ] Resolved singletons in the returned container are shared across
+- [x] Resolved singletons in the returned container are shared across
       modules (a service exported by `A` and consumed by `B` is the same
       instance both modules see).
-- [ ] `module_order` lists modules in dependency order (leaves first, root
+- [x] `module_order` lists modules in dependency order (leaves first, root
       last) — leaves of the import graph appear before the modules that
       import them.
-- [ ] `controllers` / `agents` / `workflows` / `evals` are flat lists in
+- [x] `controllers` / `agents` / `workflows` / `evals` are flat lists in
       the order they appear during graph traversal (stable, deterministic).
-- [ ] Passing `compile_module(root, container=custom_container)` populates
+- [x] Passing `compile_module(root, container=custom_container)` populates
       the supplied container instead of creating a fresh one.
 
 ### Visibility
 
-- [ ] Module `A` exports `FooService`; module `B` imports `A`. Compiling a
+- [x] Module `A` exports `FooService`; module `B` imports `A`. Compiling a
       root that uses both succeeds. A provider in `B` whose `__init__`
       takes `FooService` resolves correctly.
-- [ ] Module `A` declares `providers=[FooService, BarService]` and
+- [x] Module `A` declares `providers=[FooService, BarService]` and
       `exports=[FooService]`. Module `B` imports `A`. A provider in `B`
       whose `__init__` takes `BarService` raises `ModuleVisibilityError`
       at compile time with both modules and the offending token in the
       message.
-- [ ] A module imported by two different paths (diamond import) is
+- [x] A module imported by two different paths (diamond import) is
       compiled exactly once; its providers are registered exactly once.
-- [ ] Re-exporting (`exports=[ImportedModule]`) raises `ModuleConfigError`
+- [x] Re-exporting (`exports=[ImportedModule]`) raises `ModuleConfigError`
       at decoration time — only providers may be exported.
 
 ### Global modules
 
-- [ ] `@Module(global_=True, providers=[ConfigService], exports=[ConfigService])`
+- [x] `@Module(global_=True, providers=[ConfigService], exports=[ConfigService])`
       compiled as part of a root graph makes `ConfigService` resolvable
       from every other module without an explicit `imports=` entry.
-- [ ] Providers in a global module that are **not** exported stay private
+- [x] Providers in a global module that are **not** exported stay private
       (consistent with non-global modules).
-- [ ] Two independent global modules do not see each other's
+- [x] Two independent global modules do not see each other's
       non-exported internals.
 
 ### Circular imports
 
-- [ ] Two modules that mutually import each other via
+- [x] Two modules that mutually import each other via
       `forwardRef(lambda: ...)` compile successfully.
-- [ ] Two modules that mutually import each other **without**
+- [x] Two modules that mutually import each other **without**
       `forwardRef` raise `CircularModuleImportError` at compile time,
       with the cycle path in the message.
-- [ ] A module that imports itself (`@Module(imports=[forwardRef(lambda: SelfModule)])`
+- [x] A module that imports itself (`@Module(imports=[forwardRef(lambda: SelfModule)])`
       where the thunk returns `SelfModule` itself) raises
       `CircularModuleImportError` with `SelfModule → SelfModule` in the
       path — self-imports never compile, with or without `forwardRef`.
-- [ ] A `forwardRef` thunk that returns another `forwardRef` raises
+- [x] A `forwardRef` thunk that returns another `forwardRef` raises
       `UnresolvedForwardRefError` — chained forward references are not
       supported (one level only).
 
 ### Duplicate providers
 
-- [ ] If two modules in the same graph declare `providers=[Foo]`, the
+- [x] If two modules in the same graph declare `providers=[Foo]`, the
       compiler raises `DuplicateProviderError` naming both modules.
-- [ ] A provider in a global module that is also listed in a non-global
+- [x] A provider in a global module that is also listed in a non-global
       module's `providers=` raises the same error (no "global wins"
       shortcut).
-- [ ] A class listed both in `providers=[Foo]` and in `controllers=[Foo]`
+- [x] A class listed both in `providers=[Foo]` and in `controllers=[Foo]`
       of the same module is **deduped silently** — the compiler
       registers `Foo` exactly once and includes it in `CompiledModule.controllers`.
       Same dedup applies to `agents=` / `workflows=` / `evals=` overlap
@@ -402,22 +402,22 @@ can transition to `done`.
 
 ### `__init__` resolvability — early check
 
-- [ ] If a provider's `__init__` takes a dependency that is not in its
+- [x] If a provider's `__init__` takes a dependency that is not in its
       module's visibility set (own providers + direct-import exports +
       globals), `compile_module` raises `ModuleVisibilityError` naming
       both the provider and the missing token, **before** any
       `container.resolve()` call is attempted.
-- [ ] The same check skips parameters annotated with HTTP markers
+- [x] The same check skips parameters annotated with HTTP markers
       (`Annotated[T, Body|Query|Param|Header]`) — those are AJ-15's
       domain, not DI; the compiler treats them as runtime-resolved.
 
 ### Error cases — sanity
 
-- [ ] `compile_module(NotAModule)` raises `NotAModuleError`.
-- [ ] `compile_module(EmptyModule)` (empty `@Module()` decorator) returns
+- [x] `compile_module(NotAModule)` raises `NotAModuleError`.
+- [x] `compile_module(EmptyModule)` (empty `@Module()` decorator) returns
       a `CompiledModule` with an empty container and empty lists — no
       crash.
-- [ ] `compile_module(root, container=<already-has-Foo>)` where the
+- [x] `compile_module(root, container=<already-has-Foo>)` where the
       supplied container already has `Foo` registered and `Foo` also
       appears in the module graph raises `DuplicateProviderError` —
       pre-populated containers do not bypass the graph's own dedup
@@ -448,5 +448,88 @@ can transition to `done`.
 
 ## Implementation notes
 
-<!-- Filled during implementation. Capture scope decisions taken at write
-time, edge-case findings, coverage numbers, and any test-only quirks. -->
+- `2026-05-13` — Shipped `src/ajolopy/modules/{decorator,forward_ref,compiler,_introspect,errors,__init__}.py`
+  + `tests/modules/`. All seven open design decisions confirmed by the
+  author before coding (kwargs-only API, dynamic modules post-v0.1,
+  no re-exporting imports, `agents=` / `workflows=` / `evals=` registered
+  as singletons, global modules contribute to a shared visibility set,
+  `forwardRef` resolves at compile time, duplicate providers raise
+  `DuplicateProviderError`). All 37 acceptance items have at least one
+  passing test (54 tests total in `tests/modules/`).
+
+- **Re-decoration check uses `cls.__dict__`, not `getattr`.** A subclass
+  of a `@Module`-decorated class would otherwise inherit
+  `_ajolopy_module` and trip the re-decoration guard even though it is
+  not itself a module. The `__dict__` check is also why
+  `_ajolopy_module` is not inherited by subclasses — the metadata sits
+  on the parent only.
+
+- **`forwardRef` cycle handling is per-edge, not per-pair.** The walker
+  treats each `forwardRef(...)` import edge as deferred only when the
+  target is currently in `state == "visiting"`; the first time we walk
+  through the edge, the target is `"done"` (already cached) and we
+  short-circuit via the regular cache check. This makes
+  `forwardRef(lambda: Foo)` behave identically to `Foo` when there is
+  no cycle to break.
+
+- **Self-imports always raise**, even when wrapped in `forwardRef`.
+  `forwardRef` only breaks cycles between *distinct* modules; a module
+  importing itself is unambiguously a bug (the import would expand its
+  own provider graph into itself). The special case sits before the
+  `state[target] == "visiting"` deferral so it fires deterministically.
+
+- **`Annotated[T, marker]` is silently skipped** by `collect_di_deps`.
+  HTTP markers (Body / Query / Param / Header from AJ-15) carry
+  `__metadata__` on the annotation; we never treat them as DI deps.
+  Other "weird" annotations (unresolvable forward refs, generics that
+  don't resolve to a concrete class, unannotated params) are also
+  skipped — the container's own introspection raises
+  `MissingAnnotationError` at resolve time with a precise message, so
+  the compiler never has to.
+
+- **`__ajolopy_scope__` lookup is forgiving.** If `getattr` returns
+  something that is not a legal `Scope` literal (`"singleton"` /
+  `"request"` / `"transient"`), the compiler falls back to
+  `"singleton"`. This protects against name collisions when other
+  libraries put a `__ajolopy_scope__` attribute on a class for
+  unrelated reasons.
+
+- **Pre-populated containers do not bypass dedup semantics.** If the
+  caller passes a `Container` that already has a token registered, and
+  the same token appears anywhere in the module graph, the compiler
+  raises `DuplicateProviderError`. The escape hatch is "use a module
+  that owns the alternative" — pre-populated containers are for
+  *additional* tokens (e.g. test mocks under a different class), not
+  for shadowing graph-owned ones.
+
+- **`CompiledModule` is a frozen dataclass** with `slots=True`. Both
+  flags are deliberate: callers cannot mutate the result and the
+  attribute set is locked.
+
+- **Re-decoration error semantics — re-applying `@Module` to a class
+  with metadata in its own `__dict__` raises**, but
+  `class Child(ParentModule): pass` does **not** count as
+  re-decoration because the metadata lives on `Parent`, not `Child`.
+  Tested explicitly (`test_metadata_not_inherited_by_subclasses`).
+
+- **Coverage on new code (`src/ajolopy/modules/`)**: `__init__` 100%,
+  `decorator` 100%, `errors` 100%, `forward_ref` 100%, `compiler` 93%,
+  `_introspect` 77%. The uncovered lines in `_introspect` are
+  defensive catches for `inspect.signature` / `typing.get_type_hints`
+  failures that the test suite cannot easily trigger without exotic
+  `__init__` shapes; the container's own `MissingAnnotationError`
+  covers them at the next layer up. `compiler` uncovered lines are a
+  defensive `else` branch and two visited-state shortcuts that the
+  current test set hits via different code paths.
+
+- **Total suite: 672 tests passing** (618 pre-existing + 54 new), 88%
+  global coverage, pyright strict clean, ruff (check + format) clean,
+  `tools/board.py validate` clean.
+
+- **`except TypeError, ValueError` syntax in `_introspect.py`.** Python
+  3.14 accepts unparenthesised tuple in `except` clauses (parsed as an
+  implicit tuple), and `ruff format` strips the parens as canonical
+  style. Looks like Python 2 at a glance but the AST shows it is an
+  exception group; behaviour is identical to
+  `except (TypeError, ValueError):`. Confirmed by parsing the file and
+  catching both error types in a one-liner.
