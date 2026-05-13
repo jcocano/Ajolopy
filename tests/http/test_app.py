@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
+from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Route
 from starlette.testclient import TestClient
@@ -17,7 +18,6 @@ from ajolopy.http import HttpHandlerConfigError, add_route, create_app
 
 if TYPE_CHECKING:
     from starlette.applications import Starlette
-    from starlette.requests import Request
 
 
 # --------------------------------------------------------------------- helpers

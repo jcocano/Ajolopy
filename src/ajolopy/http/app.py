@@ -19,11 +19,14 @@ from starlette.routing import Route
 
 from .errors import HttpHandlerConfigError
 from .filters import DEFAULT_FILTERS, ExceptionFilter, get_catches
+from .introspect import ResolvedParam, extract_raw, introspect_handler
+from .pipes import Pipe, ValidationPipe
 
 if TYPE_CHECKING:
     from starlette.requests import Request
 
 type FilterSpec = ExceptionFilter[Any] | type[ExceptionFilter[Any]]
+_PIPE_STATE_ATTR = "ajolopy_pipe"
 
 _ALLOWED_METHODS: frozenset[str] = frozenset(
     {"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
@@ -43,6 +46,7 @@ def create_app(
     *,
     routes: list[Route] | None = None,
     exception_filters: Sequence[FilterSpec] | None = None,
+    pipe: Pipe | None = None,
 ) -> Starlette:
     """Create a Starlette app wired with the framework's defaults.
 
@@ -53,6 +57,10 @@ def create_app(
     pre-built instances are accepted as well). User filters that
     ``@Catch`` the same class as a default override the default.
 
+    ``pipe=`` swaps in a custom :class:`~ajolopy.http.pipes.Pipe` for the
+    default :class:`~ajolopy.http.pipes.ValidationPipe`; the same pipe is
+    applied to every handler registered via :func:`add_route`.
+
     Pass ``routes=[Route(...)]`` to register additional routes directly
     against Starlette's native API (escape hatch). Use
     :func:`add_route` for routes that should go through the framework's
@@ -61,7 +69,9 @@ def create_app(
     extra_routes: list[Route] = list(routes) if routes is not None else []
     user_specs: Sequence[FilterSpec] = exception_filters if exception_filters is not None else ()
     handlers = _build_exception_handlers(user_specs)
-    return Starlette(routes=extra_routes, exception_handlers=handlers)
+    app = Starlette(routes=extra_routes, exception_handlers=handlers)
+    setattr(app.state, _PIPE_STATE_ATTR, pipe if pipe is not None else ValidationPipe())
+    return app
 
 
 def _build_exception_handlers(
@@ -103,7 +113,9 @@ def add_route(
 
     The handler may be a coroutine function or a sync callable. Sync
     callables are dispatched via :func:`asyncio.to_thread` so they cannot
-    block the event loop.
+    block the event loop. Parameter injection (Body / Query / Param /
+    Header) is resolved from the handler's signature at registration
+    time.
     """
     upper = method.upper()
     if upper not in _ALLOWED_METHODS:
@@ -112,18 +124,37 @@ def add_route(
             f"Unsupported HTTP method {method!r} for handler {name}. "
             f"Allowed: {sorted(_ALLOWED_METHODS)}"
         )
-    endpoint = _build_endpoint(handler)
+    resolved_params = introspect_handler(handler, path)
+    pipe = _get_pipe(app)
+    endpoint = _build_endpoint(handler, resolved_params, pipe)
     app.router.routes.append(Route(path, endpoint, methods=[upper]))
 
 
-def _build_endpoint(handler: Handler) -> Callable[[Request], Awaitable[Response]]:
+def _get_pipe(app: Starlette) -> Pipe:
+    pipe = getattr(app.state, _PIPE_STATE_ATTR, None)
+    if not isinstance(pipe, Pipe):
+        # Apps not built via ``create_app`` (e.g. tests) get the default.
+        pipe = ValidationPipe()
+        setattr(app.state, _PIPE_STATE_ATTR, pipe)
+    return pipe
+
+
+def _build_endpoint(
+    handler: Handler,
+    resolved_params: list[ResolvedParam],
+    pipe: Pipe,
+) -> Callable[[Request], Awaitable[Response]]:
     is_async = inspect.iscoroutinefunction(handler)
 
     async def endpoint(request: Request) -> Response:
+        kwargs: dict[str, Any] = {}
+        for rp in resolved_params:
+            raw = await extract_raw(request, rp)
+            kwargs[rp.name] = await pipe.transform(raw, param=rp)
         if is_async:
-            result = await handler(request)
+            result = await handler(**kwargs)
         else:
-            result = await asyncio.to_thread(handler, request)
+            result = await asyncio.to_thread(handler, **kwargs)
         return _serialise_response(result)
 
     return endpoint

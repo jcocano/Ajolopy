@@ -1,11 +1,12 @@
 """Tests for class-based exception filters and the default filter pipeline."""
 
 import logging
-from typing import TYPE_CHECKING, override
+from typing import override
 
 import pytest
 from pydantic import BaseModel
-from starlette.responses import JSONResponse
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
 from starlette.testclient import TestClient
 
 from ajolopy.http import (
@@ -18,11 +19,6 @@ from ajolopy.http import (
     add_route,
     create_app,
 )
-
-if TYPE_CHECKING:
-    from starlette.requests import Request
-    from starlette.responses import Response
-
 
 # --------------------------------------------------------------------- defaults
 

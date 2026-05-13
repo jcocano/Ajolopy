@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
+from starlette.requests import Request
 from starlette.responses import PlainTextResponse, StreamingResponse
 from starlette.testclient import TestClient
 
