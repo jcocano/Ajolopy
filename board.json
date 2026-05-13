@@ -248,7 +248,7 @@
       "slug": "injectable",
       "type": "feature",
       "title": "@Injectable decorator (provider registration)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -257,7 +257,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/injectable",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/37",
       "spec": "specs/injectable.md",
       "blocks": [
         "AJ-10"
@@ -269,7 +269,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-13",
-      "closed_at": null
+      "closed_at": "2026-05-13"
     },
     {
       "id": "AJ-10",
@@ -1574,7 +1574,7 @@
       "slug": "gemini-cache-config",
       "type": "feature",
       "title": "Configurable cache lifecycle for Gemini (default-off escape hatch)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1583,7 +1583,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/gemini-cache-config",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/38",
       "spec": "specs/gemini-cache-config.md",
       "blocks": [],
       "blocked_by": [
@@ -1592,7 +1592,7 @@
       "estimate": null,
       "created_at": "2026-05-13",
       "updated_at": "2026-05-13",
-      "closed_at": null
+      "closed_at": "2026-05-13"
     },
     {
       "id": "AJ-59",
