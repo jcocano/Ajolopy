@@ -1112,15 +1112,15 @@
       "slug": "dockerfile-template",
       "type": "feature",
       "title": "Dockerfile multi-stage template (deps/development/production) + docker-compose generator",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "deploy",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/dockerfile-template",
       "pr": null,
       "spec": "specs/dockerfile-template.md",
       "blocks": [
