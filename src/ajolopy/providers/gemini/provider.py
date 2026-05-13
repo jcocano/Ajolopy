@@ -2,10 +2,18 @@
 
 Bridges the framework's provider-agnostic wire types to Google's native
 Gemini API via the official ``google-genai`` Python SDK. The implementation
-deliberately keeps the surface narrow: features that need framework-wide
-buy-in (multimodal inputs, grounding / Google Search retrieval, Vertex AI
-specific knobs, the explicit ``cachedContent`` resource lifecycle) are
-deferred until they land as separate board items.
+keeps the surface narrow on top: multimodal inputs, grounding / Google
+Search retrieval and Vertex AI specific knobs stay deferred to later
+board items.
+
+AJ-58 adds an opt-in Context Caching lifecycle on top of AJ-21's
+baseline. The provider is constructed with six caching kwargs (all
+defaulted to a no-op posture so AJ-21's behaviour is preserved); flipping
+``cache_strategy="auto"`` activates create / reuse / recreate-on-expired
+/ delete-on-close around the existing ``complete()`` / ``stream()``
+paths. The lifecycle helpers (``CacheRegistry``, ``prefix_hash_cache_key``,
+the cache-related literal types) live in :mod:`ajolopy.providers.gemini.cache`
+so this module stays focused on SDK wiring.
 
 Wire-level conversion helpers (messages, tools, response decoding,
 streaming events) live inline in this module rather than in a shared file:
@@ -36,10 +44,26 @@ from ajolopy.providers.types import (
     ToolCallDelta,
 )
 
-from .errors import GeminiConfigError, GeminiProviderError
+from .cache import (
+    CacheCleanup,
+    CacheKeyStrategy,
+    CacheOnExpired,
+    CacheRegistry,
+    CacheStrategy,
+    prefix_hash_cache_key,
+)
+from .errors import (
+    GeminiCacheCreateError,
+    GeminiCacheError,
+    GeminiCacheExpiredError,
+    GeminiCacheMinTokensError,
+    GeminiConfigError,
+    GeminiProviderError,
+)
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator
+    from collections.abc import AsyncIterator, Callable
+    from types import TracebackType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +93,21 @@ _RETRIABLE_SDK_EXCEPTIONS: tuple[type[BaseException], ...] = (
     genai_errors.ServerError,
     genai_errors.UnknownApiResponseError,
 )
+
+
+def _is_not_found(exc: BaseException) -> bool:
+    """Whether an SDK exception represents a 404 referencing a missing resource.
+
+    Used by the cache-expiry detour: when a ``generate_content`` call
+    references a ``cached_content`` whose TTL has elapsed, the SDK
+    surfaces a 404 ``APIError``. We probe the integer ``code`` attribute
+    rather than relying on the SDK exception class hierarchy because
+    ``APIError`` is the shared base for both client and server families
+    and the AJ-21 mocks construct it directly.
+    """
+    code = getattr(exc, "code", None)
+    return code == 404
+
 
 # Gemini emits a richer ``FinishReason`` enum than the framework's
 # normalised :data:`FinishReason` literal. Map the values we care about
@@ -141,6 +180,24 @@ def _estimate_tokens(text: str) -> int:
     return max(1, len(text) // 4)
 
 
+def _first_user_content(messages: list[Message]) -> str:
+    """Return the first ``user`` message's content, or an empty string.
+
+    Used to mirror ``prefix_hash_cache_key`` for the minimum-tokens gate:
+    the framework counts tokens over the same prefix the default key
+    strategy hashes, so the gate stays consistent with the cache identity.
+    """
+    for msg in messages:
+        if msg.role == "user":
+            return msg.content
+    return ""
+
+
+def _describe_callable(fn: Callable[..., Any]) -> str:
+    """Best-effort string name for a callable, for error messages."""
+    return getattr(fn, "__qualname__", None) or getattr(fn, "__name__", None) or repr(fn)
+
+
 class GeminiProvider(LLMProvider):
     """``LLMProvider`` backed by the official ``google-genai`` Python SDK.
 
@@ -160,21 +217,48 @@ class GeminiProvider(LLMProvider):
         *,
         api_key: str | None = None,
         client: genai.Client | None = None,
+        # AJ-58 — Context Caching lifecycle. Defaults to ``"off"`` so the
+        # provider behaves identically to AJ-21's release; the opt-in
+        # surface is a single kwarg flip plus optional per-knob overrides.
+        cache_strategy: CacheStrategy = "off",
+        cache_ttl_seconds: int = 3600,
+        cache_min_tokens: int = 1024,
+        cache_key_strategy: CacheKeyStrategy = "prefix_hash",
+        cache_on_expired: CacheOnExpired = "recreate",
+        cache_cleanup: CacheCleanup = "on_provider_close",
     ) -> None:
+        # Validate the numeric knobs up front so misconfiguration surfaces
+        # at construction time rather than on the first cache-eligible call.
+        if cache_ttl_seconds <= 0:
+            raise ValueError(
+                f"cache_ttl_seconds must be a positive integer; got {cache_ttl_seconds!r}."
+            )
+        if cache_min_tokens <= 0:
+            raise ValueError(
+                f"cache_min_tokens must be a positive integer; got {cache_min_tokens!r}."
+            )
+
         if client is not None:
             self._client = client
-            return
-        if api_key is not None:
+        elif api_key is not None:
             self._client = genai.Client(api_key=api_key)
-            return
-        # Fall back to env var. ``genai.Client()`` reads it itself but its
-        # error surfaces only on the first request; check up front so the
-        # framework bootstrap fails before a single call is made.
-        if not os.environ.get("GEMINI_API_KEY"):
-            raise GeminiConfigError(
-                "GEMINI_API_KEY missing — pass api_key=, client=, or set the env var."
-            )
-        self._client = genai.Client()
+        else:
+            # Fall back to env var. ``genai.Client()`` reads it itself but
+            # its error surfaces only on the first request; check up front
+            # so the framework bootstrap fails before a single call is made.
+            if not os.environ.get("GEMINI_API_KEY"):
+                raise GeminiConfigError(
+                    "GEMINI_API_KEY missing — pass api_key=, client=, or set the env var."
+                )
+            self._client = genai.Client()
+
+        self._cache_strategy: CacheStrategy = cache_strategy
+        self._cache_ttl_seconds = cache_ttl_seconds
+        self._cache_min_tokens = cache_min_tokens
+        self._cache_key_strategy: CacheKeyStrategy = cache_key_strategy
+        self._cache_on_expired: CacheOnExpired = cache_on_expired
+        self._cache_cleanup: CacheCleanup = cache_cleanup
+        self._cache_registry = CacheRegistry()
 
     @property
     def client(self) -> genai.Client:
@@ -193,6 +277,18 @@ class GeminiProvider(LLMProvider):
         """
         return cast("Any", self._client.aio.models)
 
+    @property
+    def _aio_caches(self) -> Any:
+        """Return ``client.aio.caches`` cast to ``Any``.
+
+        Parallel to :pyattr:`_aio_models` — the cache-resource endpoints
+        carry the same untyped ``ContentListUnion`` shape on
+        ``CreateCachedContentConfig`` that pyright cannot narrow. The
+        cast keeps the cache lifecycle code path readable; the tech-debt
+        ticket on the wider typing situation lives in AJ-59.
+        """
+        return cast("Any", self._client.aio.caches)
+
     @override
     async def complete(
         self,
@@ -204,20 +300,32 @@ class GeminiProvider(LLMProvider):
         max_tokens: int | None = None,
         cache: bool = False,
     ) -> Response:
-        # Gemini's prompt caching uses a stateful cachedContent resource
-        # lifecycle that does not map cleanly onto a stateless ``cache: bool``
-        # flag; ``cache=True`` is therefore a documented no-op and
-        # ``supports_prompt_caching()`` honestly returns ``False``. The full
-        # lifecycle lives in AJ-58. The unused assignment makes the intent
-        # explicit to readers and pyright.
-        _ = cache
+        # When the caller did NOT opt into the AJ-58 caching lifecycle the
+        # ``cache`` flag stays a documented no-op (matches AJ-21's release).
+        # Flipping ``cache_strategy="auto"`` plus ``cache=True`` activates
+        # the lifecycle: derive a key, create-or-reuse the server-side
+        # cache resource, and reference it via ``cached_content``.
         self._ensure_gemini_model(model)
         system_instruction, contents = self._convert_messages(messages)
+
+        cache_active = cache and self._cache_strategy == "auto"
+        cache_key: str | None = None
+        cache_name: str | None = None
+        if cache_active:
+            cache_key = self._derive_cache_key(messages, system_instruction)
+            cache_name = await self._resolve_cache_name(
+                cache_key=cache_key,
+                model=model,
+                messages=messages,
+                system_instruction=system_instruction,
+            )
+
         config = self._build_config(
             system_instruction=system_instruction,
             tools=tools,
             temperature=temperature,
             max_tokens=max_tokens,
+            cached_content=cache_name,
         )
         kwargs: dict[str, Any] = {"model": model, "contents": contents}
         if config is not None:
@@ -226,6 +334,46 @@ class GeminiProvider(LLMProvider):
         try:
             raw: Any = await self._aio_models.generate_content(**kwargs)
         except _RETRIABLE_SDK_EXCEPTIONS as exc:
+            # Cache-expiry detour. A 404 referencing the cached content
+            # means the TTL elapsed between create and the second call.
+            # ``recreate``: drop the stale name, build a fresh cache,
+            # retry once. ``error``: surface a typed cache-expiry error.
+            if (
+                cache_active
+                and cache_key is not None
+                and cache_name is not None
+                and _is_not_found(exc)
+            ):
+                if self._cache_on_expired == "error":
+                    raise GeminiCacheExpiredError(
+                        f"Gemini cache {cache_name!r} expired; "
+                        "set cache_on_expired='recreate' or retry as a fresh call."
+                    ) from exc
+                _LOGGER.info("Gemini cache %r expired; recreating transparently.", cache_name)
+                self._cache_registry.drop_name(cache_key, cache_name)
+                new_name = await self._create_cache(
+                    model=model,
+                    messages=messages,
+                    system_instruction=system_instruction,
+                )
+                self._cache_registry.register(cache_key, new_name)
+                retry_config = self._build_config(
+                    system_instruction=system_instruction,
+                    tools=tools,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    cached_content=new_name,
+                )
+                retry_kwargs: dict[str, Any] = {"model": model, "contents": contents}
+                if retry_config is not None:
+                    retry_kwargs["config"] = retry_config
+                try:
+                    raw = await self._aio_models.generate_content(**retry_kwargs)
+                except _RETRIABLE_SDK_EXCEPTIONS as retry_exc:
+                    raise GeminiProviderError(
+                        f"Gemini SDK error during complete() after cache recreate: {retry_exc}"
+                    ) from retry_exc
+                return self._convert_response(raw)
             raise GeminiProviderError(f"Gemini SDK error during complete(): {exc}") from exc
 
         return self._convert_response(raw)
@@ -241,29 +389,42 @@ class GeminiProvider(LLMProvider):
         max_tokens: int | None = None,
         cache: bool = False,
     ) -> AsyncIterator[Chunk]:
-        # Cache flag is a no-op — see ``complete()`` for the rationale.
-        _ = cache
-        # Build kwargs eagerly so configuration errors raise before any
+        # Validate eagerly so configuration errors raise before any
         # generator is created (mirrors AJ-19's pattern).
         self._ensure_gemini_model(model)
         system_instruction, contents = self._convert_messages(messages)
-        config = self._build_config(
-            system_instruction=system_instruction,
-            tools=tools,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        kwargs: dict[str, Any] = {"model": model, "contents": contents}
-        if config is not None:
-            kwargs["config"] = config
-
-        aio_models = self._aio_models
+        cache_active = cache and self._cache_strategy == "auto"
+        # When caching is active we derive the key eagerly so the spec's
+        # error-on-derive cases (custom callable raising or returning a
+        # falsy value) surface before the iterator is awaited. The
+        # streaming path never replays on 404 — see the spec's "Expiry
+        # handling" section for why ``cache_on_expired`` does not apply.
+        cache_key = self._derive_cache_key(messages, system_instruction) if cache_active else None
 
         async def _generator() -> AsyncIterator[Chunk]:
+            cache_name: str | None = None
+            if cache_active and cache_key is not None:
+                cache_name = await self._resolve_cache_name(
+                    cache_key=cache_key,
+                    model=model,
+                    messages=messages,
+                    system_instruction=system_instruction,
+                )
+            config = self._build_config(
+                system_instruction=system_instruction,
+                tools=tools,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                cached_content=cache_name,
+            )
+            kwargs: dict[str, Any] = {"model": model, "contents": contents}
+            if config is not None:
+                kwargs["config"] = config
+
             sdk_stream: Any = None
             terminated = False
             try:
-                sdk_stream = aio_models.generate_content_stream(**kwargs)
+                sdk_stream = self._aio_models.generate_content_stream(**kwargs)
                 # The SDK may return either a coroutine that resolves to an
                 # async iterator, or the iterator directly. Await if needed.
                 if hasattr(sdk_stream, "__await__"):
@@ -276,6 +437,21 @@ class GeminiProvider(LLMProvider):
                         if terminated:
                             return
             except _RETRIABLE_SDK_EXCEPTIONS as exc:
+                # Streaming + cache expiry: surface a typed cache-expiry
+                # error regardless of ``cache_on_expired``. Recreate is
+                # not possible without buffering the full output — see
+                # the spec's "Expiry handling" section for the rationale.
+                if (
+                    cache_active
+                    and cache_key is not None
+                    and cache_name is not None
+                    and _is_not_found(exc)
+                ):
+                    self._cache_registry.drop_name(cache_key, cache_name)
+                    raise GeminiCacheExpiredError(
+                        f"Gemini cache {cache_name!r} expired mid-stream; "
+                        "retry the request as a fresh call (streaming cannot replay)."
+                    ) from exc
                 raise GeminiProviderError(f"Gemini SDK error during stream(): {exc}") from exc
             finally:
                 # Best-effort: close the underlying iterator on early exit so
@@ -362,15 +538,182 @@ class GeminiProvider(LLMProvider):
 
     @override
     def supports_prompt_caching(self) -> bool:
-        # Gemini's prompt caching requires an explicit ``cachedContent``
-        # lifecycle that does not fit the stateless ``cache: bool`` flag
-        # shared across providers. Honestly advertise ``False``; the full
-        # lifecycle lives in AJ-58.
-        return False
+        # AJ-58: honestly reflect the per-instance state of the cache
+        # lifecycle. ``cache_strategy="off"`` (default, AJ-21-compatible)
+        # advertises ``False`` so the framework / @Agent does not pass
+        # ``cache=True`` on the wire. ``"auto"`` flips it to ``True``.
+        return self._cache_strategy == "auto"
 
     @override
     def supports_tool_calling(self) -> bool:
         return True
+
+    # ------------------------------------------------------------------
+    # AJ-58 — cache lifecycle (opt-in via ``cache_strategy="auto"``)
+    # ------------------------------------------------------------------
+
+    async def aclose(self) -> None:
+        """Release the provider's transient state.
+
+        When ``cache_cleanup="on_provider_close"`` (the default) every
+        tracked cache name is best-effort deleted on the server. Other
+        cleanup is best-effort too — a single ``caches.delete`` failure
+        does not abort the shutdown. ``manual`` mode leaves cache names
+        in the registry for the caller to clean up explicitly.
+
+        Idempotent: calling twice is a no-op once the registry has been
+        cleared. Concurrent calls observe whatever is in the registry
+        at the moment of the snapshot; caches registered afterwards by
+        an in-flight ``complete()`` survive until garbage collection.
+
+        Provider-specific in v0.1: the ``LLMProvider`` ABC does not
+        declare ``aclose()`` because only Gemini owns server-side state
+        the framework opts to manage. Promote to the ABC in a future
+        item if a generalised shutdown protocol is needed.
+        """
+        if self._cache_cleanup != "on_provider_close":
+            return
+        snapshot = self._cache_registry.snapshot()
+        if not snapshot:
+            return
+        # Take a snapshot then clear the registry up-front so re-entrant
+        # ``aclose()`` calls (idempotency) immediately become no-ops.
+        self._cache_registry.clear()
+        aio_caches = self._aio_caches
+        for _key, name in snapshot:
+            try:
+                await aio_caches.delete(name=name)
+            except Exception as exc:
+                # Server-side caches expire naturally; a 404 / 5xx on
+                # delete is not actionable during shutdown. Log and move
+                # on so the remaining names still get a delete attempt.
+                _LOGGER.warning(
+                    "Gemini cache delete %r failed during shutdown (%s); ignoring.",
+                    name,
+                    exc,
+                )
+
+    async def __aenter__(self) -> GeminiProvider:
+        """Make the provider usable as an async context manager."""
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        # Suppress nothing: we always return ``None`` (and the implicit
+        # falsy return) so exceptions propagate. The kwargs are unused
+        # in the cleanup logic itself but match the protocol's contract.
+        _ = (exc_type, exc_value, traceback)
+        await self.aclose()
+
+    def _derive_cache_key(
+        self,
+        messages: list[Message],
+        system_instruction: str | None,
+    ) -> str:
+        """Derive the cache key for a request using the configured strategy.
+
+        ``"prefix_hash"`` (default) uses the built-in SHA-256 prefix hash.
+        A ``Callable`` is invoked with ``(messages, system_instruction)``
+        and its return value is used verbatim. Wrap callable failures as
+        ``GeminiCacheError`` and refuse empty / falsy return values —
+        empty cache keys collide silently in the registry.
+        """
+        strategy = self._cache_key_strategy
+        if strategy == "prefix_hash":
+            return prefix_hash_cache_key(messages, system_instruction)
+        if callable(strategy):
+            try:
+                derived = strategy(messages, system_instruction)
+            except Exception as exc:
+                raise GeminiCacheError(
+                    f"Custom cache_key_strategy {_describe_callable(strategy)} "
+                    f"raised {type(exc).__name__}: {exc}"
+                ) from exc
+            if not derived:
+                raise GeminiCacheError(
+                    f"Custom cache_key_strategy {_describe_callable(strategy)} "
+                    f"returned falsy value {derived!r}; cache keys must be non-empty strings."
+                )
+            return derived
+        # Defence-in-depth — should be unreachable thanks to the literal
+        # type annotation. Surface a typed error rather than crashing.
+        raise GeminiCacheError(
+            f"Unrecognised cache_key_strategy {strategy!r}; expected 'prefix_hash' or a callable."
+        )
+
+    async def _resolve_cache_name(
+        self,
+        *,
+        cache_key: str,
+        model: str,
+        messages: list[Message],
+        system_instruction: str | None,
+    ) -> str:
+        """Return the cache name to reference on the upcoming SDK call.
+
+        Reuses an existing entry from the registry if present, otherwise
+        gates on ``cache_min_tokens`` and creates a fresh cache. The
+        token-minimum check fires *before* any ``caches.create`` SDK call
+        so callers see a typed framework error instead of paying for a
+        wasted server-side resource.
+        """
+        existing = self._cache_registry.latest(cache_key)
+        if existing is not None:
+            return existing
+        # No existing cache — gate on minimum tokens first.
+        text_for_count = (system_instruction or "") + "\n\n" + _first_user_content(messages)
+        token_count = self.count_tokens(model=model, text=text_for_count)
+        if token_count < self._cache_min_tokens:
+            raise GeminiCacheMinTokensError(
+                f"Gemini cache_min_tokens={self._cache_min_tokens} not met "
+                f"(got ~{token_count} tokens); shorten the prompt, override "
+                f"cache_min_tokens at construction, or call with cache=False."
+            )
+        name = await self._create_cache(
+            model=model,
+            messages=messages,
+            system_instruction=system_instruction,
+        )
+        self._cache_registry.register(cache_key, name)
+        return name
+
+    async def _create_cache(
+        self,
+        *,
+        model: str,
+        messages: list[Message],
+        system_instruction: str | None,
+    ) -> str:
+        """Issue a ``caches.create`` SDK call and return the server-assigned name.
+
+        Wraps ``CreateCachedContentConfig`` from the SDK with the contents
+        we want cached (the framework-converted messages, minus any
+        ``tool``-role parts which are conversation-turn payloads not
+        suited for caching) and the configured TTL as a duration string.
+        """
+        _system, contents = self._convert_messages(messages)
+        ttl = f"{self._cache_ttl_seconds}s"
+        config = genai_types.CreateCachedContentConfig(
+            ttl=ttl,
+            system_instruction=system_instruction,
+            contents=contents,
+        )
+        try:
+            created: Any = await self._aio_caches.create(model=model, config=config)
+        except Exception as exc:
+            raise GeminiCacheCreateError(
+                f"Gemini caches.create failed for model={model!r}: {exc}"
+            ) from exc
+        name = getattr(created, "name", None)
+        if not isinstance(name, str) or not name:
+            raise GeminiCacheCreateError(
+                f"Gemini caches.create returned no usable cache name (got {name!r})."
+            )
+        return name
 
     # ------------------------------------------------------------------
     # internal helpers
@@ -499,13 +842,21 @@ class GeminiProvider(LLMProvider):
         tools: list[Tool] | None,
         temperature: float | None,
         max_tokens: int | None,
+        cached_content: str | None = None,
     ) -> genai_types.GenerateContentConfig | None:
         """Assemble a ``GenerateContentConfig`` from the optional knobs.
 
         Returns ``None`` when none of the knobs are set so the SDK call
-        stays terse for the simple path.
+        stays terse for the simple path. ``cached_content`` carries the
+        server-assigned cache name produced by AJ-58's lifecycle.
         """
-        if system_instruction is None and not tools and temperature is None and max_tokens is None:
+        if (
+            system_instruction is None
+            and not tools
+            and temperature is None
+            and max_tokens is None
+            and cached_content is None
+        ):
             return None
         kwargs: dict[str, Any] = {}
         if system_instruction is not None:
@@ -516,6 +867,8 @@ class GeminiProvider(LLMProvider):
             kwargs["temperature"] = temperature
         if max_tokens is not None:
             kwargs["max_output_tokens"] = max_tokens
+        if cached_content is not None:
+            kwargs["cached_content"] = cached_content
         return genai_types.GenerateContentConfig(**kwargs)
 
     @staticmethod
