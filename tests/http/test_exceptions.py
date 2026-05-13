@@ -70,8 +70,14 @@ def test_user_can_define_custom_subclass_with_class_level_status():
 
 
 def test_subclass_raised_is_catchable_as_base():
-    with pytest.raises(HttpException) as info:
+    def _raise_not_found() -> None:
         raise NotFoundException("x")
+
+    # Wrapping the ``raise`` in a helper keeps CodeQL's flow analysis happy:
+    # it does not model ``pytest.raises`` as catching, so a bare ``raise``
+    # directly inside the ``with`` body trips its "unreachable code" check.
+    with pytest.raises(HttpException) as info:
+        _raise_not_found()
 
     assert info.value.status == 404
 
