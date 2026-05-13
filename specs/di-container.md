@@ -205,99 +205,99 @@ can transition to `done`.
 
 ### Registration
 
-- [ ] `Container().register(MyService)` defaults scope to `"singleton"`.
-- [ ] `register(MyService, scope="transient")` and `scope="request"`
+- [x] `Container().register(MyService)` defaults scope to `"singleton"`.
+- [x] `register(MyService, scope="transient")` and `scope="request"`
       both succeed; later `resolve()` honours the scope.
-- [ ] `register(MyService, scope="invalid")` raises
+- [x] `register(MyService, scope="invalid")` raises
       `ContainerConfigError` listing the three legal scopes.
-- [ ] `register(MyService, instance=obj)` stores `obj` and bypasses
+- [x] `register(MyService, instance=obj)` stores `obj` and bypasses
       `__init__` introspection.
-- [ ] `register(MyService, instance=obj, scope="transient")` raises
+- [x] `register(MyService, instance=obj, scope="transient")` raises
       `ContainerConfigError` (instance providers are inherently
       singletons).
-- [ ] `register(MyService, factory=lambda c: MyService(...))`
+- [x] `register(MyService, factory=lambda c: MyService(...))`
       registers the factory; the factory is not called until
       `resolve()`.
-- [ ] `register(MyService, factory=..., instance=...)` raises
+- [x] `register(MyService, factory=..., instance=...)` raises
       `ContainerConfigError` (mutually exclusive).
-- [ ] Re-registering the same token raises `ContainerConfigError`
+- [x] Re-registering the same token raises `ContainerConfigError`
       unless `overwrite=True` is passed. (The kwarg lives on
       `register`; default is `False`.)
-- [ ] `is_registered(MyService)` and `MyService in container` both
+- [x] `is_registered(MyService)` and `MyService in container` both
       return the right boolean.
 
 ### Resolution — singleton
 
-- [ ] `resolve(DatabaseService)` returns an instance.
-- [ ] Two `resolve()` calls return the same instance.
-- [ ] `resolve(TicketService)` whose `__init__` takes
+- [x] `resolve(DatabaseService)` returns an instance.
+- [x] Two `resolve()` calls return the same instance.
+- [x] `resolve(TicketService)` whose `__init__` takes
       `(orders: OrderRepository, cache: CacheService)` builds the
       dependencies recursively and passes them positionally.
-- [ ] Re-resolving the same singleton from two different request
+- [x] Re-resolving the same singleton from two different request
       scopes still returns the same instance.
 
 ### Resolution — transient
 
-- [ ] Two `resolve()` calls return two distinct instances.
-- [ ] A transient dependency injected into a singleton is **frozen**
+- [x] Two `resolve()` calls return two distinct instances.
+- [x] A transient dependency injected into a singleton is **frozen**
       at the singleton's first resolution (the singleton holds one
       copy of the transient). The test makes this explicit so future
       readers don't expect "transient cascades into singletons".
 
 ### Resolution — request
 
-- [ ] `resolve(RequestContext)` outside any `request_scope()` raises
+- [x] `resolve(RequestContext)` outside any `request_scope()` raises
       `OutOfScopeError` referencing the scope name.
-- [ ] Inside a `with container.request_scope():` block, two
+- [x] Inside a `with container.request_scope():` block, two
       `resolve()` calls return the same instance.
-- [ ] Two **sequential** `request_scope()` blocks produce two
+- [x] Two **sequential** `request_scope()` blocks produce two
       distinct request-scoped instances (the scope is freshly
       pushed each time).
-- [ ] Two **concurrent** `asyncio.Task`s under
+- [x] Two **concurrent** `asyncio.Task`s under
       `async_request_scope()` see independent request-scoped
       instances (verified via `asyncio.gather` + assert IDs differ).
-- [ ] A request-scoped service injected into a singleton service
+- [x] A request-scoped service injected into a singleton service
       resolved *outside* a request scope raises `OutOfScopeError`
       with a message naming both services. (Singletons can only
       depend on singletons.)
 
 ### Resolution — errors
 
-- [ ] `resolve(UnregisteredClass)` raises
+- [x] `resolve(UnregisteredClass)` raises
       `ProviderNotRegisteredError` naming the class.
-- [ ] A circular dependency `A → B → A` raises
+- [x] A circular dependency `A → B → A` raises
       `CircularDependencyError`; the message includes the full path.
-- [ ] A class whose `__init__` declares a parameter without a type
+- [x] A class whose `__init__` declares a parameter without a type
       hint raises `MissingAnnotationError` at resolution time naming
       the parameter and the class.
-- [ ] A class whose `__init__` declares a parameter whose annotation
+- [x] A class whose `__init__` declares a parameter whose annotation
       resolves to a class the container can't introspect (e.g.
       `Annotated[str, ...]` without a marker) raises
       `MissingAnnotationError` with a hint about using a marker.
-- [ ] An unresolvable forward-reference annotation
+- [x] An unresolvable forward-reference annotation
       (`__init__(self, dep: "DefinedLater")` where `DefinedLater`
       is never reachable from the class's module) raises
       `MissingAnnotationError`.
 
 ### Resolution — singleton thread safety
 
-- [ ] Two threads racing to resolve the same singleton end up with
+- [x] Two threads racing to resolve the same singleton end up with
       the same instance, and `__init__` runs exactly once. Verified
       with a class whose `__init__` increments a class-level counter
       under a brief `time.sleep` to widen the race window.
 
 ### Lifecycle support hooks for AJ-13
 
-- [ ] `container.iter_singletons()` yields each cached singleton
+- [x] `container.iter_singletons()` yields each cached singleton
       instance in the order it was first resolved. (AJ-13 will use
       this to fire `on_module_init` and `on_app_shutdown`.)
-- [ ] `container.iter_singletons()` is safe to call when no
+- [x] `container.iter_singletons()` is safe to call when no
       singletons have been resolved yet (yields zero items).
 
 ### Programmatic surface — sanity
 
-- [ ] `Container()` constructs without args.
-- [ ] `Container()` constructed in two different tests does not
+- [x] `Container()` constructs without args.
+- [x] `Container()` constructed in two different tests does not
       share state (no module-level globals leak between containers).
 
 ## Implementation pointers
@@ -320,4 +320,50 @@ can transition to `done`.
 
 ## Implementation notes
 
-_Populated as the item is implemented._
+- `2026-05-12` — Shipped `src/ajolopy/di/{container,errors,_introspect,__init__}.py`
+  + `tests/di/`. Scope decisions taken during implementation:
+  - **All four open design decisions confirmed before coding** (user-approved):
+    `@Injectable` stays in AJ-9, `forwardRef` belongs to AJ-8,
+    request scope is `contextvars`-only (no thread-local fallback),
+    `register(factory=...)` receives only the container.
+  - **`Annotated` annotations rejected outright.** The container raises
+    `MissingAnnotationError` whenever a parameter is annotated as
+    `Annotated[T, ...]`, including `Annotated[Service, ...]` — the marker
+    pattern belongs to AJ-15's HTTP layer, not DI. This avoids guessing
+    which markers (Body/Query/Param/Header) the container should
+    "understand". When `@Injectable` lands (AJ-9), service annotations
+    will use plain class hints.
+  - **PEP 649 quirk in tests.** The `test_unreachable_forward_reference_raises`
+    case relies on a string annotation (`dep: "DefinedNowhere"`) to
+    survive `inspect.signature()` collection time. Python 3.14 evaluates
+    annotations lazily on `__annotations__` access; ruff's `UP037`
+    (remove-quotes) would unquote it but the resulting `__annotate__`
+    function fires during pytest collection. The test file carries an
+    inline `# noqa: F821, UP037` with an explanatory comment.
+  - **`Callable` / `Iterator` / `Generator` / `AsyncGenerator` stay at
+    runtime.** Ruff's `TC003` would move them to `TYPE_CHECKING`, but
+    dataclass and `@contextmanager` machinery evaluates these
+    annotations at runtime under PEP 649. A single `# noqa: TC003` on
+    the import covers the whole tuple.
+  - **`AsyncGenerator[None]` for `@asynccontextmanager`.** Python 3.14's
+    typing module deprecates `AsyncIterator[T]` as the documented
+    return type — pyright warns. Switched to `AsyncGenerator[None]`
+    which is the new idiom.
+  - **Singletons get a per-token build lock** allocated under a tiny
+    global lock, so two threads racing on `resolve(Foo)` block on
+    Foo's lock without serialising every other resolution. Verified
+    by `test_singleton_init_runs_exactly_once_under_thread_race`.
+  - **Singleton-on-request enforced eagerly.** If a singleton's
+    `__init__` declares a request-scoped dependency, the container
+    raises `OutOfScopeError` *even when* the build happens inside an
+    active request scope. Singletons cannot capture per-request state;
+    catching this at build time avoids a stealth-bug lifecycle issue.
+  - **Resolution stack uses a `ContextVar`.** Cycle detection sees
+    the in-flight resolves of the current coroutine / thread without
+    contaminating concurrent tasks. Each `Container` instance has its
+    own `ContextVar` (named with `id(self):x`) so two containers in
+    the same test do not share state.
+  - **Coverage of new code.** `src/ajolopy/di/`: `__init__` 100%,
+    `errors` 100%, `container` 99% (one defensive `_introspect.py`
+    fallback uncovered, two on `_introspect`'s edge cases). Total
+    suite: 489 tests passing (33 new + 456 pre-existing).
