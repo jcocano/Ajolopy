@@ -60,13 +60,15 @@ def _validate_scope(scope: object) -> Scope:
 
 
 @overload
-def Injectable(cls: type, /) -> type: ...  # bare: ``@Injectable``
+def Injectable(cls: type, /) -> type:
+    """Bare form — applies the decorator directly to a class with default
+    ``"singleton"`` scope. Returns the decorated class."""
 
 
 @overload
-def Injectable(
-    *, scope: Scope = "singleton"
-) -> Callable[[type], type]: ...  # parameterised: ``@Injectable(scope=...)``
+def Injectable(*, scope: Scope = "singleton") -> Callable[[type], type]:
+    """Parameterised form — ``@Injectable(scope="...")`` returns the actual
+    decorator, which is then applied to the target class."""
 
 
 def Injectable(  # noqa: N802 — Brief locks the decorator name as ``Injectable``
