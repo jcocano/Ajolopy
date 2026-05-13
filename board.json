@@ -77,7 +77,7 @@
       "slug": "stream",
       "type": "feature",
       "title": "@Stream decorator (SSE on @Agent and @Workflow)",
-      "status": "backlog",
+      "status": "ready",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -87,7 +87,7 @@
       "owner": null,
       "branch": null,
       "pr": null,
-      "spec": null,
+      "spec": "specs/stream.md",
       "blocks": [
         "AJ-48",
         "AJ-54"
