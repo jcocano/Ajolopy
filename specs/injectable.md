@@ -189,32 +189,32 @@ can transition to `done`.
 
 ### Bare-decorator form
 
-- [ ] `@Injectable` (no parens) on a class stamps
+- [x] `@Injectable` (no parens) on a class stamps
       `__ajolopy_scope__ = "singleton"` and returns the class
       unchanged.
-- [ ] The decorated class continues to have its own attributes and
+- [x] The decorated class continues to have its own attributes and
       `__init__` untouched.
 
 ### Parameterised form
 
-- [ ] `@Injectable(scope="singleton")` stamps
+- [x] `@Injectable(scope="singleton")` stamps
       `__ajolopy_scope__ = "singleton"`.
-- [ ] `@Injectable(scope="request")` stamps the request scope.
-- [ ] `@Injectable(scope="transient")` stamps the transient scope.
-- [ ] `@Injectable()` (parens with no kwargs) defaults to singleton
+- [x] `@Injectable(scope="request")` stamps the request scope.
+- [x] `@Injectable(scope="transient")` stamps the transient scope.
+- [x] `@Injectable()` (parens with no kwargs) defaults to singleton
       scope — keeps parity with the bare form.
 
 ### Scope-value validation
 
-- [ ] `@Injectable(scope="bogus")` raises `InjectableConfigError`
+- [x] `@Injectable(scope="bogus")` raises `InjectableConfigError`
       at decoration time naming the offending value and listing the
       three legal scopes.
-- [ ] `@Injectable(scope=None)` raises `InjectableConfigError`.
-- [ ] `@Injectable(scope=123)` raises `InjectableConfigError`.
+- [x] `@Injectable(scope=None)` raises `InjectableConfigError`.
+- [x] `@Injectable(scope=123)` raises `InjectableConfigError`.
 
 ### Inheritance
 
-- [ ] `class Child(InjectableParent): ...` (where `InjectableParent`
+- [x] `class Child(InjectableParent): ...` (where `InjectableParent`
       is `@Injectable`-decorated) does **not** inherit
       `__ajolopy_scope__` in `Child.__dict__`. The attribute is
       present on `Parent.__dict__` only. (Test asserts
@@ -223,27 +223,27 @@ can transition to `done`.
 
 ### Re-decoration
 
-- [ ] `@Injectable @Injectable class Foo:` raises
+- [x] `@Injectable @Injectable class Foo:` raises
       `InjectableConfigError` referencing the already-decorated class.
 
 ### Integration with `@Module` (AJ-8) — smoke test
 
-- [ ] A class decorated `@Injectable(scope="request")` and placed in a
+- [x] A class decorated `@Injectable(scope="request")` and placed in a
       `@Module(providers=[Service])` is registered under request scope
       in the resulting `CompiledModule.container`. Verified by reading
       the container's registration record or by exercising the scope
       semantics (`request_scope` lifecycle) end-to-end.
-- [ ] A class decorated `@Injectable` (bare) and placed in a module is
+- [x] A class decorated `@Injectable` (bare) and placed in a module is
       registered as a singleton — the compiler's fallback already
       delivers this, but we test the explicit path too.
-- [ ] A class **not** decorated with `@Injectable` placed in
+- [x] A class **not** decorated with `@Injectable` placed in
       `providers=[]` is still registered (the compiler's default
       fallback to `"singleton"` covers it).
 
 ### Public surface
 
-- [ ] `from ajolopy import Injectable` resolves.
-- [ ] `from ajolopy.di import Injectable` (the more specific path)
+- [x] `from ajolopy import Injectable` resolves.
+- [x] `from ajolopy.di import Injectable` (the more specific path)
       also resolves, since the decorator lives next to the container.
 
 ## Implementation pointers
@@ -266,5 +266,61 @@ can transition to `done`.
 
 ## Implementation notes
 
-<!-- Filled during implementation. Capture scope decisions taken at write
-time, edge-case findings, coverage numbers, and any test-only quirks. -->
+`@Injectable` ships as a single-attribute stamp (`__ajolopy_scope__`)
+that the AJ-8 module compiler already consumes. The decorator is the
+thinnest in the framework: no wrapping, no introspection, no runtime
+container interaction.
+
+### Confirmed design decisions (all six)
+
+1. Both bare (`@Injectable`) and parameterised (`@Injectable(scope=...)`)
+   forms are supported via an overloaded signature. The dispatcher
+   inspects `cls is None` to disambiguate.
+2. Default scope is `"singleton"` — matches the container's default and
+   doc 08's "implicit default" snippet.
+3. `__ajolopy_scope__` is **not** inherited: we check `cls.__dict__`,
+   not `getattr(cls, ...)`. A subclass of an `@Injectable`-decorated
+   class is *not* injectable until re-decorated.
+4. Re-decoration (`@Injectable @Injectable class Foo:`) raises
+   `InjectableConfigError` at decoration time, naming the offending
+   class. Mirrors `@Module`'s `ModuleConfigError` semantics.
+5. `@Injectable` does **not** register the class anywhere. The class
+   must appear in some `@Module(providers=[...])` to be resolvable;
+   the decorator only declares "if it ends up in a module, use *this*
+   scope."
+6. `@Injectable` does **not** validate the target class's `__init__`.
+   `MissingAnnotationError` from the container (AJ-11) covers that at
+   resolve time.
+
+### Public surface
+
+- `src/ajolopy/di/injectable.py` — the decorator.
+- `src/ajolopy/di/errors.py` — `InjectableError` (base) and
+  `InjectableConfigError` (decoration-time misuse).
+- Re-exports from `ajolopy.di` and the top-level `ajolopy` package.
+
+### Tests + coverage
+
+- `tests/di/test_injectable.py` — 21 tests covering every acceptance
+  checkbox plus the integration smoke test against `@Module`.
+- `src/ajolopy/di/injectable.py` — **100 %** statement + branch
+  coverage.
+- Full suite: **735 passed**, no regressions. Repo coverage 89 %.
+
+### Edge cases worth noting
+
+- `_validate_scope` rejects non-string values (`None`, `int`, etc.)
+  via `isinstance` first, then membership in `_LEGAL_SCOPES`. The
+  error message uses `{scope!r}` so the user sees `None`, `123`, or
+  `'weird'` verbatim.
+- The decorator's re-decoration check uses `cls.__dict__` (not
+  `getattr`), matching `@Module`'s rule. This lets users subclass an
+  injectable parent and re-decorate the subclass with a different
+  scope (covered by
+  `TestInheritance::test_subclass_can_be_decorated_independently`).
+- The `Scope` literal and `Callable` are imported under `TYPE_CHECKING`
+  because Python 3.14 (PEP 649) defers annotation evaluation. The
+  runtime narrow in `_validate_scope` uses `cast("Scope", scope)`
+  rather than a plain `# type: ignore` so the intent is explicit and
+  matches the pattern used in `modules/compiler.py`.
+- No new dependencies — stdlib only.

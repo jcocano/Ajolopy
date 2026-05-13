@@ -1,6 +1,7 @@
 """Ajolopy — the Python framework for building AI-native applications in production."""
 
 from .agent import Agent, Tool
+from .di import Injectable
 from .modules import Module, compile_module, forwardRef
 from .routes import Delete, Get, Patch, Post, Put
 from .stream import Stream
@@ -11,6 +12,7 @@ __all__ = [
     "Agent",
     "Delete",
     "Get",
+    "Injectable",
     "Module",
     "Patch",
     "Post",
