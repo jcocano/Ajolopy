@@ -7,6 +7,7 @@ land in subsequent commits as the AJ-15 acceptance items are implemented.
 This module's import is currently side-effect-free.
 """
 
+from .app import Handler, add_route, create_app
 from .errors import (
     ExceptionFilterConfigError,
     HttpHandlerConfigError,
@@ -28,6 +29,7 @@ __all__ = [
     "ConflictException",
     "ExceptionFilterConfigError",
     "ForbiddenException",
+    "Handler",
     "HttpException",
     "HttpHandlerConfigError",
     "HttpLayerError",
@@ -35,4 +37,6 @@ __all__ = [
     "NotFoundException",
     "UnauthorizedException",
     "UnprocessableEntityException",
+    "add_route",
+    "create_app",
 ]
