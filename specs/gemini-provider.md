@@ -154,94 +154,94 @@ real network traffic happens in CI.
 
 ### Construction & registration
 
-- [ ] Importing `ajolopy.providers.gemini` registers
+- [x] Importing `ajolopy.providers.gemini` registers
       `GeminiProvider` under the key `"gemini"` in the registry.
-- [ ] `GeminiProvider(api_key="...")` constructs successfully and
+- [x] `GeminiProvider(api_key="...")` constructs successfully and
       exposes a `genai.Client` instance internally.
-- [ ] `GeminiProvider(client=<custom>)` uses the supplied client
+- [x] `GeminiProvider(client=<custom>)` uses the supplied client
       verbatim — no new `genai.Client` is built.
-- [ ] `GeminiProvider()` with `GEMINI_API_KEY` set in the env builds
+- [x] `GeminiProvider()` with `GEMINI_API_KEY` set in the env builds
       a client successfully (no error).
-- [ ] `GeminiProvider()` with `GEMINI_API_KEY` unset raises
+- [x] `GeminiProvider()` with `GEMINI_API_KEY` unset raises
       `GeminiConfigError` at construction time, naming the env var.
 
 ### `complete()`
 
-- [ ] A simple `complete(model="gemini-2.5-flash", messages=[…])` call
+- [x] A simple `complete(model="gemini-2.5-flash", messages=[…])` call
       proxies to `client.aio.models.generate_content(...)` and returns a
       `Response` with `text`, `tokens_in`, `tokens_out`,
       `finish_reason="stop"`.
-- [ ] Messages with `role="system"` are forwarded as the
+- [x] Messages with `role="system"` are forwarded as the
       `system_instruction` field of `GenerateContentConfig` — not as a
       `contents[]` entry. Multiple system messages are joined with
       `\n\n`.
-- [ ] Non-system messages are converted to Gemini `Content` objects with
+- [x] Non-system messages are converted to Gemini `Content` objects with
       `role="user"` / `role="model"` and a single text `Part`. Framework
       `role="assistant"` maps to Gemini `role="model"`; framework
       `role="tool"` maps to a `Part` with `function_response`.
-- [ ] `tools=[Tool(...)]` is converted to Gemini's `function_declarations`
+- [x] `tools=[Tool(...)]` is converted to Gemini's `function_declarations`
       schema and forwarded; if the response includes a `function_call`
       part, the returned `Response.tool_calls` contains the
       corresponding `ToolCall`.
-- [ ] `temperature` / `max_tokens` are forwarded via `GenerateContentConfig`
+- [x] `temperature` / `max_tokens` are forwarded via `GenerateContentConfig`
       as `temperature` and `max_output_tokens`.
-- [ ] `cache=True` is accepted but produces no extra kwargs in the SDK
+- [x] `cache=True` is accepted but produces no extra kwargs in the SDK
       call (verified by asserting the SDK call shape is identical
       between `cache=True` and `cache=False`).
-- [ ] A retriable SDK error (e.g. `google.api_core.exceptions.RetryError`,
+- [x] A retriable SDK error (e.g. `google.api_core.exceptions.RetryError`,
       `google.genai.errors.APIError` with a 5xx status) surfaces as a
       typed `GeminiProviderError` rather than the raw SDK exception.
-- [ ] `complete(messages=[])` (empty list) raises `GeminiProviderError`
+- [x] `complete(messages=[])` (empty list) raises `GeminiProviderError`
       with a clear "at least one user message required" hint, **before**
       the SDK is called. Gemini's API rejects empty `contents=[]` with
       a generic 400; surfacing a typed framework error is the framework
       contract.
-- [ ] `complete(messages=[Message(role="system", ...)])` (only system
+- [x] `complete(messages=[Message(role="system", ...)])` (only system
       messages, no user/assistant turn) raises `GeminiProviderError` —
       Gemini requires at least one non-system turn in `contents=[]`.
-- [ ] Consecutive same-role messages (`[user, user, ...]` or
+- [x] Consecutive same-role messages (`[user, user, ...]` or
       `[assistant, assistant, ...]`) are passed through to the SDK
       verbatim. The provider does not auto-merge, auto-inject empty
       turns, or otherwise rewrite history — that's the caller's
       responsibility (and `@Agent`'s in v0.1.x). The test asserts the
       SDK call sees the consecutive turns exactly as supplied.
-- [ ] A framework `role="tool"` message without `tool_call_id` raises
+- [x] A framework `role="tool"` message without `tool_call_id` raises
       `GeminiProviderError` at conversion time naming the offending
       message. `function_response` parts require the call id.
 
 ### `stream()`
 
-- [ ] `stream(model="gemini-2.5-flash", messages=[…])` returns an async
+- [x] `stream(model="gemini-2.5-flash", messages=[…])` returns an async
       iterator that yields `Chunk(delta=…)` for each text delta.
-- [ ] The final `Chunk` carries `finish_reason="stop"` (or the mapped
+- [x] The final `Chunk` carries `finish_reason="stop"` (or the mapped
       equivalent — `STOP` → `stop`, `MAX_TOKENS` → `length`,
       `SAFETY`/`RECITATION`/`OTHER` → `error` with a logged warning).
-- [ ] Cancelling the iterator mid-stream cancels the underlying SDK
+- [x] Cancelling the iterator mid-stream cancels the underlying SDK
       stream (no orphan HTTP connections in test).
-- [ ] Tool-call deltas (Gemini emits the function_call in a single chunk,
+- [x] Tool-call deltas (Gemini emits the function_call in a single chunk,
       not progressively) are surfaced as `Chunk.tool_call_delta` with
       the full payload in one delta.
-- [ ] A mid-stream `finish_reason` of `SAFETY` / `RECITATION` / `OTHER`
+- [x] A mid-stream `finish_reason` of `SAFETY` / `RECITATION` / `OTHER`
       surfaces as a final `Chunk(finish_reason="error", delta="")` and
       the iterator terminates cleanly (no exception propagated). The
       provider also logs a warning naming the underlying reason. This
       matches AJ-3's `@Stream` consumer contract that the stream
       "completes successfully" at the iterator boundary even when the
       upstream model refused.
-- [ ] An SDK error raised mid-stream (`google.genai.errors.APIError`,
+- [x] An SDK error raised mid-stream (`google.genai.errors.APIError`,
       connection drop, etc. — not a user cancellation) surfaces as a
       `GeminiProviderError` propagated through the iterator on the
       offending step. No orphan connection remains.
 
 ### `embed()`
 
-- [ ] `embed(model="text-embedding-004", text="hello")` proxies to
+- [x] `embed(model="text-embedding-004", text="hello")` proxies to
       `client.aio.models.embed_content(...)` and returns
       `list[list[float]]` with one inner list (the single vector).
-- [ ] `embed(model="text-embedding-004", text=["a", "b"])` returns two
+- [x] `embed(model="text-embedding-004", text=["a", "b"])` returns two
       vectors in input order.
-- [ ] Empty `text=[]` returns `[]` without calling the SDK.
-- [ ] `embed(model="gemini-2.5-flash", text="hello")` (a generation
+- [x] Empty `text=[]` returns `[]` without calling the SDK.
+- [x] `embed(model="gemini-2.5-flash", text="hello")` (a generation
       model passed to `embed`) raises `GeminiProviderError` referencing
       the offending model. The defence-in-depth `_ensure_gemini_model`
       check accepts only the `text-embedding-` / `embedding-` prefixes
@@ -249,12 +249,12 @@ real network traffic happens in CI.
 
 ### `count_tokens()`
 
-- [ ] `count_tokens(model="gemini-2.5-flash", text="hello")` returns the
+- [x] `count_tokens(model="gemini-2.5-flash", text="hello")` returns the
       value reported by the SDK's `count_tokens` endpoint.
-- [ ] If the SDK call fails (transport error, unknown model), the method
+- [x] If the SDK call fails (transport error, unknown model), the method
       falls back to a deterministic 4-chars-per-token estimate and logs
       a warning (verified with `caplog`).
-- [ ] When `count_tokens` is called from inside a running event loop
+- [x] When `count_tokens` is called from inside a running event loop
       (e.g. an `async def` test calling `provider.count_tokens(...)`
       synchronously), the method falls back to the
       4-chars-per-token estimate with a logged warning rather than
@@ -264,13 +264,13 @@ real network traffic happens in CI.
 
 ### Capability flags
 
-- [ ] `supports_prompt_caching()` returns `False` (Gemini caching requires
+- [x] `supports_prompt_caching()` returns `False` (Gemini caching requires
       explicit cache-resource lifecycle, deferred to post-v0.1).
-- [ ] `supports_tool_calling()` returns `True`.
+- [x] `supports_tool_calling()` returns `True`.
 
 ### Negative cases
 
-- [ ] A non-Gemini model string (`model="gpt-4o-mini"`, `model="claude-…"`)
+- [x] A non-Gemini model string (`model="gpt-4o-mini"`, `model="claude-…"`)
       passed to any method raises `GeminiProviderError` with the
       offending model in the message. (The router would normally prevent
       this, but the provider double-checks so subclasses cannot silently
@@ -298,5 +298,71 @@ real network traffic happens in CI.
 
 ## Implementation notes
 
-<!-- Filled during implementation. Capture scope decisions taken at write
-time, edge-case findings, coverage numbers, and any test-only quirks. -->
+Summary: `GeminiProvider` lands as a thin bridge over `google-genai` 2.2.0
+covering complete / stream / embed / count_tokens end to end. All four
+open design decisions in §"Open design decisions (please confirm before
+implementation)" were adopted **as written**: (1) `cache=True` is a
+documented no-op with `supports_prompt_caching() == False`; (2) system
+messages route to `GenerateContentConfig.system_instruction` and multiple
+system messages are joined with `\n\n`; (3) tool-call args arrive
+pre-decoded as a `dict` (no JSON-string parsing); (4) `count_tokens`
+calls the SDK's native online endpoint via `asyncio.run`, falling back
+to a deterministic `len(text) // 4` estimate + logged warning when the
+SDK fails *or* when called from inside a running event loop.
+
+Layout matches AJ-19 / AJ-20:
+
+- `src/ajolopy/providers/gemini/{__init__.py,provider.py,errors.py}` —
+  side-effect registration of the `"gemini"` key on package import.
+- `tests/providers/gemini/{conftest,test_*}.py` — every `google-genai`
+  SDK call mocked through `AsyncMock`/`MagicMock`, no network in CI.
+
+Coverage (per `pytest --cov=ajolopy.providers.gemini`):
+
+| File | Coverage |
+|---|---|
+| `gemini/__init__.py` | 100% |
+| `gemini/errors.py` | 100% |
+| `gemini/provider.py` | 94% |
+
+The uncovered ~6% in `provider.py` are defensive branches: the
+`_finish_reason_to_str` fallthrough for objects that lack `.value` and
+aren't strings (the SDK only ever emits one of those forms), the
+best-effort `aclose()` failure path (only hit if the SDK's own iterator
+raises during cleanup), the assistant-content-without-text-or-tool-calls
+branch (the wire type makes this practically unreachable), and the
+single-await branch on the stream call (we always get the iterator
+directly in tests; the await branch exists for a hypothetical SDK
+version that returns a coroutine-wrapped iterator).
+
+SDK boundary surprises:
+
+- `client.aio.models.generate_content` and friends carry a sprawling
+  `ContentListUnion` / `PartUnionDict` union for `contents` that pyright
+  cannot resolve narrowly. Centralised the workaround as a private
+  `_aio_models` property that returns the underlying object cast to
+  `Any`; the rest of the provider reads `self._aio_models.<method>(...)`
+  cleanly and the strict checker stays focused on framework boundaries.
+- `google.genai.errors.APIError.__init__` requires `(code, response_json)`
+  rather than a single message string. The test helpers construct it
+  with `code=503, response_json={"error": {"message": "..."}}`.
+- `Part` and `FunctionResponse` are Pydantic models with `extra='forbid'`
+  semantics — every part is built explicitly with the keyword the SDK
+  expects (`function_response=...`, never `functionResponse=...`).
+- Gemini's `function_response.response` must be a `dict`; the framework's
+  `Message.content` carries the tool-result body as a `str`. Wrapped it
+  under a stable `{"content": <str>}` key (plus an `is_error: True` flag
+  when the framework signalled an error) so the model can read it back
+  uniformly.
+- Conversion helpers live inline in `provider.py` rather than alongside
+  AJ-22's `_openai_helpers` because Gemini's `Content`/`Part`/
+  `FunctionCall` tree is too different from the OpenAI chat-completions
+  shape to share without ugly adapters.
+- Empty / system-only message lists raise `GeminiProviderError`
+  *before* any SDK call so callers see a typed framework error instead
+  of a generic 400 from the API.
+- The `count_tokens` fallback also triggers when the SDK returns a
+  response object without a usable integer `total_tokens` (covered by
+  `test_count_tokens_falls_back_when_sdk_returns_no_total_tokens`); the
+  spec's "transport error, unknown model" wording covers it implicitly,
+  but it's worth flagging.
