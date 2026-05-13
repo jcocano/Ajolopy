@@ -566,7 +566,7 @@
       "slug": "openai-provider",
       "type": "feature",
       "title": "OpenAIProvider (native SDK, structured outputs, embeddings)",
-      "status": "backlog",
+      "status": "ready",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -576,7 +576,7 @@
       "owner": null,
       "branch": null,
       "pr": null,
-      "spec": null,
+      "spec": "specs/openai-provider.md",
       "blocks": [
         "AJ-22"
       ],
@@ -1112,7 +1112,7 @@
       "slug": "dockerfile-template",
       "type": "feature",
       "title": "Dockerfile multi-stage template (deps/development/production) + docker-compose generator",
-      "status": "backlog",
+      "status": "ready",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -1122,7 +1122,7 @@
       "owner": null,
       "branch": null,
       "pr": null,
-      "spec": null,
+      "spec": "specs/dockerfile-template.md",
       "blocks": [
         "AJ-37",
         "AJ-38",
