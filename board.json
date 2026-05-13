@@ -594,7 +594,7 @@
       "slug": "gemini-provider",
       "type": "feature",
       "title": "GeminiProvider (google-genai, multimodal, grounding)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
