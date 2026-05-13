@@ -1,0 +1,44 @@
+# syntax=docker/dockerfile:1.7
+
+# ──────────────────────────────────────────────────────────────
+# Stage 1: dependencies
+# ──────────────────────────────────────────────────────────────
+FROM python:3.14-slim AS deps
+WORKDIR /app
+
+# Install uv (the fastest Python package manager).
+RUN pip install --no-cache-dir uv
+
+# Copy only dependency manifests so this layer caches well.
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --frozen --no-dev
+
+# ──────────────────────────────────────────────────────────────
+# Stage 2: development (hot reload)
+# ──────────────────────────────────────────────────────────────
+FROM deps AS development
+
+# Re-install with dev dependencies for tests + tooling.
+RUN uv sync --frozen
+COPY . .
+
+EXPOSE 3000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000", "--reload"]
+
+# ──────────────────────────────────────────────────────────────
+# Stage 3: production (slim, non-root, healthcheck)
+# ──────────────────────────────────────────────────────────────
+FROM deps AS production
+
+COPY . .
+
+# Non-root user (required by k8s PSA/PSP and a general best practice).
+RUN useradd -m appuser && chown -R appuser /app
+USER appuser
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000", "--workers", "4", "--no-access-log"]

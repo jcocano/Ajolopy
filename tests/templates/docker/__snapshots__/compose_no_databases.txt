@@ -1,0 +1,10 @@
+services:
+  app:
+    build:
+      context: .
+      target: development
+    volumes:
+      - ./:/app
+    ports:
+      - "3000:3000"
+    env_file: .env
