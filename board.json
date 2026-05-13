@@ -366,7 +366,7 @@
       "slug": "lifecycle-hooks",
       "type": "feature",
       "title": "Lifecycle hooks (on_module_init, on_app_bootstrap, on_app_shutdown)",
-      "status": "in_progress",
+      "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -375,7 +375,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/lifecycle-hooks",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/27",
       "spec": "specs/lifecycle-hooks.md",
       "blocks": [
         "AJ-14"
@@ -386,7 +386,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-13",
-      "closed_at": null
+      "closed_at": "2026-05-13"
     },
     {
       "id": "AJ-14",
