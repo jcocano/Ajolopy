@@ -425,7 +425,7 @@
       "slug": "http-layer",
       "type": "feature",
       "title": "HTTP layer over Starlette (ValidationPipe, ExceptionFilter, body/query/path params)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -434,7 +434,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/http-layer",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/13",
       "spec": "specs/http-layer.md",
       "blocks": [
         "AJ-3",
