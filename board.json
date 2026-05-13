@@ -220,7 +220,7 @@
       "slug": "module",
       "type": "feature",
       "title": "@Module decorator (DI container root)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
