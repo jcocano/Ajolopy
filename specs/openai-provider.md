@@ -120,84 +120,84 @@ network traffic happens in CI.
 
 ### Construction & registration
 
-- [ ] Importing `ajolopy.providers.openai` registers `OpenAIProvider`
+- [x] Importing `ajolopy.providers.openai` registers `OpenAIProvider`
       under the key `"openai"` in the registry.
-- [ ] `OpenAIProvider(api_key="sk-...")` constructs successfully and
+- [x] `OpenAIProvider(api_key="sk-...")` constructs successfully and
       exposes an `AsyncOpenAI` instance internally.
-- [ ] `OpenAIProvider(client=<custom>)` uses the supplied client
+- [x] `OpenAIProvider(client=<custom>)` uses the supplied client
       verbatim — no new `AsyncOpenAI` is built.
-- [ ] `OpenAIProvider()` with `OPENAI_API_KEY` set in the env builds a
+- [x] `OpenAIProvider()` with `OPENAI_API_KEY` set in the env builds a
       client successfully (no error).
-- [ ] `OpenAIProvider()` with `OPENAI_API_KEY` unset raises
+- [x] `OpenAIProvider()` with `OPENAI_API_KEY` unset raises
       `OpenAIConfigError` at construction time, naming the env var.
 
 ### `complete()`
 
-- [ ] A simple `complete(model="gpt-4o-mini", messages=[…])` call proxies
+- [x] A simple `complete(model="gpt-4o-mini", messages=[…])` call proxies
       to `client.chat.completions.create(...)` and returns a `Response`
       with `text`, `tokens_in`, `tokens_out`, `finish_reason="stop"`.
-- [ ] Messages with `role="system"` are forwarded as a leading
+- [x] Messages with `role="system"` are forwarded as a leading
       `{"role": "system", ...}` entry in the `messages` array (OpenAI
       does not have a separate top-level field).
-- [ ] `tools=[Tool(...)]` is converted to OpenAI's function-calling
+- [x] `tools=[Tool(...)]` is converted to OpenAI's function-calling
       schema (`{"type": "function", "function": {...}}`) and forwarded;
       if the response includes a `tool_calls` entry, the returned
       `Response.tool_calls` contains the corresponding `ToolCall`.
-- [ ] `temperature` / `max_tokens` are forwarded as-is to the SDK.
-- [ ] OpenAI's automatic prompt caching applies to system + first-user
+- [x] `temperature` / `max_tokens` are forwarded as-is to the SDK.
+- [x] OpenAI's automatic prompt caching applies to system + first-user
       messages once the prompt crosses the SDK's documented threshold;
       `cache=True` is accepted but a no-op (OpenAI does not require an
       opt-in flag). Verified by asserting the SDK was called without an
       extra cache kwarg leaking through.
-- [ ] A retriable SDK error (`openai.APIConnectionError` /
+- [x] A retriable SDK error (`openai.APIConnectionError` /
       `openai.APITimeoutError` / `openai.RateLimitError`) surfaces as a
       typed `OpenAIProviderError` rather than the raw SDK exception.
 
 ### `stream()`
 
-- [ ] `stream(model="gpt-4o-mini", messages=[…])` returns an async
+- [x] `stream(model="gpt-4o-mini", messages=[…])` returns an async
       iterator that yields `Chunk(delta=…)` for each text delta.
-- [ ] The final `Chunk` carries `finish_reason="stop"` (or the mapped
+- [x] The final `Chunk` carries `finish_reason="stop"` (or the mapped
       equivalent).
-- [ ] Cancelling the iterator mid-stream cancels the underlying SDK
+- [x] Cancelling the iterator mid-stream cancels the underlying SDK
       stream (no orphan HTTP connections in test).
-- [ ] Tool-call deltas (OpenAI's `delta.tool_calls[...]`) are surfaced
+- [x] Tool-call deltas (OpenAI's `delta.tool_calls[...]`) are surfaced
       as `Chunk.tool_call_delta`, accumulating across chunks the way
       the SDK emits them (`{"index": N, "function": {"arguments": "..."}}`).
 
 ### `embed()`
 
-- [ ] `embed(model="text-embedding-3-small", text="hello")` proxies to
+- [x] `embed(model="text-embedding-3-small", text="hello")` proxies to
       `client.embeddings.create(...)` and returns `list[list[float]]`
       with one inner list (the single vector).
-- [ ] `embed(model="text-embedding-3-small", text=["a", "b"])` returns
+- [x] `embed(model="text-embedding-3-small", text=["a", "b"])` returns
       two vectors in input order.
-- [ ] Empty `text=[]` returns `[]` without calling the SDK.
+- [x] Empty `text=[]` returns `[]` without calling the SDK.
 
 ### `count_tokens()`
 
-- [ ] `count_tokens(model="gpt-4o-mini", text="hello")` returns a
+- [x] `count_tokens(model="gpt-4o-mini", text="hello")` returns a
       deterministic integer (≥ 1). Use `tiktoken` when the encoding is
       known; fall back to a `len(text) // 4` estimate and log a warning
       otherwise.
-- [ ] `count_tokens(model="o1-preview", text="hello")` works for the
+- [x] `count_tokens(model="o1-preview", text="hello")` works for the
       reasoning-model series (their encoding is the same as `gpt-4o`).
 
 ### Capability flags
 
-- [ ] `supports_prompt_caching()` returns `True` (OpenAI caches
+- [x] `supports_prompt_caching()` returns `True` (OpenAI caches
       automatically; the framework reports the capability so callers
       can rely on the feature).
-- [ ] `supports_tool_calling()` returns `True`.
+- [x] `supports_tool_calling()` returns `True`.
 
 ### Negative cases
 
-- [ ] A non-OpenAI model string (`model="claude-sonnet-4-7"`) passed to
+- [x] A non-OpenAI model string (`model="claude-sonnet-4-7"`) passed to
       any method raises `OpenAIProviderError` with the offending model
       in the message. (The router would normally prevent this, but the
       provider double-checks so subclasses cannot silently route the
       wrong model.)
-- [ ] A finish reason the SDK can emit but the framework's
+- [x] A finish reason the SDK can emit but the framework's
       `FinishReason` literal does not know about (`"function_call"`
       legacy, `"content_filter"`) maps to `"stop"` and logs a warning.
 
@@ -221,4 +221,56 @@ network traffic happens in CI.
 
 ## Implementation notes
 
-_Populated as the item is implemented._
+Scope decisions taken while shipping AJ-20:
+
+- **Model-prefix allowlist.** The defence-in-depth check in
+  `_ensure_openai_model` accepts `gpt-`, `o1-`, `o3-`, `text-embedding-`,
+  and `chatgpt-`. Any new family (`o4-`, `gpt-5-*`) needs an explicit
+  entry — the registry already covers these prefixes via
+  `_DEFAULT_ROUTES`, so the provider's allowlist stays in sync without
+  shipping a separate catalog.
+- **`cache=True` is intentionally a no-op.** OpenAI applies prompt
+  caching automatically once a request crosses the SDK threshold (~1024
+  tokens); there is no opt-in flag to forward. The test
+  `test_cache_true_is_no_op_no_extra_kwargs` asserts the SDK call shape
+  is identical between `cache=True` and `cache=False`. The capability
+  flag `supports_prompt_caching()` still returns `True` so the framework
+  can advertise the feature.
+- **`max_tokens` is forwarded only when set.** Unlike Anthropic (which
+  requires the field), OpenAI accepts no value and uses the model
+  default. Inventing a default here would be a silent ceiling on every
+  call — callers can pass it explicitly when they want one.
+- **`count_tokens` is sync + `tiktoken`-only.** OpenAI does not ship an
+  online token-count endpoint, so the implementation skips the SDK call
+  entirely. `tiktoken.encoding_for_model` covers `gpt-4o*`, `o1*`, `o3*`
+  via the same `o200k_base` tokenizer, plus the legacy chat models;
+  any model `tiktoken` does not know falls back to a deterministic
+  `len(text) // 4` estimate with a warning logged to
+  `ajolopy.providers.openai`.
+- **Tool-call arguments are decoded eagerly.** OpenAI delivers the
+  arguments as a JSON-encoded string; the provider parses them into a
+  `dict[str, Any]` before populating `ToolCall.arguments`. Non-JSON
+  payloads (rare, but possible during malformed streaming) are captured
+  under `{"_raw": <string>}` plus a warning so the conversation history
+  stays consistent and the model can recover on its own.
+- **Stream events can carry both text and tool-call deltas.** The
+  `_convert_stream_event` helper returns a list of `Chunk` objects so a
+  single SDK `ChatCompletionChunk` can emit multiple wire-level chunks
+  in the order they arrive (text first, tool-call deltas next, terminal
+  `finish_reason` last). This matches OpenAI's documented streaming
+  semantics and keeps the consumer pattern identical to Anthropic's.
+- **Early-cancellation safety.** `stream()`'s generator has a `finally`
+  block that calls `close()` on the SDK stream object (best-effort,
+  await it if the result is awaitable). This prevents orphan HTTP
+  sockets when the caller breaks out of the iterator before draining
+  it; the test `test_stream_cancellation_closes_underlying_sdk_stream`
+  pins the behaviour.
+- **Embeddings short-circuit on empty input.** `embed(model=..., text=[])`
+  returns `[]` immediately without an SDK call. This protects callers
+  that do `embed(model, list(iterator))` against burning a roundtrip
+  for an empty batch.
+- **`embed()` reuses the model-prefix guard.** Passing a Claude model
+  to `embed()` raises `OpenAIProviderError` for the same defence-in-depth
+  reason as `complete()` / `stream()` — the spec only required the
+  guard on completion paths, but extending it to embeddings is cheap
+  and removes the only call site without the check.
