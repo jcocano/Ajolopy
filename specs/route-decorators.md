@@ -167,54 +167,54 @@ item can transition to `done`. All HTTP tests use
 
 ### Decorator validation
 
-- [ ] `@Get("/users")` on a method stamps `_ajolopy_route` with
+- [x] `@Get("/users")` on a method stamps `_ajolopy_route` with
       `method="GET"`, `path="/users"`, `handler=fn` and returns the
       method unchanged.
-- [ ] `@Post`, `@Put`, `@Patch`, `@Delete` produce the same
+- [x] `@Post`, `@Put`, `@Patch`, `@Delete` produce the same
       metadata shape with the right HTTP verb.
-- [ ] `@Get("")` and a path that does not start with `/` raise
+- [x] `@Get("")` and a path that does not start with `/` raise
       `RouteConfigError` at decoration time.
-- [ ] Two route decorators stacked on one method raise
+- [x] Two route decorators stacked on one method raise
       `RouteConfigError` at decoration time.
-- [ ] Applying `@Get` to a method already decorated with `@Stream`
+- [x] Applying `@Get` to a method already decorated with `@Stream`
       (or vice versa) raises `RouteConfigError` referencing the
       conflicting primitive.
 
 ### `mount_routes`
 
-- [ ] `mount_routes(app, [Users])` instantiates `Users()` and
+- [x] `mount_routes(app, [Users])` instantiates `Users()` and
       registers every `@Get`/`@Post`/etc-marked method via
       `add_route` (verified by patching `add_route`).
-- [ ] `mount_routes(app, [users])` accepts a pre-built instance
+- [x] `mount_routes(app, [users])` accepts a pre-built instance
       without calling the constructor.
-- [ ] A class whose `__init__` needs arguments raises
+- [x] A class whose `__init__` needs arguments raises
       `RouteConfigError` naming the parameter and pointing at AJ-14.
-- [ ] A class without any route-marked method raises
+- [x] A class without any route-marked method raises
       `RouteConfigError` so typos surface at boot.
-- [ ] Two methods across all items declaring the same
+- [x] Two methods across all items declaring the same
       `(method, path)` pair raise `RouteConfigError` listing both
       source qualnames.
 
 ### End-to-end via TestClient
 
-- [ ] `Get("/users")` → `client.get("/users")` returns the
+- [x] `Get("/users")` → `client.get("/users")` returns the
       handler's response (JSON body from `dict` return).
-- [ ] `Get("/users/{user_id}")` → path parameter is forwarded into
+- [x] `Get("/users/{user_id}")` → path parameter is forwarded into
       the handler via `Annotated[str, Param()]`.
-- [ ] `Post("/users")` → `client.post("/users", json={...})` parses
+- [x] `Post("/users")` → `client.post("/users", json={...})` parses
       the body through `ValidationPipe` (`Annotated[Dto, Body()]`)
       and returns the handler's response.
-- [ ] `Patch("/users/{user_id}")` with a Pydantic body works the
+- [x] `Patch("/users/{user_id}")` with a Pydantic body works the
       same way; `Put` and `Delete` likewise (parametrised test).
-- [ ] A body whose JSON fails Pydantic validation produces the
+- [x] A body whose JSON fails Pydantic validation produces the
       standard 422 envelope from AJ-15 (no custom AJ-16 path).
-- [ ] A handler returning a Pydantic `BaseModel` is serialised via
+- [x] A handler returning a Pydantic `BaseModel` is serialised via
       `model_dump(mode="json")` (delegated to AJ-15's response
       serialiser).
 
 ### Composability with `@Stream` and `mount_streams`
 
-- [ ] A class mixing `@Stream("/chat")` (AJ-3) and `@Get("/health")`
+- [x] A class mixing `@Stream("/chat")` (AJ-3) and `@Get("/health")`
       (AJ-16) registers both routes when called as
       `mount_streams(app, [SameClass]); mount_routes(app, [SameClass])`.
       `mount_streams` only walks `_ajolopy_stream`-marked methods;
@@ -223,7 +223,7 @@ item can transition to `done`. All HTTP tests use
 
 ### Negative cases
 
-- [ ] A method registered via `mount_routes` whose signature AJ-15's
+- [x] A method registered via `mount_routes` whose signature AJ-15's
       introspector cannot bind (e.g. missing annotation on a
       param-marked argument) raises `HttpHandlerConfigError` —
       propagated unchanged from AJ-15.
@@ -246,4 +246,40 @@ item can transition to `done`. All HTTP tests use
 
 ## Implementation notes
 
-_Populated as the item is implemented._
+- The five decorators (`Get` / `Post` / `Put` / `Patch` / `Delete`)
+  share a single closure builder `_make_decorator(method, path)` in
+  `src/ajolopy/routes/decorator.py`. Each public function only fixes
+  the HTTP verb; all validation logic (path checks, stacking
+  rejection, `@Stream` conflict detection) lives in one place.
+- `_validate_path` rejects empty strings, paths missing the leading
+  `/`, and Express-style `:param` segments. The Express check uses
+  the regex `(^|/):[A-Za-z_][A-Za-z0-9_]*` so it catches `:id` at the
+  start of any segment but accepts Starlette's `{id}` form
+  untouched. Doc 08's `:user_id` example predates AJ-15's commitment
+  to Starlette syntax; the spec resolves the ambiguity in favour of
+  `{user_id}`.
+- The `@Stream` conflict is detected by reading
+  `STREAM_META_ATTR` from `ajolopy.stream.decorator` rather than
+  duplicating the string literal — so renaming the attribute in
+  either layer surfaces as a static error rather than a silent
+  divergence. The symmetric direction (`@Stream` applied to a
+  route-decorated coroutine) is rejected by AJ-3's own
+  async-generator guard, since a `@Get`-decorated `async def` is a
+  plain coroutine and `@Stream` already requires
+  `inspect.isasyncgenfunction(fn)`. The test suite documents this
+  asymmetry explicitly.
+- `mount_routes(app, items)` forwards every marked method to AJ-15's
+  `add_route`, so parameter resolution (`Body` / `Query` / `Param` /
+  `Header`), pipe execution, and response serialisation are reused
+  verbatim. The mount layer never reaches into `ValidationPipe` or
+  the filter pipeline; it owns only discovery + dispatch.
+- Duplicate `(method, path)` detection happens before the
+  `add_route` call so both decorating classes' qualnames appear in
+  the error message. The error format mirrors `mount_streams`.
+- Per the spec, `create_app` is **not** extended with a
+  `controllers=` / `routes=` kwarg. AJ-10 owns that surface; AJ-16
+  ships the explicit two-line wiring (`create_app()` +
+  `mount_routes(app, [...])`).
+- The decorator is a no-op at call time — `await
+  instance.list_users()` invokes the original coroutine with no HTTP
+  framing. Verified by `tests/routes/test_composability.py::test_route_decorated_method_callable_directly`.
