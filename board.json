@@ -366,15 +366,15 @@
       "slug": "lifecycle-hooks",
       "type": "feature",
       "title": "Lifecycle hooks (on_module_init, on_app_bootstrap, on_app_shutdown)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "foundation",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/lifecycle-hooks",
       "pr": null,
       "spec": "specs/lifecycle-hooks.md",
       "blocks": [
@@ -385,7 +385,7 @@
       ],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-12",
+      "updated_at": "2026-05-13",
       "closed_at": null
     },
     {
