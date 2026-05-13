@@ -425,7 +425,7 @@
       "slug": "http-layer",
       "type": "feature",
       "title": "HTTP layer over Starlette (ValidationPipe, ExceptionFilter, body/query/path params)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -447,7 +447,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
-      "closed_at": null
+      "closed_at": "2026-05-12"
     },
     {
       "id": "AJ-16",
