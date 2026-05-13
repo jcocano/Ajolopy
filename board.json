@@ -620,7 +620,7 @@
       "slug": "universal-openai-provider",
       "type": "feature",
       "title": "UniversalOpenAIProvider (Ollama/Together/Groq/Mistral/DeepSeek/OpenRouter/Bedrock/Azure)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -629,7 +629,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/universal-openai-provider",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/24",
       "spec": "specs/universal-openai-provider.md",
       "blocks": [],
       "blocked_by": [
