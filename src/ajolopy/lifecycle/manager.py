@@ -79,11 +79,11 @@ class LifecycleManager:
         for instance in reversed(instances):
             try:
                 await _fire_hook(instance, _SHUTDOWN_HOOK)
-            except BaseException as exc:
+            except Exception as exc:
                 # Best-effort shutdown: a single bad pool must not block
-                # the rest from closing, so we catch everything and keep
-                # going. ``shutdown_errors`` lets the caller decide the
-                # exit code.
+                # the rest from closing. ``KeyboardInterrupt`` / ``SystemExit``
+                # are deliberately left unhandled so the user can abort the
+                # shutdown loop with Ctrl-C if it stalls.
                 qualname = type(instance).__qualname__
                 _LOGGER.error("Shutdown hook on %s raised: %s", qualname, exc, exc_info=True)
                 self.shutdown_errors.append((qualname, exc))
@@ -102,8 +102,8 @@ async def _fire_hook(instance: object, hook_name: str) -> None:
     if inspect.iscoroutinefunction(hook):
         await hook()
         return
-    result = await asyncio.to_thread(hook)
-    if inspect.isawaitable(result):
-        # Defensive: a sync hook that returns a coroutine should still
-        # be awaited so the caller's intent (background work) is honoured.
-        await result
+    # Sync hooks dispatched via ``asyncio.to_thread`` so they cannot
+    # block the event loop. A sync hook that *returns* a coroutine is
+    # a programming error (Python emits ``RuntimeWarning: coroutine was
+    # never awaited``); the framework does not paper over it.
+    await asyncio.to_thread(hook)

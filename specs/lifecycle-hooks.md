@@ -223,7 +223,7 @@ can transition to `done`.
 
 - `2026-05-13` — Shipped `src/ajolopy/lifecycle/{__init__,manager}.py`
   + `tests/lifecycle/`. Scope decisions taken during implementation:
-  - **No `errors.py`** — `BaseException`s caught at shutdown are stored
+  - **No `errors.py`** — `Exception`s caught at shutdown are stored
     in `shutdown_errors: list[tuple[str, BaseException]]` on the
     manager. Adding a custom exception class would be ceremony with
     no caller (callers iterate the list, they don't `isinstance`).
@@ -233,13 +233,16 @@ can transition to `done`.
     once `Container` is properly TYPE_CHECKING-imported, unquoting is
     both safe and the rule's preferred form.
   - **Sync hooks dispatched via `asyncio.to_thread`** (matches AJ-2's
-    `@Tool` precedent). Defensive: if a sync hook nevertheless
-    returns a coroutine, the manager `await`s it — covers the rare
-    "I forgot the `async`" foot-gun.
-  - **`shutdown()` catches `BaseException`, not `Exception`.** A
-    `KeyboardInterrupt` or `SystemExit` during shutdown would otherwise
-    leave singletons half-closed. The hook still gets surfaced via
-    `shutdown_errors`; the caller can decide whether to re-raise.
+    `@Tool` precedent). A sync hook that *returns* a coroutine is a
+    programming error — Python emits `RuntimeWarning: coroutine was
+    never awaited` and the user fixes their code. The framework does
+    not paper over it.
+  - **`shutdown()` catches `Exception`, not `BaseException`.** Originally
+    I wanted to keep `KeyboardInterrupt` / `SystemExit` from leaving
+    singletons half-closed, but on CodeQL feedback this was reversed —
+    the framework should let the user abort shutdown with Ctrl-C, and
+    the singleton order (reverse-of-creation) means a partial close
+    still leaves dependencies up.
   - **Phase order pinned by `iter_singletons` only.** No dependency-depth
     re-sort: that would re-introspect `__init__` and could disagree
     with the container's actual resolution order. The contract is
@@ -247,7 +250,6 @@ can transition to `done`.
   - **`shutdown_errors` is reset on each `shutdown()` call.** Calling
     `shutdown()` twice over the same manager (an unusual but possible
     pattern) does not accumulate stale entries from a previous run.
-  - **Coverage**: `__init__` 100 %, `manager` 96 % (one uncovered
-    defensive branch — the `if inspect.isawaitable(result): await result`
-    path that handles a sync hook returning a coroutine). Total
-    suite: 563 tests passing (15 new + 548 pre-existing).
+  - **Coverage**: `__init__` 100 %, `manager` 100 % after the
+    CodeQL-driven cleanup removed the unreachable defensive branch.
+    Total suite: 563 tests passing (15 new + 548 pre-existing).
