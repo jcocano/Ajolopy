@@ -1112,7 +1112,7 @@
       "slug": "dockerfile-template",
       "type": "feature",
       "title": "Dockerfile multi-stage template (deps/development/production) + docker-compose generator",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -1121,7 +1121,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/dockerfile-template",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/18",
       "spec": "specs/dockerfile-template.md",
       "blocks": [
         "AJ-37",
