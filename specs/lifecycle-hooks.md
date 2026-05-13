@@ -152,57 +152,57 @@ can transition to `done`.
 
 ### Bootstrap ordering
 
-- [ ] A container with two singletons resolved in order A → B causes
+- [x] A container with two singletons resolved in order A → B causes
       `bootstrap()` to call `A.on_module_init`, `B.on_module_init`,
       `A.on_app_bootstrap`, `B.on_app_bootstrap` in that exact
       sequence (verified by recording call order on a fake class).
-- [ ] A singleton that lacks `on_module_init` but defines
+- [x] A singleton that lacks `on_module_init` but defines
       `on_app_bootstrap` is skipped in phase 1 and called in phase 2.
-- [ ] A singleton that lacks both hooks is skipped entirely.
+- [x] A singleton that lacks both hooks is skipped entirely.
 
 ### Sync vs async
 
-- [ ] An `async def on_module_init` is awaited directly.
-- [ ] A sync `def on_module_init` is dispatched via
+- [x] An `async def on_module_init` is awaited directly.
+- [x] A sync `def on_module_init` is dispatched via
       `asyncio.to_thread` (verified by patching `asyncio.to_thread`
       and asserting it was called once).
-- [ ] A coroutine that returns a non-`None` value is accepted (the
+- [x] A coroutine that returns a non-`None` value is accepted (the
       return value is discarded; we only need side effects).
 
 ### Bootstrap failure
 
-- [ ] An exception raised inside `on_module_init` propagates from
+- [x] An exception raised inside `on_module_init` propagates from
       `bootstrap()`. Singletons after the failing one do not have
       their hooks fired.
-- [ ] An exception raised inside `on_app_bootstrap` propagates from
+- [x] An exception raised inside `on_app_bootstrap` propagates from
       `bootstrap()` after phase 1 finished for every instance.
 
 ### Shutdown ordering and resilience
 
-- [ ] `shutdown()` calls `on_app_shutdown` on each singleton in
+- [x] `shutdown()` calls `on_app_shutdown` on each singleton in
       reverse first-resolution order.
-- [ ] A singleton that raises inside `on_app_shutdown` does **not**
+- [x] A singleton that raises inside `on_app_shutdown` does **not**
       stop the others. Subsequent shutdowns still run and the
       exception is logged at `ERROR` via
       `logging.getLogger("ajolopy.lifecycle")` (verified with
       `caplog`).
-- [ ] After a partial-failure shutdown,
+- [x] After a partial-failure shutdown,
       `LifecycleManager.shutdown_errors` contains one
       `(qualname, exception)` per failed instance.
-- [ ] `shutdown()` is safe to call when `bootstrap()` was never
+- [x] `shutdown()` is safe to call when `bootstrap()` was never
       called (no singletons cached → no hooks → noop, returns
       normally).
 
 ### Composition with `Container`
 
-- [ ] Singletons resolved after `bootstrap()` has already returned
+- [x] Singletons resolved after `bootstrap()` has already returned
       **are not** retroactively wired. Their hooks never fire (no
       "second bootstrap" semantics). The test pins this so future
       code does not silently add it.
-- [ ] `LifecycleManager` does not call hooks on request-scoped or
+- [x] `LifecycleManager` does not call hooks on request-scoped or
       transient instances. Only `container.iter_singletons()` is
       consulted.
-- [ ] Building two `LifecycleManager` over the same container and
+- [x] Building two `LifecycleManager` over the same container and
       calling `bootstrap()` on both fires the hooks **twice**, in
       order, on the same instances. This is unusual but documented;
       AJ-14 will call `bootstrap()` exactly once.
@@ -221,4 +221,35 @@ can transition to `done`.
 
 ## Implementation notes
 
-_Populated as the item is implemented._
+- `2026-05-13` — Shipped `src/ajolopy/lifecycle/{__init__,manager}.py`
+  + `tests/lifecycle/`. Scope decisions taken during implementation:
+  - **No `errors.py`** — `Exception`s caught at shutdown are stored
+    in `shutdown_errors: list[tuple[str, BaseException]]` on the
+    manager. Adding a custom exception class would be ceremony with
+    no caller (callers iterate the list, they don't `isinstance`).
+  - **`Container` import lives in `TYPE_CHECKING`**, even though the
+    parameter annotation evaluates lazily under PEP 649. Pyright stayed
+    happy; ruff's `UP037` originally wanted the quotes removed but
+    once `Container` is properly TYPE_CHECKING-imported, unquoting is
+    both safe and the rule's preferred form.
+  - **Sync hooks dispatched via `asyncio.to_thread`** (matches AJ-2's
+    `@Tool` precedent). A sync hook that *returns* a coroutine is a
+    programming error — Python emits `RuntimeWarning: coroutine was
+    never awaited` and the user fixes their code. The framework does
+    not paper over it.
+  - **`shutdown()` catches `Exception`, not `BaseException`.** Originally
+    I wanted to keep `KeyboardInterrupt` / `SystemExit` from leaving
+    singletons half-closed, but on CodeQL feedback this was reversed —
+    the framework should let the user abort shutdown with Ctrl-C, and
+    the singleton order (reverse-of-creation) means a partial close
+    still leaves dependencies up.
+  - **Phase order pinned by `iter_singletons` only.** No dependency-depth
+    re-sort: that would re-introspect `__init__` and could disagree
+    with the container's actual resolution order. The contract is
+    "the order singletons first showed up in the container".
+  - **`shutdown_errors` is reset on each `shutdown()` call.** Calling
+    `shutdown()` twice over the same manager (an unusual but possible
+    pattern) does not accumulate stale entries from a previous run.
+  - **Coverage**: `__init__` 100 %, `manager` 100 % after the
+    CodeQL-driven cleanup removed the unreachable defensive branch.
+    Total suite: 563 tests passing (15 new + 548 pre-existing).
