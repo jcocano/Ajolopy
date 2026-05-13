@@ -22,7 +22,7 @@ Schema generation strategy (the "magical default"):
 import inspect
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, overload
+from typing import Any, ClassVar, TypeVar, overload
 
 from pydantic import BaseModel, ValidationError, create_model
 
@@ -32,6 +32,12 @@ from .errors import ToolDefinitionError
 
 _TOOL_MARKER = "__ajolopy_tool__"
 """Attribute name used to tag a method as a ``@Tool``."""
+
+# Module-level TypeVar so the inner `_wrap` closure does not depend on a
+# PEP 695 function-scoped type parameter. CodeQL's flow analysis flags the
+# PEP 695 form as a potentially-uninitialised local; the TypeVar is the
+# equivalent shape with a name CodeQL recognises.
+_F = TypeVar("_F", bound=Callable[..., Any])
 
 
 @dataclass(slots=True)
@@ -123,24 +129,24 @@ class ToolBinding:
 
 
 @overload
-def Tool[F: Callable[..., Any]](fn: F, /) -> F: ...
+def Tool(fn: _F, /) -> _F: ...  # noqa: UP047
 @overload
-def Tool[F: Callable[..., Any]](
+def Tool(
     fn: None = ...,
     /,
     *,
     name: str | None = ...,
     description: str | None = ...,
     schema: type[BaseModel] | None = ...,
-) -> Callable[[F], F]: ...
-def Tool[F: Callable[..., Any]](  # noqa: N802 — public surface mirrors the Brief's primitive name.
-    fn: F | None = None,
+) -> Callable[[_F], _F]: ...
+def Tool(  # noqa: N802, UP047 — public surface mirrors the Brief's primitive name.
+    fn: _F | None = None,
     /,
     *,
     name: str | None = None,
     description: str | None = None,
     schema: type[BaseModel] | None = None,
-) -> F | Callable[[F], F]:
+) -> _F | Callable[[_F], _F]:
     """Mark an instance method as a tool exposed to the LLM.
 
     Used either bare (``@Tool``) or with kwargs (``@Tool(name="…")``). The
@@ -150,7 +156,7 @@ def Tool[F: Callable[..., Any]](  # noqa: N802 — public surface mirrors the Br
     See ``specs/tool.md`` for the full surface and acceptance criteria.
     """
 
-    def _wrap(fn_inner: F) -> F:
+    def _wrap(fn_inner: _F) -> _F:
         metadata = _build_metadata(
             fn=fn_inner,
             name_override=name,
