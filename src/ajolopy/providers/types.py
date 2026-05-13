@@ -21,16 +21,6 @@ into one of these four values."""
 
 
 @dataclass(slots=True)
-class Message:
-    """A single message in a chat-style conversation."""
-
-    role: Role
-    content: str
-    name: str | None = None
-    tool_call_id: str | None = None
-
-
-@dataclass(slots=True)
 class Tool:
     """A tool offered to the model. ``parameters`` is JSON Schema."""
 
@@ -54,11 +44,41 @@ class ToolCallDelta:
 
     ``arguments_delta`` is a partial JSON fragment — the caller concatenates
     fragments and parses once ``finish_reason`` is set on the parent chunk.
+    ``index`` is the provider-side block index, used to correlate the
+    initial ``content_block_start`` (which carries ``id`` and ``name``) with
+    subsequent ``content_block_delta`` events (which carry argument
+    fragments). When ``index`` is ``None`` the caller must rely on ``id``.
     """
 
     id: str
     name: str | None = None
     arguments_delta: str | None = None
+    index: int | None = None
+
+
+@dataclass(slots=True)
+class Message:
+    """A single message in a chat-style conversation.
+
+    ``tool_calls`` is only meaningful on ``assistant`` messages: it carries
+    the tool invocations the model produced in the previous turn so the
+    next provider call can replay the full conversation history (system →
+    user → assistant(tool_use) → tool(tool_result) → assistant). Providers
+    that do not support tool use ignore the field.
+
+    ``tool_call_id`` is only meaningful on ``tool`` messages: it links a
+    ``tool_result`` back to the originating ``ToolCall.id``. ``is_error``
+    on a ``tool`` message signals that the tool execution failed and the
+    ``content`` carries the error description — providers forward it as
+    an error-flagged tool_result so the model can recover.
+    """
+
+    role: Role
+    content: str
+    name: str | None = None
+    tool_call_id: str | None = None
+    tool_calls: list[ToolCall] = field(default_factory=list[ToolCall])
+    is_error: bool = False
 
 
 @dataclass(slots=True)

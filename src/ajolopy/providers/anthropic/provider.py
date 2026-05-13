@@ -263,21 +263,34 @@ class AnthropicProvider(LLMProvider):
                 if cache:
                     block["cache_control"] = {"type": "ephemeral"}
                 system_blocks.append(block)
-            elif msg.role in ("user", "assistant"):
-                chat_messages.append({"role": msg.role, "content": msg.content})
-            elif msg.role == "tool":
-                chat_messages.append(
-                    {
-                        "role": "user",
-                        "content": [
+            elif msg.role == "user":
+                chat_messages.append({"role": "user", "content": msg.content})
+            elif msg.role == "assistant":
+                if msg.tool_calls:
+                    blocks: list[dict[str, Any]] = []
+                    if msg.content:
+                        blocks.append({"type": "text", "text": msg.content})
+                    for call in msg.tool_calls:
+                        blocks.append(
                             {
-                                "type": "tool_result",
-                                "tool_use_id": msg.tool_call_id,
-                                "content": msg.content,
+                                "type": "tool_use",
+                                "id": call.id,
+                                "name": call.name,
+                                "input": call.arguments,
                             }
-                        ],
-                    }
-                )
+                        )
+                    chat_messages.append({"role": "assistant", "content": blocks})
+                else:
+                    chat_messages.append({"role": "assistant", "content": msg.content})
+            elif msg.role == "tool":
+                tool_result: dict[str, Any] = {
+                    "type": "tool_result",
+                    "tool_use_id": msg.tool_call_id,
+                    "content": msg.content,
+                }
+                if msg.is_error:
+                    tool_result["is_error"] = True
+                chat_messages.append({"role": "user", "content": [tool_result]})
 
         if not system_blocks:
             return None, chat_messages
@@ -338,11 +351,14 @@ class AnthropicProvider(LLMProvider):
             if delta_type == "text_delta":
                 return Chunk(delta=getattr(delta, "text", ""))
             if delta_type == "input_json_delta":
+                index_raw = getattr(event, "index", None)
+                index = int(index_raw) if isinstance(index_raw, int) else None
                 return Chunk(
                     delta="",
                     tool_call_delta=ToolCallDelta(
-                        id=getattr(event, "index", "0"),
+                        id="",
                         arguments_delta=getattr(delta, "partial_json", ""),
+                        index=index,
                     ),
                 )
             return None
@@ -350,11 +366,14 @@ class AnthropicProvider(LLMProvider):
         if event_type == "content_block_start":
             block = getattr(event, "content_block", None)
             if getattr(block, "type", None) == "tool_use":
+                index_raw = getattr(event, "index", None)
+                index = int(index_raw) if isinstance(index_raw, int) else None
                 return Chunk(
                     delta="",
                     tool_call_delta=ToolCallDelta(
                         id=getattr(block, "id", ""),
                         name=getattr(block, "name", None),
+                        index=index,
                     ),
                 )
             return None

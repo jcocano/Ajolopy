@@ -6,9 +6,11 @@ from .errors import (
     AgentConfigError,
     AgentError,
     AgentProviderError,
-    AgentToolUseUnsupportedError,
+    AgentToolLoopError,
+    ToolDefinitionError,
 )
 from .runtime import AgentRuntime
+from .tool import Tool, ToolBinding, ToolMetadata
 
 __all__ = [
     "Agent",
@@ -16,5 +18,9 @@ __all__ = [
     "AgentError",
     "AgentProviderError",
     "AgentRuntime",
-    "AgentToolUseUnsupportedError",
+    "AgentToolLoopError",
+    "Tool",
+    "ToolBinding",
+    "ToolDefinitionError",
+    "ToolMetadata",
 ]
