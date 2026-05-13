@@ -566,7 +566,7 @@
       "slug": "openai-provider",
       "type": "feature",
       "title": "OpenAIProvider (native SDK, structured outputs, embeddings)",
-      "status": "in_progress",
+      "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -575,7 +575,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/openai-provider",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/19",
       "spec": "specs/openai-provider.md",
       "blocks": [
         "AJ-22"
@@ -587,7 +587,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
-      "closed_at": null
+      "closed_at": "2026-05-12"
     },
     {
       "id": "AJ-21",
@@ -1112,7 +1112,7 @@
       "slug": "dockerfile-template",
       "type": "feature",
       "title": "Dockerfile multi-stage template (deps/development/production) + docker-compose generator",
-      "status": "in_review",
+      "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -1136,7 +1136,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
-      "closed_at": null
+      "closed_at": "2026-05-12"
     },
     {
       "id": "AJ-42",
