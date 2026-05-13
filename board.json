@@ -220,15 +220,15 @@
       "slug": "module",
       "type": "feature",
       "title": "@Module decorator (DI container root)",
-      "status": "ready",
+      "status": "in_review",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "primitive",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/module",
       "pr": null,
       "spec": "specs/module.md",
       "blocks": [
@@ -240,7 +240,7 @@
       ],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-12",
+      "updated_at": "2026-05-13",
       "closed_at": null
     },
     {
