@@ -620,15 +620,15 @@
       "slug": "universal-openai-provider",
       "type": "feature",
       "title": "UniversalOpenAIProvider (Ollama/Together/Groq/Mistral/DeepSeek/OpenRouter/Bedrock/Azure)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "provider",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/universal-openai-provider",
       "pr": null,
       "spec": "specs/universal-openai-provider.md",
       "blocks": [],
