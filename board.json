@@ -77,7 +77,7 @@
       "slug": "stream",
       "type": "feature",
       "title": "@Stream decorator (SSE on @Agent and @Workflow)",
-      "status": "in_progress",
+      "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -86,7 +86,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/stream",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/15",
       "spec": "specs/stream.md",
       "blocks": [
         "AJ-48",
@@ -99,7 +99,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-12",
-      "closed_at": null
+      "closed_at": "2026-05-12"
     },
     {
       "id": "AJ-4",
