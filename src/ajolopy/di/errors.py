@@ -55,3 +55,24 @@ class OutOfScopeError(ContainerError):
     scope — singletons must not capture per-request state. The message
     names both services so the fix is straightforward.
     """
+
+
+class InjectableError(RuntimeError):
+    """Base class for any error raised by the ``@Injectable`` decorator.
+
+    Lives in the DI errors module because ``@Injectable`` ships next to
+    :class:`Container`. Distinct from :class:`ContainerError` so callers
+    can pinpoint decoration-time failures separately from runtime
+    container failures.
+    """
+
+
+class InjectableConfigError(InjectableError):
+    """An ``@Injectable(...)`` call cannot be honoured at decoration time.
+
+    Raised when the supplied scope value is not one of
+    ``"singleton"``/``"request"``/``"transient"``, or when the same
+    class is decorated with ``@Injectable`` twice. The message names
+    the offending class and the offending value so the user fixes the
+    typo without opening framework source.
+    """
