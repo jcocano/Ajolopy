@@ -276,7 +276,7 @@
       "slug": "controller",
       "type": "feature",
       "title": "@Controller decorator (HTTP route binding)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
