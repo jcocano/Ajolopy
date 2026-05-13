@@ -19,17 +19,24 @@ def test_header_str_reads_request_header_case_insensitively():
     assert response.json() == {"auth": "Bearer t"}
 
 
-def test_header_default_name_from_python_parameter():
-    async def handler(x_trace_id: Annotated[str, Header()]) -> dict[str, str]:
-        return {"trace_id": x_trace_id}
+def test_header_default_name_matches_python_parameter_verbatim():
+    """Header() without ``name=`` uses the python identifier verbatim.
+
+    No ``_``→``-`` auto-translation; for ``X-Trace-Id`` etc., the user
+    must pass an explicit ``Header("x-trace-id")``. Keeps the mapping
+    predictable and matches NestJS's literal header access.
+    """
+
+    async def handler(x: Annotated[str | None, Header()]) -> dict[str, object]:
+        return {"x": x}
 
     app = create_app()
     add_route(app, "GET", "/x", handler)
-    response = TestClient(app).get("/x", headers={"x-trace-id": "abc"})
 
-    # Starlette headers are case-insensitive; the underscore→dash mapping is
-    # the user's responsibility (Header(name=) override).
-    assert response.status_code == 200 or response.status_code == 400  # documented limitation
+    # Lower-case header named "x" — matches the python parameter name verbatim.
+    response = TestClient(app).get("/x", headers={"x": "hello"})
+    assert response.status_code == 200
+    assert response.json() == {"x": "hello"}
 
 
 def test_header_optional_resolves_to_none_when_absent():

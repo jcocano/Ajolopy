@@ -262,148 +262,148 @@ transition to `done`. All HTTP tests use `starlette.testclient.TestClient`
 
 ### `create_app()` / `add_route()`
 
-- [ ] `create_app()` returns a Starlette `Starlette` instance with the
+- [x] `create_app()` returns a Starlette `Starlette` instance with the
       framework's default exception filters already registered (one for
       `HttpException`, one for `pydantic.ValidationError`, one catch-all
       for `Exception`).
-- [ ] `add_route(app, method, path, handler)` registers the handler under
+- [x] `add_route(app, method, path, handler)` registers the handler under
       the given method/path; a `TestClient(app)` call to that route returns
       the handler's response.
-- [ ] `add_route` accepts `method` in any case (`"post"`, `"POST"`) and
+- [x] `add_route` accepts `method` in any case (`"post"`, `"POST"`) and
       rejects unknown verbs with `HttpHandlerConfigError`.
-- [ ] An `async def` handler is awaited directly; a sync `def` handler is
+- [x] An `async def` handler is awaited directly; a sync `def` handler is
       dispatched via `asyncio.to_thread` (verified by patching
       `asyncio.to_thread` and asserting it was called once per request).
-- [ ] `create_app(routes=[Route("/raw", raw_handler)])` forwards extra
+- [x] `create_app(routes=[Route("/raw", raw_handler)])` forwards extra
       routes to Starlette unchanged (escape hatch).
 
 ### Param decorators — body
 
-- [ ] `Annotated[Dto, Body()]` where `Dto` is a Pydantic `BaseModel`
+- [x] `Annotated[Dto, Body()]` where `Dto` is a Pydantic `BaseModel`
       causes the request body to be parsed as JSON and validated; the
       handler receives the model instance.
-- [ ] A request whose JSON body fails Pydantic validation produces a
+- [x] A request whose JSON body fails Pydantic validation produces a
       `422` response whose JSON body matches the structure
       `{"statusCode": 422, "error": "Unprocessable Entity",
       "message": "Validation failed", "details": [...]}` where `details`
       is `ValidationError.errors()`.
-- [ ] A request whose body is **not** valid JSON when a Pydantic model
+- [x] A request whose body is **not** valid JSON when a Pydantic model
       body is expected produces a `400` response with
       `error == "Bad Request"` and the same envelope (no `details`).
-- [ ] `Annotated[bytes, Body()]` receives the raw bytes without JSON
+- [x] `Annotated[bytes, Body()]` receives the raw bytes without JSON
       parsing.
-- [ ] `Annotated[str, Body()]` receives the body decoded as UTF-8.
-- [ ] `Annotated[dict[str, Any], Body()]` receives the parsed JSON object
+- [x] `Annotated[str, Body()]` receives the body decoded as UTF-8.
+- [x] `Annotated[dict[str, Any], Body()]` receives the parsed JSON object
       without Pydantic validation.
-- [ ] An `Annotated[<unsupported-type>, Body()]` (e.g. an arbitrary
+- [x] An `Annotated[<unsupported-type>, Body()]` (e.g. an arbitrary
       non-BaseModel class) raises `HttpHandlerConfigError` at `add_route`
       time naming the parameter and supported types.
-- [ ] Two `Body()`-annotated parameters on the same handler raise
+- [x] Two `Body()`-annotated parameters on the same handler raise
       `HttpHandlerConfigError` at `add_route` time (at most one body per
       handler).
 
 ### Param decorators — query
 
-- [ ] `Annotated[Dto, Query()]` where `Dto` is a Pydantic `BaseModel`
+- [x] `Annotated[Dto, Query()]` where `Dto` is a Pydantic `BaseModel`
       validates the query string against the model. Missing required
       fields produce a `422` with the same error envelope as Body.
-- [ ] `Annotated[int, Query()]` reads `?page=…` and coerces to `int`;
+- [x] `Annotated[int, Query()]` reads `?page=…` and coerces to `int`;
       a non-numeric value produces a `422`.
-- [ ] `Annotated[int, Query("p")]` reads from `?p=…` instead of the
+- [x] `Annotated[int, Query("p")]` reads from `?p=…` instead of the
       parameter name.
-- [ ] `Annotated[int | None, Query()]` is optional and resolves to
+- [x] `Annotated[int | None, Query()]` is optional and resolves to
       `None` when absent.
-- [ ] `Annotated[list[str], Query()]` collects repeated keys
+- [x] `Annotated[list[str], Query()]` collects repeated keys
       (`?tag=a&tag=b`) into the list.
 
 ### Param decorators — path
 
-- [ ] `Annotated[str, Param()]` reads the placeholder of the same name
+- [x] `Annotated[str, Param()]` reads the placeholder of the same name
       from the route path (`/users/{user_id}` + parameter `user_id`).
-- [ ] `Annotated[int, Param()]` coerces the captured string; a
+- [x] `Annotated[int, Param()]` coerces the captured string; a
       non-numeric capture produces a `422`.
-- [ ] `Annotated[str, Param("uid")]` reads `{uid}` from the path
+- [x] `Annotated[str, Param("uid")]` reads `{uid}` from the path
       regardless of the Python parameter name.
-- [ ] A handler whose `Param()` name has no matching placeholder in the
+- [x] A handler whose `Param()` name has no matching placeholder in the
       registered path raises `HttpHandlerConfigError` at `add_route` time.
 
 ### Param decorators — header
 
-- [ ] `Annotated[str, Header("authorization")]` reads the
+- [x] `Annotated[str, Header("authorization")]` reads the
       `Authorization` request header (case-insensitive match).
-- [ ] `Annotated[str | None, Header()]` is optional and resolves to
+- [x] `Annotated[str | None, Header()]` is optional and resolves to
       `None` when absent.
-- [ ] A required `Header()` value missing from the request produces a
+- [x] A required `Header()` value missing from the request produces a
       `400` with `error == "Bad Request"`.
 
 ### Mixed parameters & raw access
 
-- [ ] A handler with `Annotated[Dto, Body()]`,
+- [x] A handler with `Annotated[Dto, Body()]`,
       `Annotated[int, Param()]`, and `request: Request` (no marker)
       receives all three correctly.
-- [ ] A handler with **only** `request: Request` runs the pipe as a
+- [x] A handler with **only** `request: Request` runs the pipe as a
       no-op and forwards the raw request.
 
 ### Response handling
 
-- [ ] Returning a `dict` produces a `JSONResponse` with the dict body.
-- [ ] Returning a Pydantic `BaseModel` produces a `JSONResponse` whose
+- [x] Returning a `dict` produces a `JSONResponse` with the dict body.
+- [x] Returning a Pydantic `BaseModel` produces a `JSONResponse` whose
       body equals `model.model_dump(mode="json")`.
-- [ ] Returning a Starlette `Response` is forwarded verbatim (no
+- [x] Returning a Starlette `Response` is forwarded verbatim (no
       re-serialisation, status preserved).
-- [ ] Returning a Starlette `StreamingResponse` is forwarded verbatim and
+- [x] Returning a Starlette `StreamingResponse` is forwarded verbatim and
       the framework consumes the body as a stream (no buffering — verified
       with a generator that yields chunks observable in TestClient's
       streamed read). This is the hook AJ-3 (`@Stream`) builds on.
-- [ ] Returning `None` produces a `204 No Content` response.
+- [x] Returning `None` produces a `204 No Content` response.
 
 ### Exception filters
 
-- [ ] An uncaught `HttpException` subclass with `status=404` produces a
+- [x] An uncaught `HttpException` subclass with `status=404` produces a
       `404` response with the default envelope
       `{"statusCode": 404, "error": "Not Found", "message": "<exc.message>"}`.
-- [ ] An `HttpException` raised with a `details=` object surfaces that
+- [x] An `HttpException` raised with a `details=` object surfaces that
       object under the envelope's `"details"` key.
-- [ ] A `@Catch(NotFoundException)` filter registered on the app
+- [x] A `@Catch(NotFoundException)` filter registered on the app
       overrides the default for that exception class only; sibling
       exception classes still go through the default handler.
-- [ ] Filter dispatch picks the most specific class first
+- [x] Filter dispatch picks the most specific class first
       (`@Catch(NotFoundException)` wins over `@Catch(HttpException)` for
       a `NotFoundException` instance) by walking the exception's MRO.
-- [ ] `@Catch` accepts multiple classes:
+- [x] `@Catch` accepts multiple classes:
       `@Catch(NotFoundException, ConflictException)` registers the filter
       for both.
-- [ ] When two filters declare `@Catch` on the same class, the one
+- [x] When two filters declare `@Catch` on the same class, the one
       registered later in `exception_filters=[...]` wins.
-- [ ] An uncaught non-`HttpException` exception is logged via the
+- [x] An uncaught non-`HttpException` exception is logged via the
       framework's logger at `ERROR` level (verified with `caplog`) and
       produces a `500` with the envelope
       `{"statusCode": 500, "error": "Internal Server Error",
       "message": "Internal Server Error"}` (the original exception
       message is **not** leaked to the response body).
-- [ ] `@Catch()` with no argument raises `ExceptionFilterConfigError`
+- [x] `@Catch()` with no argument raises `ExceptionFilterConfigError`
       at decoration time.
-- [ ] A class decorated with `@Catch(...)` that does not subclass
+- [x] A class decorated with `@Catch(...)` that does not subclass
       `ExceptionFilter` raises `ExceptionFilterConfigError` at
       decoration time.
 
 ### ValidationPipe escape hatch
 
-- [ ] `create_app(pipe=MyPipe())` swaps in a subclass of
+- [x] `create_app(pipe=MyPipe())` swaps in a subclass of
       `ValidationPipe` for the default; a custom pipe that returns a
       hardcoded model is observed by the handler.
-- [ ] The `Pipe` ABC exposes a single async method
+- [x] The `Pipe` ABC exposes a single async method
       `transform(value: Any, *, param: ResolvedParam) -> Any`; the default
       `ValidationPipe` is the only implementation shipped in this item.
 
 ### Negative cases
 
-- [ ] An `Annotated[...]` parameter with two markers
+- [x] An `Annotated[...]` parameter with two markers
       (`Annotated[str, Query(), Header()]`) raises
       `HttpHandlerConfigError` at `add_route` time.
-- [ ] An untyped parameter with a marker
+- [x] An untyped parameter with a marker
       (`def handler(x = Body())`) raises `HttpHandlerConfigError`.
-- [ ] A handler with a parameter whose type pyright cannot serialise
+- [x] A handler with a parameter whose type pyright cannot serialise
       (e.g. an unresolvable forward reference) raises
       `HttpHandlerConfigError` at `add_route` time.
 
@@ -435,5 +435,40 @@ transition to `done`. All HTTP tests use `starlette.testclient.TestClient`
 
 ## Implementation notes
 
-- _(populated during implementation — record scope decisions, deviations,
-  coverage numbers per existing spec convention)._
+- `2026-05-12` — Shipped `src/ajolopy/http/{app,errors,exceptions,filters,
+  introspect,params,pipes}.py`. Scope decisions taken during implementation:
+  - **Starlette pinned at >=1.0.0** (just released, MIT). httpx pinned in
+    `dev` deps so the TestClient does not depend on the transitive resolution
+    via the anthropic SDK.
+  - **Sync handlers supported.** Originally the spec said async-only, but
+    alignment with `@Tool` (which dispatches sync via `asyncio.to_thread`)
+    and NestJS's transport-agnostic stance led to allowing sync `def`
+    handlers; they go through `asyncio.to_thread` per request.
+  - **Reason phrases hardcoded** (`_REASON_PHRASES`). Python 3.13 updated
+    `HTTPStatus(422).phrase` from "Unprocessable Entity" to "Unprocessable
+    Content" (RFC 9110); the framework's envelope stays on the
+    NestJS-compatible RFC 7231 wording across Python versions.
+  - **Default catch-all 500 + Uvicorn re-raise.** Registering a handler for
+    `Exception` causes Starlette to route it through `ServerErrorMiddleware`,
+    which sends the response and *re-raises* the exception so production
+    servers (Uvicorn) log it. Tests that hit the catch-all path use
+    `TestClient(app, raise_server_exceptions=False)` to inspect the response
+    without the test transport re-propagating the exception.
+  - **Header default name uses the Python identifier verbatim.** No
+    `_`→`-` auto-translation. For `X-Trace-Id` etc., use the explicit
+    `Header("x-trace-id")`. Predictable and matches NestJS's literal
+    header access.
+  - **Pipe lives on `app.state.ajolopy_pipe`.** Stored once at
+    `create_app()` and read at every `add_route()`. `_get_pipe` falls back
+    to `ValidationPipe()` for apps not constructed by `create_app` (e.g.
+    direct Starlette instantiation in tests).
+  - **TC rules ignored for tests.** `tests/**` is now in
+    `per-file-ignores` for `TC` (move-to-TYPE_CHECKING). Framework
+    introspection resolves annotations via `typing.get_type_hints`, so
+    handler-side imports need to be at runtime even when the test file
+    itself only uses them as annotations.
+  - **Module coverage.** `__init__`, `errors`, `exceptions`, `params` at
+    100%; `app` 96%, `introspect` 99%, `filters` 90%, `pipes` 85%. Uncovered
+    branches are defensive fallbacks (unknown-status reason phrase lookup,
+    missing-pipe-state default, unknown-source dispatch). Total suite: 300
+    tests passing.
