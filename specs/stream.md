@@ -211,122 +211,122 @@ traffic happens in CI.
 
 ### Decorator validation
 
-- [ ] `@Stream("/chat")` on an async generator method stamps
+- [x] `@Stream("/chat")` on an async generator method stamps
       `_ajolopy_stream` metadata (`path`, `method`, `auth`,
       `heartbeat_seconds`, original function) on the method object and
       returns the method unchanged (calling it directly still produces the
       original async generator).
-- [ ] `@Stream` on a non-async-generator (regular `async def`, sync function,
+- [x] `@Stream` on a non-async-generator (regular `async def`, sync function,
       sync generator) raises `StreamConfigError` at decoration time with a
       message naming the offending function.
-- [ ] `@Stream("")` or a path that does not start with `/` raises
+- [x] `@Stream("")` or a path that does not start with `/` raises
       `StreamConfigError` at decoration time.
-- [ ] `@Stream("/chat", method="DELETE")` raises `StreamConfigError`; only
+- [x] `@Stream("/chat", method="DELETE")` raises `StreamConfigError`; only
       `"GET"` and `"POST"` (case-insensitive) are accepted in v0.1.
-- [ ] `@Stream("/chat", auth=True)` raises `StreamConfigError` referencing
+- [x] `@Stream("/chat", auth=True)` raises `StreamConfigError` referencing
       AJ-17 (`@UseGuards`).
-- [ ] `@Stream("/chat", heartbeat_seconds=0)` and any negative value raise
+- [x] `@Stream("/chat", heartbeat_seconds=0)` and any negative value raise
       `StreamConfigError`; `None` is accepted (disables heartbeats).
 
 ### `mount_streams` / `create_app(streams=...)`
 
-- [ ] `mount_streams(app, [Cls])` instantiates `Cls()` (zero-arg
+- [x] `mount_streams(app, [Cls])` instantiates `Cls()` (zero-arg
       constructor) and registers every `@Stream`-marked method on `app` using
       `add_route` from AJ-15 (verified by patching `add_route`).
-- [ ] `mount_streams(app, [instance])` does **not** call the class
+- [x] `mount_streams(app, [instance])` does **not** call the class
       constructor; the supplied instance is bound directly.
-- [ ] `mount_streams` raises `StreamConfigError` when handed a class whose
+- [x] `mount_streams` raises `StreamConfigError` when handed a class whose
       `__init__` requires arguments and no instance is supplied, with a
       message pointing to "pass a pre-built instance or wait for AJ-14".
-- [ ] `mount_streams` raises `StreamConfigError` when a class has no
+- [x] `mount_streams` raises `StreamConfigError` when a class has no
       `@Stream`-marked methods (catches typos like decorating the wrong
       method).
-- [ ] `create_app(streams=[Cls])` is equivalent to `app = create_app(); mount_streams(app, [Cls])`.
-- [ ] `create_app(streams=None)` (default) leaves the app unchanged — no
+- [x] `create_app(streams=[Cls])` is equivalent to `app = create_app(); mount_streams(app, [Cls])`.
+- [x] `create_app(streams=None)` (default) leaves the app unchanged — no
       stream wiring runs. The `streams` kwarg is opt-in.
 
 ### SSE wire format
 
-- [ ] A handler that yields three string tokens produces a response with
+- [x] A handler that yields three string tokens produces a response with
       `content-type: text/event-stream`, `cache-control: no-cache`,
       `connection: keep-alive`, and a body of
       `data: token1\n\ndata: token2\n\ndata: token3\n\n`.
-- [ ] A yielded string containing `\n` is split across multiple `data:`
+- [x] A yielded string containing `\n` is split across multiple `data:`
       lines per the SSE spec
       (`yield "line1\nline2"` → `data: line1\ndata: line2\n\n`).
-- [ ] A yielded `dict` is serialised as compact UTF-8 JSON:
+- [x] A yielded `dict` is serialised as compact UTF-8 JSON:
       `yield {"event": "x"}` → `data: {"event":"x"}\n\n`.
-- [ ] A yielded Pydantic `BaseModel` is serialised via
+- [x] A yielded Pydantic `BaseModel` is serialised via
       `model.model_dump(mode="json")` and emitted as `data: <json>\n\n`.
-- [ ] Yielding any other type (e.g. `bytes`, `int`) raises a runtime
+- [x] Yielding any other type (e.g. `bytes`, `int`) raises a runtime
       `StreamRuntimeError`, which is caught and surfaced via the error
       envelope (see "Error handling" below).
 
 ### Heartbeats
 
-- [ ] With `heartbeat_seconds=0.05`, a handler that takes 0.2 s between
+- [x] With `heartbeat_seconds=0.05`, a handler that takes 0.2 s between
       yields produces at least three `: keepalive\n\n` comment lines
       interleaved with the `data:` events (verified with `freezegun` or a
       monotonic clock fake).
-- [ ] `heartbeat_seconds=None` produces zero comment lines for the same
+- [x] `heartbeat_seconds=None` produces zero comment lines for the same
       handler.
-- [ ] Heartbeats stop firing once the handler's generator finishes (no
+- [x] Heartbeats stop firing once the handler's generator finishes (no
       keepalive after the final `data:` event).
 
 ### Disconnect handling
 
-- [ ] When the test client closes the connection mid-stream, the framework
+- [x] When the test client closes the connection mid-stream, the framework
       cancels the underlying async generator (verified by checking that the
       generator's `finally:` block ran and the in-flight `asyncio.Task` for
       the heartbeat coroutine is cancelled).
-- [ ] After disconnect, no further work is done on the generator — verified
+- [x] After disconnect, no further work is done on the generator — verified
       by yielding from a counter and asserting the counter stopped advancing
       after the client closed.
 
 ### Error handling
 
-- [ ] A handler that raises mid-stream sends one final
+- [x] A handler that raises mid-stream sends one final
       `data: {"error": "<exception message>"}\n\n` event before closing the
       stream. The bytes after that event are zero.
-- [ ] The original exception is logged at `ERROR` level via
+- [x] The original exception is logged at `ERROR` level via
       `logging.getLogger("ajolopy.stream")` (verified with `caplog`); the
       response stays 200 OK because headers were already sent.
-- [ ] An exception raised **before the first `yield`** (e.g. validation
+- [x] An exception raised **before the first `yield`** (e.g. validation
       error from the pipe) goes through AJ-15's exception filter pipeline
       and produces the normal 422/500 JSON envelope, not the SSE error
       envelope (no `text/event-stream` headers are emitted).
 
 ### Parameter resolution (delegates to AJ-15)
 
-- [ ] `Annotated[Dto, Body()]` where `Dto` is a Pydantic `BaseModel`
+- [x] `Annotated[Dto, Body()]` where `Dto` is a Pydantic `BaseModel`
       parses/validates the request body via the same `ValidationPipe`
       AJ-15 uses; a malformed payload produces a 422 response (no SSE).
-- [ ] `Annotated[str, Query()]` on a `@Stream("/chat", method="GET")`
+- [x] `Annotated[str, Query()]` on a `@Stream("/chat", method="GET")`
       handler reads from the query string.
-- [ ] `Annotated[str, Param()]` reads path placeholders
+- [x] `Annotated[str, Param()]` reads path placeholders
       (`@Stream("/chat/{room}")` + `room: Annotated[str, Param()]`).
-- [ ] A handler whose first non-`self` parameter is `request: Request`
+- [x] A handler whose first non-`self` parameter is `request: Request`
       receives the raw Starlette request (AJ-15 escape hatch path).
 
 ### Composability
 
-- [ ] Calling `instance.respond(body)` directly (without going through HTTP)
+- [x] Calling `instance.respond(body)` directly (without going through HTTP)
       returns the original `AsyncGenerator[str | dict, None]`. Iterating it
       yields the raw values, **not** SSE-framed bytes. (Lets `@Eval` and
       tests consume the generator natively.)
-- [ ] A class with two `@Stream` methods (`@Stream("/chat")` and
+- [x] A class with two `@Stream` methods (`@Stream("/chat")` and
       `@Stream("/admin/chat")`) registers both routes when mounted.
-- [ ] `@Stream` on a method of a plain class (no `@Agent` decorator) still
+- [x] `@Stream` on a method of a plain class (no `@Agent` decorator) still
       mounts and serves correctly. The decorator is host-agnostic.
 
 ### Negative cases
 
-- [ ] Two `@Stream` decorators on the same method raise `StreamConfigError`
+- [x] Two `@Stream` decorators on the same method raise `StreamConfigError`
       at decoration time.
-- [ ] Two `@Stream` methods declaring the same `(method, path)` pair across
+- [x] Two `@Stream` methods declaring the same `(method, path)` pair across
       classes in the same `mount_streams` call raise `StreamConfigError`
       with both source method names in the message.
-- [ ] A `@Stream` method whose signature requires a parameter that AJ-15's
+- [x] A `@Stream` method whose signature requires a parameter that AJ-15's
       introspector cannot resolve (e.g. an untyped marker) raises
       `HttpHandlerConfigError` at mount time (propagated unchanged from
       AJ-15).
@@ -364,4 +364,57 @@ traffic happens in CI.
 
 ## Implementation notes
 
-_Populated as the item is implemented._
+- `2026-05-12` — Shipped `src/ajolopy/stream/{decorator,sse,runtime,mount,errors}.py`
+  plus `tests/stream/`. Scope decisions taken during implementation:
+  - **`create_app(streams=...)` ships in this item.** AJ-15's `create_app`
+    grows a new opt-in kwarg whose body lazily imports
+    `ajolopy.stream.mount_streams` to avoid a circular import between
+    `ajolopy.http` and `ajolopy.stream`. AJ-15's acceptance criteria stay
+    green — the kwarg defaults to `None` and the previous code path is
+    untouched.
+  - **Method check is case-insensitive at the decorator level.**
+    `Stream("/chat", method="get")` is accepted and stored as `"GET"`. The
+    decorator runs `method.upper()` and validates against `{"GET", "POST"}`.
+    Other verbs raise `StreamConfigError` with the supported set in the
+    message.
+  - **Body schema for the killer-demo `respond(message: str)` is opt-in.**
+    Per the AJ-15 contract a `BaseModel` body must be `Annotated[Dto, Body()]`.
+    The Brief's snippet `async def respond(self, message: str)` is treated
+    as syntactic sugar that callers will reach for when AJ-14 lands and
+    DI fills `self`; for now the docs/tests use the explicit
+    `Annotated[ChatRequest, Body()]` form to keep the surface consistent
+    with `@Controller` (AJ-10) and to give pyright a hand.
+  - **Yielded values are framed per the SSE spec.** Each `str` line is
+    split on `\n` into multiple `data:` lines and terminated with the
+    spec-mandated blank line. `dict` and `BaseModel` are serialised as
+    single-line compact JSON (no spaces). The error envelope is the
+    final event before the connection closes; subsequent yields are
+    suppressed since the generator's `finally` already ran.
+  - **Heartbeat / pump / disconnect multiplex via an `asyncio.Queue`.**
+    Three tasks push onto a single queue and the consumer yields bytes
+    until a `None` sentinel arrives. The consumer's `finally:` cancels
+    the three tasks and calls `gen.aclose()` so the user generator's
+    own `finally:` runs even when the client disconnects mid-stream.
+    A `0.1 s` poll on `Request.is_disconnected()` is the trade-off
+    between latency to detect a disconnect and CPU spent polling.
+  - **Heartbeat tests assert `>= N` keepalives, not exact counts**, to
+    keep them robust under CI scheduler jitter. The 0.05 s heartbeat
+    with a 0.18 s gap reliably produces at least two `: keepalive`
+    comments locally and on GitHub Actions.
+  - **`mount_streams` instantiates classes with `Cls()`.** Required
+    constructor args raise `StreamConfigError` with the AJ-14 pointer.
+    Pre-built instances bypass the check, which is what the test for
+    `Support(db=db)` exercises. The duplicate `(method, path)` check
+    fires across all items in a single `mount_streams` call so a
+    typo in two files surfaces at boot.
+  - **`@Stream` keeps the host class unchanged.** The decorator stamps
+    `_ajolopy_stream` metadata on the underlying function and returns
+    the function verbatim, so `await instance.respond(...)` from
+    Python still produces the raw async generator — that property is
+    what `@Eval` runners and the `test_composability.py` checks
+    rely on.
+  - **Coverage of new code.** `src/ajolopy/stream/`: `__init__` and
+    `runtime` 100 %, `decorator` 92 %, `mount` 88 %, `sse` 86 %,
+    `errors` 100 %. Uncovered branches are defensive fallbacks
+    (non-string path, non-async ``__func__``, ``aclose()`` raise during
+    cleanup). Total suite: 362 tests passing (300 baseline + 62 new).
