@@ -129,7 +129,10 @@ class ToolBinding:
 
 
 @overload
-def Tool(fn: _F, /) -> _F: ...  # noqa: UP047
+def Tool(fn: _F, /) -> _F:  # noqa: UP047
+    pass
+
+
 @overload
 def Tool(
     fn: None = ...,
@@ -138,7 +141,10 @@ def Tool(
     name: str | None = ...,
     description: str | None = ...,
     schema: type[BaseModel] | None = ...,
-) -> Callable[[_F], _F]: ...
+) -> Callable[[_F], _F]:
+    pass
+
+
 def Tool(  # noqa: N802, UP047 — public surface mirrors the Brief's primitive name.
     fn: _F | None = None,
     /,

@@ -193,34 +193,31 @@ def test_schema_override_skips_introspection() -> None:
 
 
 def test_unannotated_parameter_raises_tool_definition_error() -> None:
-    with pytest.raises(ToolDefinitionError, match="order_id"):
+    def lookup(self, order_id) -> str:
+        return order_id
 
-        class _Holder:
-            @Tool
-            def lookup(self, order_id) -> str:
-                return order_id
+    with pytest.raises(ToolDefinitionError, match="order_id"):
+        Tool(lookup)
 
 
 def test_var_args_raises_tool_definition_error() -> None:
-    with pytest.raises(ToolDefinitionError, match="args"):
+    def variadic(self, *args: int) -> int:
+        return sum(args)
 
-        class _Holder:
-            @Tool
-            def variadic(self, *args: int) -> int:
-                return sum(args)
+    with pytest.raises(ToolDefinitionError, match="args"):
+        Tool(variadic)
 
 
 def test_schema_override_with_unknown_field_raises() -> None:
     class WrongArgs(BaseModel):
         not_a_param: str
 
-    with pytest.raises(ToolDefinitionError, match="not_a_param"):
+    def lookup(self, order_id: str) -> str:
+        """Mismatched override."""
+        return order_id
 
-        class _Holder:
-            @Tool(schema=WrongArgs)
-            def lookup(self, order_id: str) -> str:
-                """Mismatched override."""
-                return order_id
+    with pytest.raises(ToolDefinitionError, match="not_a_param"):
+        Tool(schema=WrongArgs)(lookup)
 
 
 # ---------------------------------------------------------------------------
