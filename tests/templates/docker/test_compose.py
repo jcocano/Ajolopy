@@ -89,6 +89,14 @@ class TestPostgresPgvectorMutualExclusion:
             render_docker_compose(databases=("pgvector", "postgres"))
 
 
+class TestDuplicateDatabases:
+    def test_duplicate_entries_raise(self) -> None:
+        # Two ``redis`` would emit two ``redis:`` service blocks under
+        # the same key — invalid compose. Same for any other choice.
+        with pytest.raises(ValueError, match="duplicates"):
+            render_docker_compose(databases=("redis", "redis"))
+
+
 class TestRedis:
     def test_adds_redis_service_with_alpine_image(self) -> None:
         data = _load(render_docker_compose(databases=("redis",)))

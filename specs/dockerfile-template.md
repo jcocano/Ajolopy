@@ -202,7 +202,7 @@ real Docker daemon is invoked in CI.
 
 ### `render_dockerfile()`
 
-- [ ] Default `render_dockerfile()` output:
+- [x] Default `render_dockerfile()` output:
   - opens with `# syntax=docker/dockerfile:1.7`,
   - contains exactly three `FROM` lines (`deps`, `development`,
     `production`),
@@ -210,57 +210,57 @@ real Docker daemon is invoked in CI.
   - the production stage `RUN`s `useradd -m appuser`, has `USER appuser`,
   - the production stage's `HEALTHCHECK` curls `http://localhost:3000/health`,
   - the production `CMD` includes `--workers 4 --no-access-log`.
-- [ ] `python_version="3.13"` swaps the base image to
+- [x] `python_version="3.13"` swaps the base image to
       `python:3.13-slim` across all three stages.
-- [ ] `python_version="3.14-slim"` is normalised (no
+- [x] `python_version="3.14-slim"` is normalised (no
       `python:3.14-slim-slim` in the output).
-- [ ] `port=8080` updates both the `EXPOSE` line and the healthcheck
+- [x] `port=8080` updates both the `EXPOSE` line and the healthcheck
       target URL in the production stage.
-- [ ] `app_module="api:app"` is forwarded to every Uvicorn `CMD`.
-- [ ] `workers=2` updates only the production `CMD`'s `--workers`
+- [x] `app_module="api:app"` is forwarded to every Uvicorn `CMD`.
+- [x] `workers=2` updates only the production `CMD`'s `--workers`
       value; the development stage stays on `--reload`.
-- [ ] `python_version=""` and `python_version="3"` raise `ValueError`
+- [x] `python_version=""` and `python_version="3"` raise `ValueError`
       naming the expected `X.Y` format.
-- [ ] `port=0` and `port=70_000` raise `ValueError`.
+- [x] `port=0` and `port=70_000` raise `ValueError`.
 
 ### `render_docker_compose()`
 
-- [ ] `databases=()` produces a single `app` service with no
+- [x] `databases=()` produces a single `app` service with no
       `depends_on` block.
-- [ ] `databases=("postgres",)` adds a `db` service backed by
+- [x] `databases=("postgres",)` adds a `db` service backed by
       `postgres:16-alpine`, the `pg_isready` healthcheck, a `pgdata`
       named volume, and `app.depends_on.db.condition: service_healthy`.
-- [ ] `databases=("pgvector",)` swaps the image to
+- [x] `databases=("pgvector",)` swaps the image to
       `pgvector/pgvector:pg16` and keeps the same healthcheck +
       volume name.
-- [ ] `databases=("postgres", "pgvector")` raises `ValueError`
+- [x] `databases=("postgres", "pgvector")` raises `ValueError`
       naming the mutual exclusion.
-- [ ] `databases=("redis",)` adds a `redis` service backed by
+- [x] `databases=("redis",)` adds a `redis` service backed by
       `redis:7-alpine` with the `redis-cli ping` healthcheck and
       `app.depends_on.redis.condition: service_healthy`.
-- [ ] `databases=("qdrant",)` adds a `qdrant` service backed by
+- [x] `databases=("qdrant",)` adds a `qdrant` service backed by
       `qdrant/qdrant:latest` with the `qdrantdata` volume and a
       `# TODO: healthcheck` comment line directly above the service.
-- [ ] `databases=("postgres", "redis", "qdrant")` emits all three
+- [x] `databases=("postgres", "redis", "qdrant")` emits all three
       services in that order, all three named volumes, and a
       `depends_on` block that references every healthy service.
-- [ ] `target="production"` drops the bind mount (`./:/app`) from the
+- [x] `target="production"` drops the bind mount (`./:/app`) from the
       `app` service and changes `build.target` to `production`.
-- [ ] The output parses cleanly with `yaml.safe_load` and the
+- [x] The output parses cleanly with `yaml.safe_load` and the
       top-level structure is `{"services": {...}, "volumes": {...}}`
       when any stateful service is selected, or `{"services": {...}}`
       when none.
 
 ### `render_dockerignore()`
 
-- [ ] Output contains every doc 07 entry exactly once; the order
+- [x] Output contains every doc 07 entry exactly once; the order
       matches the doc for reviewability.
-- [ ] No leading / trailing blank lines (so concatenation with a
+- [x] No leading / trailing blank lines (so concatenation with a
       user-provided extension is well-behaved).
 
 ### Snapshot stability
 
-- [ ] A snapshot test pins the default output of each renderer to a
+- [x] A snapshot test pins the default output of each renderer to a
       committed `.txt` fixture under `tests/templates/docker/__snapshots__/`.
       Diffing the snapshot is the canonical signal that the template
       changed; CI fails until the snapshot is regenerated and
@@ -290,4 +290,49 @@ real Docker daemon is invoked in CI.
 
 ## Implementation notes
 
-_Populated as the item is implemented._
+- **Package layout** matches the spec verbatim: `src/ajolopy/templates/__init__.py`
+  re-exports the docker subpackage's public surface, and
+  `src/ajolopy/templates/docker/{__init__.py, dockerfile.py, compose.py,
+  dockerignore.py}` host the renderers. No top-level export from
+  `ajolopy` — `from ajolopy.templates.docker import ...` is the only entry
+  point.
+- **Renderers are pure f-strings + concatenation.** No template engine, no
+  YAML serializer at render time, no `textwrap.dedent` (the f-string
+  literals are written at the indentation they will appear in the output,
+  which made the diff vs doc 07 easier to eyeball). PyYAML stays a
+  test-only dependency.
+- **Determinism** is enforced by (a) `databases` being a `Sequence`, never
+  a set or dict, and (b) `_VOLUME_BY_DB` only being read in the order
+  `databases` lists. The snapshot tests double-check.
+- **`postgres`/`pgvector` mutual exclusion** is enforced by checking the
+  intersection of `databases` against a `frozenset({"postgres",
+  "pgvector"})` and raising before any service block is emitted.
+- **Duplicate detection** (`databases=("postgres", "postgres")`) raises
+  the same way, since duplicate service keys would also produce an invalid
+  compose document.
+- **Qdrant TODO comment** is emitted one line directly above
+  `  qdrant:` (verified by a test that does `lines.index("  qdrant:")`
+  and asserts the line above). The compose file still parses cleanly via
+  `yaml.safe_load`.
+- **Redis owns no top-level volume.** Doc 07 omits one for the dev
+  compose example, and a stateful Redis is not the default story; the
+  `_VOLUME_BY_DB` map only includes `pgdata` and `qdrantdata`. The
+  `volumes:` top-level block is dropped entirely when no stateful service
+  is selected (e.g. `databases=("redis",)`), so the parsed structure
+  matches `{"services": {...}}` cleanly.
+- **`target="production"`** drops the bind mount (`./:/app`) and sets
+  `build.target` to `production`. The semantics test parses the YAML and
+  asserts `"volumes" not in app`.
+- **`port=0`** is rejected on both `render_dockerfile(port=...)` and
+  `render_docker_compose(app_port=...)` with the same `1..65535` range,
+  even though TCP allows 0 as a kernel-assigned port — `EXPOSE 0` is
+  meaningless in a Dockerfile.
+- **PyYAML** was added as a dev dependency via `uv add --dev pyyaml`. It
+  was already transitive through several existing test deps, but pinning
+  it explicitly makes the dev-time intent visible in `pyproject.toml`.
+- **Sequence import** is wrapped in `if TYPE_CHECKING` so the runtime
+  module stays import-free of `collections.abc`. PEP 649 (Python 3.14)
+  handles the lazy annotation resolution.
+- **Coverage**: the templates package lands at 100% on all three
+  renderers. Mutual exclusion, duplicate detection, and the qdrant
+  TODO comment placement each have a dedicated test.
