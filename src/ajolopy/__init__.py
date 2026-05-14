@@ -2,6 +2,7 @@
 
 from .agent import Agent, Tool
 from .di import Injectable
+from .eval import Eval, Metric
 from .factory import AjolopyApp, AjolopyFactory, run
 from .guards import UseGuards
 from .mcp import MCP
@@ -21,9 +22,11 @@ __all__ = [
     "AjolopyFactory",
     "Controller",
     "Delete",
+    "Eval",
     "Get",
     "Injectable",
     "MCPServer",
+    "Metric",
     "Module",
     "Patch",
     "Post",
