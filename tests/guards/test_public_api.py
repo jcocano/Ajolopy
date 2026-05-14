@@ -1,7 +1,6 @@
 """``UseGuards`` is exported from the top-level package and from ``ajolopy.guards``."""
 
 import ajolopy
-from ajolopy import guards as ajolopy_guards
 from ajolopy.guards import (
     BearerTokenGuard,
     Guard,
@@ -12,6 +11,11 @@ from ajolopy.guards import (
     UseGuards,
     UseGuardsConfigError,
 )
+
+# Alias via attribute access to avoid mixing ``import ajolopy`` with
+# ``from ajolopy import guards``. CodeQL flags both as importing the
+# same module under two styles even when the names differ.
+ajolopy_guards = ajolopy.guards
 
 
 class TestPublicExports:
