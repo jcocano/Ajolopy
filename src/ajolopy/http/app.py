@@ -50,6 +50,7 @@ def create_app(
     exception_filters: Sequence[FilterSpec] | None = None,
     pipe: Pipe | None = None,
     streams: Iterable[type | object] | None = None,
+    mcp_servers: Iterable[type | object] | None = None,
 ) -> Starlette:
     """Create a Starlette app wired with the framework's defaults.
 
@@ -73,6 +74,13 @@ def create_app(
     :func:`ajolopy.stream.mount_streams` so every ``@Stream``-marked
     method on the provided classes / instances becomes an SSE route on
     the app. The kwarg is opt-in; ``None`` leaves the app unchanged.
+
+    ``mcp_servers=[Cls, instance, ...]`` forwards to
+    :func:`ajolopy.mcp_server.mount_mcp_servers` so every
+    ``@MCPServer(transport="http" | "sse")`` class on the list becomes
+    an MCP route on the app. stdio targets are rejected at mount time
+    (run them via the ``ajolopy mcp-serve`` CLI instead). The kwarg is
+    opt-in; ``None`` leaves the app unchanged.
     """
     extra_routes: list[Route] = list(routes) if routes is not None else []
     user_specs: Sequence[FilterSpec] = exception_filters if exception_filters is not None else ()
@@ -85,6 +93,14 @@ def create_app(
         from ajolopy.stream import mount_streams
 
         mount_streams(app, streams)
+    if mcp_servers is not None:
+        # Lazy import for the same reason: ``ajolopy.mcp_server.mount``
+        # imports from ``ajolopy.guards.runtime`` which transitively
+        # imports ``ajolopy.http.exceptions`` -- pulling it at module
+        # load would invert this package's own boot order.
+        from ajolopy.mcp_server import mount_mcp_servers
+
+        mount_mcp_servers(app, mcp_servers)
     return app
 
 
