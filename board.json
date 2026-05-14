@@ -729,15 +729,15 @@
       "slug": "eval-metrics-builtin",
       "type": "feature",
       "title": "Built-in metrics (exact_match, json_match, llm_judge, contains, not_contains, intent_match, tool_called)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p2",
       "milestone": "v0.1",
       "labels": [
         "primitive-support",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/eval-metrics-builtin",
       "pr": null,
       "spec": "specs/eval-metrics-builtin.md",
       "blocks": [
