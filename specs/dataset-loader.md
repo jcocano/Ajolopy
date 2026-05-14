@@ -268,91 +268,91 @@ can transition to `done`.
 
 ### `Case`
 
-- [ ] `Case(input={"x": 1}, expected={"y": 2})` constructs successfully.
-- [ ] `Case` is frozen: mutating `case.input` raises (frozen dataclass
+- [x] `Case(input={"x": 1}, expected={"y": 2})` constructs successfully.
+- [x] `Case` is frozen: mutating `case.input` raises (frozen dataclass
       behaviour) — verified by attempting `case.input = ...` and
       catching `dataclasses.FrozenInstanceError`.
-- [ ] `Case` has `__slots__` (verified via `hasattr(Case, "__slots__")`
+- [x] `Case` has `__slots__` (verified via `hasattr(Case, "__slots__")`
       and `"__dict__" not in Case.__slots__`).
-- [ ] Two `Case` instances with equal fields compare equal
+- [x] Two `Case` instances with equal fields compare equal
       (dataclass `__eq__`).
 
 ### `Dataset` ABC
 
-- [ ] `Dataset` cannot be instantiated directly (`TypeError` due to
+- [x] `Dataset` cannot be instantiated directly (`TypeError` due to
       abstract methods).
-- [ ] A subclass implementing only `__iter__` cannot be instantiated
+- [x] A subclass implementing only `__iter__` cannot be instantiated
       (still abstract on `__aiter__`).
-- [ ] A subclass implementing only `__aiter__` cannot be instantiated.
-- [ ] A subclass implementing both is instantiable and iterates
+- [x] A subclass implementing only `__aiter__` cannot be instantiated.
+- [x] A subclass implementing both is instantiable and iterates
       correctly via both protocols.
 
 ### `JSONLDataset` — happy paths
 
-- [ ] Loading `tests/eval/fixtures/support.jsonl` (3 valid cases)
+- [x] Loading `tests/eval/fixtures/support.jsonl` (3 valid cases)
       produces three `Case` objects in file order via sync iteration.
-- [ ] Async iteration over the same fixture yields the same three
+- [x] Async iteration over the same fixture yields the same three
       cases in the same order.
-- [ ] `len(ds)` returns 3 for the fixture.
-- [ ] `ds.path` returns an absolute `Path` matching the resolved
+- [x] `len(ds)` returns 3 for the fixture.
+- [x] `ds.path` returns an absolute `Path` matching the resolved
       file path.
-- [ ] A JSONL file with extra keys per case (e.g. `tags`, `comment`)
+- [x] A JSONL file with extra keys per case (e.g. `tags`, `comment`)
       loads cleanly; extra keys are silently ignored.
-- [ ] Blank lines and whitespace-only lines are skipped during
+- [x] Blank lines and whitespace-only lines are skipped during
       validation; subsequent line numbers in error messages still
       match the editor view.
-- [ ] A JSONL file with trailing newline at EOF loads cleanly (the
+- [x] A JSONL file with trailing newline at EOF loads cleanly (the
       final blank line is skipped, not flagged).
-- [ ] Relative path strings resolve against `os.getcwd()`
+- [x] Relative path strings resolve against `os.getcwd()`
       (verified by `monkeypatch.chdir(...)`).
-- [ ] Absolute paths pass through verbatim.
+- [x] Absolute paths pass through verbatim.
 
 ### `JSONLDataset` — error paths
 
-- [ ] Non-existent file → `DatasetFileError` whose message contains
+- [x] Non-existent file → `DatasetFileError` whose message contains
       the resolved path.
-- [ ] Path that is a directory → `DatasetFileError`.
-- [ ] Empty file (zero bytes) or file with only blank lines →
+- [x] Path that is a directory → `DatasetFileError`.
+- [x] Empty file (zero bytes) or file with only blank lines →
       `DatasetSchemaError("dataset is empty")`.
-- [ ] Malformed JSON on line 2 (e.g. `{not valid}`) →
+- [x] Malformed JSON on line 2 (e.g. `{not valid}`) →
       `DatasetSchemaError` whose `.line == 2` and whose message
       includes `"line 2"` and the parser error.
-- [ ] Top-level array on line 1 (`["nope"]`) → `DatasetSchemaError`
+- [x] Top-level array on line 1 (`["nope"]`) → `DatasetSchemaError`
       with `.line == 1` and message
       `"line 1: case must be a JSON object"`.
-- [ ] Missing `input` key on line 3 → `DatasetSchemaError` with
+- [x] Missing `input` key on line 3 → `DatasetSchemaError` with
       `.line == 3` and `"line 3: missing required key 'input'"`.
-- [ ] Missing `expected` key → analogous error.
-- [ ] `input` not an object (e.g. `"input": "string"`) →
+- [x] Missing `expected` key → analogous error.
+- [x] `input` not an object (e.g. `"input": "string"`) →
       `DatasetSchemaError` with `"line N: 'input' must be a JSON object"`.
-- [ ] Unreadable file (e.g. permission denied — simulated with
+- [x] Unreadable file (e.g. permission denied — simulated with
       `chmod 000` in a tmp_path fixture) → `DatasetFileError`.
 
 ### `resolve_dataset(spec)`
 
-- [ ] `resolve_dataset("evals/support.jsonl")` returns a
+- [x] `resolve_dataset("evals/support.jsonl")` returns a
       `JSONLDataset` whose `.path` resolves against cwd.
-- [ ] `resolve_dataset(Path("evals/support.jsonl"))` works the
+- [x] `resolve_dataset(Path("evals/support.jsonl"))` works the
       same way.
-- [ ] `resolve_dataset(JSONLDataset(...))` returns the input
+- [x] `resolve_dataset(JSONLDataset(...))` returns the input
       verbatim (`is` identity).
-- [ ] `resolve_dataset(JSONLDataset)` (a class, not an instance)
+- [x] `resolve_dataset(JSONLDataset)` (a class, not an instance)
       raises `DatasetError` because `JSONLDataset` itself has a
       required-arg `__init__`.
-- [ ] A user-defined zero-arg `Dataset` subclass class is
+- [x] A user-defined zero-arg `Dataset` subclass class is
       instantiated and returned.
-- [ ] A user-defined subclass with required-arg `__init__` raises
+- [x] A user-defined subclass with required-arg `__init__` raises
       `DatasetError` with a hint to pass an instance.
-- [ ] `resolve_dataset(42)` raises `DatasetError` listing accepted
+- [x] `resolve_dataset(42)` raises `DatasetError` listing accepted
       forms.
 
 ### Public re-exports
 
-- [ ] `from ajolopy.eval import Case, Dataset, DatasetError,
+- [x] `from ajolopy.eval import Case, Dataset, DatasetError,
       DatasetFileError, DatasetSchemaError, JSONLDataset,
       resolve_dataset` works.
-- [ ] `ajolopy.eval.__all__` includes those names.
-- [ ] `ajolopy/__init__.py` is **not** modified by this item — these
+- [x] `ajolopy.eval.__all__` includes those names.
+- [x] `ajolopy/__init__.py` is **not** modified by this item — these
       are eval-internal types, not top-level primitives. AJ-4 will
       decide whether `@Eval` gets a top-level re-export.
 
@@ -384,4 +384,41 @@ can transition to `done`.
 
 ## Implementation notes
 
-(Empty — populated by the implementation PR.)
+- **Module layout shipped.** `src/ajolopy/eval/` with `case.py`,
+  `errors.py`, `dataset.py`, `jsonl.py`, and `__init__.py` re-exporting
+  the seven public names from the spec. `ajolopy/__init__.py` is
+  untouched — AJ-4 will decide whether `@Eval` warrants a top-level
+  alias.
+- **`DatasetSchemaError.line` is a typed attribute.** Set in
+  `__init__(self, message, *, line=None)` so callers can `except
+  DatasetSchemaError as exc: handle(exc.line)` without re-parsing the
+  message string. Whole-file errors (`"dataset is empty"`) carry
+  `line=None`.
+- **Validation is eager; iteration is lazy.** `__init__` reads the
+  file, splits on `\n`, skips blank/whitespace-only lines (which still
+  advance the line counter so diagnostics match the editor view),
+  `json.loads` each remaining line, and shape-checks the result. The
+  validated `list[dict]` is stored; `__iter__` / `__aiter__` build a
+  fresh `Case` on each yield.
+- **`__aiter__` is implemented as an `async def` with `yield`.** Python
+  treats that as an async-generator function: calling
+  `ds.__aiter__()` (synchronously, no `await`) returns an async
+  generator, which is itself an `AsyncIterator[Case]`. This matches
+  the ABC's sync `__aiter__(self) -> AsyncIterator[Case]` signature
+  at the runtime call site and lets `async for case in ds` work
+  without a wrapper class.
+- **`resolve_dataset` check order matters.** The `Dataset` subclass
+  branch comes before the `str | os.PathLike` branch — otherwise
+  passing the `JSONLDataset` class (which is callable) would be
+  silently fed to `JSONLDataset(JSONLDataset)`, producing an
+  unrelated path-not-found error. The class branch raises
+  `DatasetError` with a "pass an instance" hint when the subclass
+  needs constructor arguments.
+- **No runtime `Mapping` import in `case.py`.** PEP 649 makes the
+  annotation lazy; the import lives under `if TYPE_CHECKING`. Same for
+  `Iterator` / `AsyncIterator` in `dataset.py` and `jsonl.py`. Ruff's
+  `TC` rules pass without needing `from __future__ import annotations`
+  (which is project-banned).
+- **No new runtime / dev dependencies.** Pure stdlib (`json`,
+  `pathlib`, `dataclasses`, `abc`, `os`, `typing`,
+  `collections.abc`).
