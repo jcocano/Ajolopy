@@ -25,6 +25,8 @@ from .pipes import Pipe, ValidationPipe
 if TYPE_CHECKING:
     from starlette.requests import Request
 
+    from ajolopy.guards.base import Guard
+
 type FilterSpec = ExceptionFilter[Any] | type[ExceptionFilter[Any]]
 _PIPE_STATE_ATTR = "ajolopy_pipe"
 
@@ -120,6 +122,8 @@ def add_route(
     method: str,
     path: str,
     handler: Handler,
+    *,
+    guards: Sequence[Guard] | None = None,
 ) -> None:
     """Register ``handler`` at ``(method, path)`` on ``app``.
 
@@ -128,6 +132,12 @@ def add_route(
     block the event loop. Parameter injection (Body / Query / Param /
     Header) is resolved from the handler's signature at registration
     time.
+
+    ``guards=`` is the seam ``mount_routes`` uses to inject an AJ-17
+    guard chain. When non-empty, the endpoint is wrapped so each guard
+    runs (in order) BEFORE the ValidationPipe and the handler body —
+    a 401/403 short-circuits before any user-controlled validation
+    cost is paid.
     """
     upper = method.upper()
     if upper not in _ALLOWED_METHODS:
@@ -139,6 +149,13 @@ def add_route(
     resolved_params = introspect_handler(handler, path)
     pipe = _get_pipe(app)
     endpoint = _build_endpoint(handler, resolved_params, pipe)
+    if guards:
+        # Lazy import to avoid a cycle: ajolopy.guards.runtime imports
+        # ajolopy.http.exceptions, and that module is loaded as part of
+        # this package's own boot sequence.
+        from ajolopy.guards.runtime import apply_guard_chain
+
+        endpoint = apply_guard_chain(endpoint, guards)
     app.router.routes.append(Route(path, endpoint, methods=[upper]))
 
 

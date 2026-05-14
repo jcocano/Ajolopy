@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 from starlette.routing import Route
 
+from ajolopy.guards.runtime import apply_guard_chain, resolve_guard_chain
 from ajolopy.http.introspect import introspect_handler
 from ajolopy.http.pipes import Pipe, ValidationPipe
 
@@ -43,7 +44,8 @@ def mount_streams(app: Starlette, items: Iterable[type | object]) -> None:
 
     seen: dict[tuple[str, str], str] = {}
     for instance in instances:
-        cls_name = type(instance).__qualname__
+        cls = type(instance)
+        cls_name = cls.__qualname__
         marked = list(iter_stream_methods(instance))
         if not marked:
             raise StreamConfigError(
@@ -63,6 +65,15 @@ def mount_streams(app: Starlette, items: Iterable[type | object]) -> None:
                 )
             seen[key] = new_qualname
 
+            guards = resolve_guard_chain(cls, bound_method)
+            if metadata.auth and not guards:
+                raise StreamConfigError(
+                    f"@Stream({metadata.path!r}, auth=True) on "
+                    f"{new_qualname} requires @UseGuards on the method "
+                    f"or its host class. Add "
+                    f"@UseGuards(BearerTokenGuard(...)) (or any other "
+                    f"Guard) to gate the stream."
+                )
             resolved_params = introspect_handler(bound_method, metadata.path)
             endpoint = make_sse_handler(
                 bound_method=bound_method,
@@ -70,6 +81,8 @@ def mount_streams(app: Starlette, items: Iterable[type | object]) -> None:
                 resolved_params=resolved_params,
                 pipe=pipe,
             )
+            if guards:
+                endpoint = apply_guard_chain(endpoint, guards)
             app.router.routes.append(Route(metadata.path, endpoint, methods=[metadata.method]))
 
 

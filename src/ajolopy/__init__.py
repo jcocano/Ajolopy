@@ -3,6 +3,7 @@
 from .agent import Agent, Tool
 from .di import Injectable
 from .factory import AjolopyApp, AjolopyFactory, run
+from .guards import UseGuards
 from .mcp import MCP
 from .modules import Module, compile_module, forwardRef
 from .observability import get_logger
@@ -27,6 +28,7 @@ __all__ = [
     "Put",
     "Stream",
     "Tool",
+    "UseGuards",
     "Workflow",
     "__version__",
     "compile_module",

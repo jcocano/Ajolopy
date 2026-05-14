@@ -15,6 +15,7 @@ zero-arg restriction.
 import inspect
 from typing import TYPE_CHECKING
 
+from ajolopy.guards.runtime import resolve_guard_chain
 from ajolopy.http.app import add_route
 
 from .controller import get_controller_prefix
@@ -74,7 +75,17 @@ def mount_routes(app: Starlette, items: Iterable[type | object]) -> None:
                 )
             seen[key] = new_qualname
 
-            add_route(app, metadata.method, full_path, bound_method)
+            # AJ-17: concatenate class-level + method-level @UseGuards
+            # metadata; class guards always run first. Empty chain → no
+            # wrapping (the add_route fast path takes over).
+            guards = resolve_guard_chain(cls, bound_method)
+            add_route(
+                app,
+                metadata.method,
+                full_path,
+                bound_method,
+                guards=guards or None,
+            )
 
 
 def _join_prefix(prefix: str, path: str) -> str:

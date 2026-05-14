@@ -58,10 +58,13 @@ def Stream(  # noqa: N802 — public surface mirrors the Brief's primitive name.
     (uses ``yield`` inside an ``async def``); regular coroutines and sync
     functions are rejected.
 
-    ``auth=True`` is reserved for AJ-17 (``@UseGuards``) and currently
-    raises :class:`StreamConfigError` so production code does not silently
-    rely on an unimplemented gate. ``heartbeat_seconds=None`` disables
-    keep-alive comments; a positive float configures the interval.
+    ``auth=True`` declares that the stream MUST be gated by
+    ``@UseGuards`` (AJ-17). The decoration-time check is light — the
+    bool is recorded on the metadata; ``mount_streams`` later raises
+    :class:`StreamConfigError` if neither the host class nor the
+    method carries any ``_ajolopy_guards`` metadata.
+    ``heartbeat_seconds=None`` disables keep-alive comments; a positive
+    float configures the interval.
     """
     _validate_path(path)
     upper = _validate_method(method)
@@ -159,10 +162,13 @@ def _validate_method(method: str) -> str:
 
 
 def _validate_auth(auth: bool) -> None:
-    if auth:
+    # ``auth=`` is purely declarative at decoration time: the metadata
+    # stamp lets ``mount_streams`` assert the gating story is wired
+    # before the route goes live. We still reject non-bool inputs so a
+    # typo (``auth="true"``) surfaces immediately.
+    if not isinstance(auth, bool):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise StreamConfigError(
-            "auth=True requires @UseGuards which lands in AJ-17. Until "
-            "then, set auth=False (the default) or omit the kwarg."
+            f"@Stream auth= must be a bool; got {type(auth).__name__}: {auth!r}."
         )
 
 
