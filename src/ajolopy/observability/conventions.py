@@ -245,10 +245,83 @@ AJOLOPY_MCP_SERVER_DURATION_MS = "ajolopy.mcp_server.duration_ms"
 """Wall-clock duration (ms) of one tool dispatch, including the
 host-class instantiation amortised on first call."""
 
+# ---------------------------------------------------------------------------
+# Eval span attributes (AJ-4)
+# ---------------------------------------------------------------------------
+
+AJOLOPY_EVAL_SUITE = "ajolopy.eval.suite"
+"""The ``@Eval`` class's ``__name__``. Lives on the ``eval.run`` root span."""
+
+AJOLOPY_EVAL_TARGET_KIND = "ajolopy.eval.target_kind"
+"""``"agent"`` or ``"workflow"`` depending on which target was registered."""
+
+AJOLOPY_EVAL_TARGET_NAME = "ajolopy.eval.target_name"
+"""The ``@Agent`` or ``@Workflow`` class's ``__name__`` (the target's name)."""
+
+AJOLOPY_EVAL_THRESHOLD = "ajolopy.eval.threshold"
+"""Configured aggregate threshold; the run passes when ``aggregate_score``
+clears this bar."""
+
+AJOLOPY_EVAL_AGGREGATE_SCORE = "ajolopy.eval.aggregate_score"
+"""Weighted aggregate score across every metric. Written at the end of
+the run."""
+
+AJOLOPY_EVAL_PASSED = "ajolopy.eval.passed"
+"""``True`` when ``aggregate_score >= threshold``. Written at the end of
+the run."""
+
+AJOLOPY_EVAL_CONCURRENCY = "ajolopy.eval.concurrency"
+"""Configured per-suite case concurrency cap."""
+
+AJOLOPY_EVAL_CASE_INDEX = "ajolopy.eval.case_index"
+"""0-based dataset index of one case. Lives on every ``eval.case`` span."""
+
+AJOLOPY_EVAL_CASE_PASSED = "ajolopy.eval.case_passed"
+"""Per-case boolean roll-up: ``error is None`` AND every metric cleared
+its ``pass_threshold``."""
+
+AJOLOPY_EVAL_CASE_ERROR = "ajolopy.eval.case_error"
+"""Stringified exception when the target invocation or a metric raised.
+Absent on successful cases."""
+
+AJOLOPY_EVAL_SCORE_PREFIX = "ajolopy.eval.score."
+"""Per-metric per-case score attributes use this prefix; e.g.
+``ajolopy.eval.score.helpful``. No constant per metric — the name is
+built at emission time from the metric's class-declared identifier."""
+
+
+def eval_run_span_name(suite_name: str) -> str:
+    """Span name for the root of one :meth:`EvalRunner.run`.
+
+    Format: ``eval.run {SuiteName}`` to match the ``agent.invoke`` /
+    ``workflow.invoke`` convention.
+    """
+    return f"eval.run {suite_name}"
+
+
+def eval_case_span_name(case_index: int) -> str:
+    """Span name for one case under an ``eval.run`` root.
+
+    Format: ``eval.case {i}`` where ``i`` is the 0-based dataset index.
+    """
+    return f"eval.case {case_index}"
+
+
 __all__ = [
     "AJOLOPY_AGENT_NAME",
     "AJOLOPY_AGENT_OPERATION",
     "AJOLOPY_COST_USD_TOTAL",
+    "AJOLOPY_EVAL_AGGREGATE_SCORE",
+    "AJOLOPY_EVAL_CASE_ERROR",
+    "AJOLOPY_EVAL_CASE_INDEX",
+    "AJOLOPY_EVAL_CASE_PASSED",
+    "AJOLOPY_EVAL_CONCURRENCY",
+    "AJOLOPY_EVAL_PASSED",
+    "AJOLOPY_EVAL_SCORE_PREFIX",
+    "AJOLOPY_EVAL_SUITE",
+    "AJOLOPY_EVAL_TARGET_KIND",
+    "AJOLOPY_EVAL_TARGET_NAME",
+    "AJOLOPY_EVAL_THRESHOLD",
     "AJOLOPY_MCP_SERVER_DURATION_MS",
     "AJOLOPY_MCP_SERVER_IS_ERROR",
     "AJOLOPY_MCP_SERVER_NAME",
@@ -290,6 +363,8 @@ __all__ = [
     "OPERATION_EMBEDDINGS",
     "agent_invoke_span_name",
     "chat_span_name",
+    "eval_case_span_name",
+    "eval_run_span_name",
     "execute_tool_span_name",
     "mcp_call_tool_span_name",
     "mcp_discover_span_name",
