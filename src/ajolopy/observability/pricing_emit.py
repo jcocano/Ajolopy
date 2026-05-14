@@ -18,7 +18,14 @@ is its only caller. The public cost-math entry point is
 :func:`ajolopy.observability.compute_cost_usd`.
 """
 
-from typing import TYPE_CHECKING, Union
+# `Span` is used only in annotations, so ruff's TC002 prefers it under
+# TYPE_CHECKING — but CodeQL flags TYPE_CHECKING imports referenced via
+# string forward refs as "unused" (the static analyser does not trace
+# string quotes back to the import). Keeping the import at runtime is the
+# tie-break that satisfies both tools; noqa pins the rationale.
+from opentelemetry.trace import (
+    Span,  # noqa: TC002 — runtime import keeps CodeQL happy; see note below
+)
 
 from ajolopy.observability.conventions import (
     AJOLOPY_COST_USD_TOTAL,
@@ -33,13 +40,15 @@ from ajolopy.observability.pricing import (
     compute_cost_usd,
     get_active_catalog,
 )
+from ajolopy.providers.types import ChunkUsage, Response
 
-if TYPE_CHECKING:
-    from opentelemetry.trace import Span
-
-    from ajolopy.providers.types import ChunkUsage, Response
-
-UsageSource = Union["Response", "ChunkUsage"]
+# `Response` and `ChunkUsage` are imported at runtime (not under
+# TYPE_CHECKING) so the `UsageSource` alias below resolves immediately
+# without string forward refs. CodeQL's intra-procedural analyser does not
+# trace string-quoted references back to TYPE_CHECKING imports; reading the
+# imports normally avoids the false positive without changing runtime
+# behaviour (these are plain dataclasses with no heavy deps).
+UsageSource = Response | ChunkUsage
 """The two wire types the chat span can pull tokens from."""
 
 
