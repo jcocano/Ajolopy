@@ -298,95 +298,95 @@ can transition to `done`.
 
 ### Happy path
 
-- [ ] `AjolopyFactory.create(AppModule)` returns an `AjolopyApp`
+- [x] `AjolopyFactory.create(AppModule)` returns an `AjolopyApp`
       with `compiled_module`, `container`, and `http` populated.
-- [ ] The returned app's `container` resolves every provider
+- [x] The returned app's `container` resolves every provider
       declared in `AppModule`'s graph (same invariant as
       `compile_module`'s output).
-- [ ] Routes from every `@Controller` in the graph are mounted with
+- [x] Routes from every `@Controller` in the graph are mounted with
       the AJ-10 prefix applied.
-- [ ] Streams from every `@Stream` in the graph are mounted via
+- [x] Streams from every `@Stream` in the graph are mounted via
       `mount_streams`.
 
 ### Step ordering
 
-- [ ] `compile_module` runs before env validation. (Test: `AppModule`
+- [x] `compile_module` runs before env validation. (Test: `AppModule`
       missing `@Module` decorator raises `NotAModuleError` and
       `ConfigService` is never instantiated.)
-- [ ] Env validation runs before `on_app_bootstrap`. (Test:
+- [x] Env validation runs before `on_app_bootstrap`. (Test:
       missing required env var raises `FactoryStartupError(step="validate_env")`
       and no `on_app_bootstrap` is called.)
-- [ ] `on_app_bootstrap` runs before HTTP mounting. (Test: a
+- [x] `on_app_bootstrap` runs before HTTP mounting. (Test: a
       provider with `on_app_bootstrap` that raises prevents any
       route from being registered.)
-- [ ] HTTP mounting runs in the deterministic order produced by
+- [x] HTTP mounting runs in the deterministic order produced by
       `CompiledModule.module_order` + `controllers` list — verified
       by inspecting registered routes after a fixed module graph.
 
 ### Failure modes
 
-- [ ] Passing a non-module root raises `FactoryConfigError` before
+- [x] Passing a non-module root raises `FactoryConfigError` before
       any other step runs. Message names the offending class.
-- [ ] `compile_module` errors (`DuplicateProviderError`,
+- [x] `compile_module` errors (`DuplicateProviderError`,
       `ModuleVisibilityError`, etc.) bubble up as
       `FactoryStartupError(step="compile_module")` with the original
       chained.
-- [ ] Env validation failures bubble up as
+- [x] Env validation failures bubble up as
       `FactoryStartupError(step="validate_env")` with
       `pydantic.ValidationError` chained.
-- [ ] `on_app_bootstrap` raising bubbles up as
+- [x] `on_app_bootstrap` raising bubbles up as
       `FactoryStartupError(step="fire_on_app_bootstrap")` with the
       original chained.
-- [ ] Route mounting failure (rare — typically a malformed
+- [x] Route mounting failure (rare — typically a malformed
       `__ajolopy_route_path__`) bubbles up as
       `FactoryStartupError(step="mount_routes")`.
 
 ### `AjolopyApp` lifecycle
 
-- [ ] `app.listen(port=0)` (random ephemeral port) starts the
+- [x] `app.listen(port=0)` (random ephemeral port) starts the
       server, can be cancelled via `task.cancel()`, and `aclose()`
       is reached via the `finally:` block.
-- [ ] `await app.aclose()` fires every singleton's
+- [x] `await app.aclose()` fires every singleton's
       `on_app_shutdown` in reverse module order, then closes the
       HTTP app, then awaits each provider's optional `aclose()`
       method (e.g. Gemini's cache registry cleanup).
-- [ ] Calling `aclose()` twice is idempotent (second call is a
+- [x] Calling `aclose()` twice is idempotent (second call is a
       no-op).
-- [ ] `async with await AjolopyFactory.create(AppModule) as app:`
+- [x] `async with await AjolopyFactory.create(AppModule) as app:`
       enters the context manager, runs body, exits with `aclose()`
       fired (no `listen` involved).
 
 ### `use_global_pipes` / `use_global_filters` pass-throughs
 
-- [ ] `app.use_global_pipes(SomePipe())` reaches the underlying
+- [x] `app.use_global_pipes(SomePipe())` reaches the underlying
       Starlette app via AJ-15's mechanism. Existing AJ-15 tests
       continue to pass when exercised through `AjolopyApp`.
-- [ ] `app.use_global_filters(SomeFilter())` likewise.
+- [x] `app.use_global_filters(SomeFilter())` likewise.
 
 ### Escape-hatch kwargs
 
-- [ ] `AjolopyFactory.create(AppModule, container=custom_container)`
+- [x] `AjolopyFactory.create(AppModule, container=custom_container)`
       uses the supplied container (verified by pre-seeding a
       provider and asserting it resolves identically).
-- [ ] `AjolopyFactory.create(AppModule, http=custom_starlette)`
+- [x] `AjolopyFactory.create(AppModule, http=custom_starlette)`
       uses the supplied HTTP app — routes mount onto it; the
       property `app.http is custom_starlette` is true.
 
 ### `run()` convenience
 
-- [ ] `run(AppModule, port=0)` starts the server, handles
+- [x] `run(AppModule, port=0)` starts the server, handles
       `KeyboardInterrupt` by cancelling cleanly, and exits with
       code 0 after `aclose()` runs.
-- [ ] `run(AppModule, port=0)` with a faulty AppModule (e.g.
+- [x] `run(AppModule, port=0)` with a faulty AppModule (e.g.
       duplicate provider) exits with a non-zero status and prints
       the `FactoryStartupError` to stderr — the test runs `run` in
       a subprocess and asserts the exit code + stderr content.
 
 ### Public surface
 
-- [ ] `from ajolopy import AjolopyFactory, AjolopyApp, run` all
+- [x] `from ajolopy import AjolopyFactory, AjolopyApp, run` all
       resolve.
-- [ ] `from ajolopy.factory import AjolopyFactory` (the dedicated
+- [x] `from ajolopy.factory import AjolopyFactory` (the dedicated
       path) also resolves.
 
 ## Implementation pointers
@@ -415,6 +415,65 @@ can transition to `done`.
 
 ## Implementation notes
 
-<!-- Filled during implementation. Capture scope decisions taken at
-write time, edge-case findings, coverage numbers, and any test-only
-quirks. -->
+- `2026-05-13` — Shipped `src/ajolopy/factory/{factory,app,run,errors,__init__}.py`
+  + `tests/factory/`. All 8 open design decisions confirmed by the
+  author before coding. Decision **#1** (double validation — early
+  `.env` instantiation + container re-instantiation) and **#7**
+  (signal handling only in `run()`) were the two flagged for explicit
+  user confirmation; the remaining six were adopted as proposed.
+
+- **AJ-11 bug surfaced during smoke testing — fixed in this PR.**
+  Pydantic-settings's `BaseSettings.__init__` uses `__pydantic_self__`
+  in place of `self` (so users can declare a field named "self") and
+  carries several `_`-prefixed configuration kwargs. AJ-11's
+  `introspect_dependencies` did not skip either convention, so
+  `Container.resolve(<BaseConfig subclass>)` failed with
+  `MissingAnnotationError: parameter '__pydantic_self__'`. Fix: skip
+  `__pydantic_self__` alongside `self`, plus skip every `_`-prefixed
+  parameter (matches pydantic-settings's convention). Tests live in
+  `tests/di/test_introspect_pydantic.py` (4 cases).
+
+- **Eager-resolve singletons before lifecycle.** AJ-13's
+  `LifecycleManager.bootstrap()` walks `Container.iter_singletons()`,
+  which only yields already-cached instances. Without an explicit
+  pre-resolve pass, `on_app_bootstrap` would silently fail to fire on
+  providers that nothing else had resolved yet (the normal case at
+  the moment ``create()`` runs). The factory's
+  ``_eager_resolve_singletons`` walks ``compiled.module_order``,
+  collects every owned token, and resolves each singleton once.
+  Request-scoped and transient providers are skipped.
+
+- **Stream mounting filters controllers.** `mount_streams` refuses
+  classes with no `@Stream`-marked methods (would shadow a real bug).
+  But `CompiledModule.controllers` includes pure-HTTP controllers
+  alongside any future stream-bearing controllers. The factory filters
+  via ``iter_stream_methods(cls)`` to forward only classes that carry
+  at least one stream; everything else stays as a regular controller.
+
+- **`use_global_pipes` accepts at most one pipe.** v0.1 supports
+  exactly one global `Pipe`. Passing zero is a no-op (NestJS allows
+  it); passing more than one raises `TypeError` immediately.
+
+- **`set_global_pipe` is a new public seam in `ajolopy.http`.** AJ-14
+  needed to swap the pipe on a running app; the previous AJ-15 API
+  only let you pass a pipe at `create_app` construction. Added a
+  public helper so AJ-14 does not reach into Starlette's
+  `app.state.ajolopy_pipe` private attribute. AJ-15 keeps the private
+  attr internal; ``set_global_pipe`` is the supported way to swap.
+
+- **`run()` keeps signal handlers process-global.** SIGINT / SIGTERM
+  are installed inside `run()` only, never inside `listen()`. Two
+  reasons: (a) `listen()` stays testable without rolling back signal
+  handlers between tests, and (b) advanced users who want their own
+  signal handling call `AjolopyFactory.create + listen` directly. On
+  Windows event loops where `add_signal_handler` is
+  `NotImplementedError`, uvicorn ships its own SIGINT handler that
+  still works.
+
+- **`uvicorn` is the new runtime dependency** (Apache-2.0, version
+  0.46.0). Justified by Brief v4.0's killer-demo Paso 1 contract
+  (`await app.listen(port)`). No known CVEs against 0.46.0.
+
+- **Total suite: 802 tests passing**, 89% global coverage. pyright
+  strict clean, ruff (check + format) clean, `tools/board.py validate`
+  clean.

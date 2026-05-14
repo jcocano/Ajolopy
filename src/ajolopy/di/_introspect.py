@@ -15,10 +15,12 @@ from .errors import MissingAnnotationError
 def introspect_dependencies(cls: type) -> dict[str, Any]:
     """Return ``{param_name: target_type}`` for every ``__init__`` parameter.
 
-    Skips ``self``. Ignores ``*args`` / ``**kwargs``. Raises
-    :class:`MissingAnnotationError` when any keyword parameter lacks
-    a resolvable annotation, naming the parameter and the class so the
-    error message points at the exact ``__init__`` to fix.
+    Skips ``self`` and pydantic-settings' ``__pydantic_self__`` rename.
+    Skips ``_``-prefixed parameters (pydantic-settings' private init
+    kwargs like ``_case_sensitive``). Ignores ``*args`` / ``**kwargs``.
+    Raises :class:`MissingAnnotationError` when any keyword parameter
+    lacks a resolvable annotation, naming the parameter and the class
+    so the error message points at the exact ``__init__`` to fix.
     """
     init = cls.__init__
     # ``object.__init__`` takes no explicit parameters; classes that
@@ -40,7 +42,17 @@ def introspect_dependencies(cls: type) -> dict[str, Any]:
 
     deps: dict[str, Any] = {}
     for name, param in sig.parameters.items():
-        if name == "self":
+        if name in {"self", "__pydantic_self__"}:
+            # ``self`` for normal methods; ``__pydantic_self__`` is
+            # pydantic-settings' convention for the implicit first
+            # parameter (lets users declare a field named "self").
+            continue
+        if name.startswith("_"):
+            # Pydantic-settings's BaseSettings.__init__ declares private
+            # configuration kwargs (``_case_sensitive``, ``_env_prefix``,
+            # ...) all prefixed with a single underscore, every one
+            # carrying a default. They are not DI dependencies; skip them
+            # uniformly so any ``BaseConfig`` subclass resolves cleanly.
             continue
         if param.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
             # *args / **kwargs are not injected — they stay unset.
