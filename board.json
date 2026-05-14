@@ -809,15 +809,15 @@
       "slug": "structlog-integration",
       "type": "feature",
       "title": "structlog setup (JSON in prod, human-readable in dev, trace_id correlation)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "observability",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/structlog-integration",
       "pr": null,
       "spec": "specs/structlog-integration.md",
       "blocks": [],
