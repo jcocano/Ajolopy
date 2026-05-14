@@ -15,9 +15,10 @@ whether ``@Eval`` deserves a top-level alias.
 """
 
 from .case import Case
-from .dataset import Dataset, resolve_dataset
+from .dataset import Dataset
 from .errors import DatasetError, DatasetFileError, DatasetSchemaError
 from .jsonl import JSONLDataset
+from .resolver import resolve_dataset
 
 __all__ = [
     "Case",
