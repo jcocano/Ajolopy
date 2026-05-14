@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, cast
 from ajolopy.config import BaseConfig
 from ajolopy.http import create_app
 from ajolopy.lifecycle import LifecycleManager
+from ajolopy.mcp import MCPDependencyError, get_mcp_registry
 from ajolopy.modules import (
     CircularModuleImportError,
     DuplicateProviderError,
@@ -159,6 +160,24 @@ class AjolopyFactory:
         #    already-cached instances, so this step is mandatory.
         _eager_resolve_singletons(compiled)
 
+        # 3.5. MCP discovery (AJ-7). Walks every @Agent / @Workflow under
+        #     the module tree, collects @MCP classes referenced via
+        #     ``integrations=``, opens one client per unique canonical
+        #     spec, and lists tools. Per-server failures emit WARN logs
+        #     and contribute zero tools; the factory NEVER aborts because
+        #     of an MCP failure. ``MCPDependencyError`` is the one
+        #     exception: it surfaces only when a @MCP class was actually
+        #     declared but the ``ajolopy[mcp]`` extra is missing.
+        registry = get_mcp_registry()
+        if registry.registered_classes():
+            try:
+                await registry.connect_all_for(root_module)
+            except MCPDependencyError as exc:
+                raise FactoryStartupError("mcp_discovery", f"{type(exc).__name__}: {exc}") from exc
+            except Exception as exc:
+                raise FactoryStartupError("mcp_discovery", f"{type(exc).__name__}: {exc}") from exc
+            _wire_mcp_tools(compiled, registry)
+
         # 4. Fire on_module_init + on_app_bootstrap.
         lifecycle = LifecycleManager(compiled.container)
         try:
@@ -195,6 +214,32 @@ class AjolopyFactory:
             http=http_app,
             lifecycle=lifecycle,
         )
+
+
+def _wire_mcp_tools(compiled: CompiledModule, registry: object) -> None:
+    """Walk the module tree and call ``wire_mcp_tools`` on every runtime.
+
+    The registry has already discovered the tool sets; this function
+    just composes them onto every consumer that asked for an
+    ``integrations=`` injection.
+    """
+    seen: set[type] = set()
+    for mod in compiled.module_order:
+        meta = cast(ModuleMetadata, mod.__dict__["_ajolopy_module"])  # noqa: TC006 — runtime import so CodeQL sees usage
+        for token in (
+            *meta.agents,
+            *meta.workflows,
+            *meta.controllers,
+        ):
+            if token in seen:
+                continue
+            seen.add(token)
+            agent_runtime = getattr(token, "_agent_runtime", None)
+            if agent_runtime is not None and hasattr(agent_runtime, "wire_mcp_tools"):
+                agent_runtime.wire_mcp_tools(registry)
+            workflow_runtime = getattr(token, "_workflow_runtime", None)
+            if workflow_runtime is not None and hasattr(workflow_runtime, "wire_mcp_tools"):
+                workflow_runtime.wire_mcp_tools(registry)
 
 
 def _eager_resolve_singletons(compiled: CompiledModule) -> None:
