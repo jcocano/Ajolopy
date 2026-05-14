@@ -28,6 +28,7 @@ from ajolopy.modules import (
     CircularModuleImportError,
     DuplicateProviderError,
     ForwardRef,
+    ModuleMetadata,
     ModuleVisibilityError,
     NotAModuleError,
     UnresolvedForwardRefError,
@@ -43,7 +44,7 @@ if TYPE_CHECKING:
     from starlette.applications import Starlette
 
     from ajolopy.di import Container
-    from ajolopy.modules import CompiledModule, ModuleMetadata
+    from ajolopy.modules import CompiledModule
 
 
 class AjolopyFactory:
@@ -161,7 +162,7 @@ def _eager_resolve_singletons(compiled: CompiledModule) -> None:
     """
     seen: set[type] = set()
     for mod in compiled.module_order:
-        meta = cast("ModuleMetadata", mod.__dict__["_ajolopy_module"])
+        meta = cast(ModuleMetadata, mod.__dict__["_ajolopy_module"])  # noqa: TC006 — runtime import so CodeQL sees usage
         for token in (
             *meta.providers,
             *meta.controllers,
@@ -201,7 +202,7 @@ def _validate_env_early(root_module: type) -> None:
         raw_meta = getattr(mod, "_ajolopy_module", None)
         if raw_meta is None:
             return
-        meta = cast("ModuleMetadata", raw_meta)
+        meta = cast(ModuleMetadata, raw_meta)  # noqa: TC006 — runtime import so CodeQL sees usage
         seen_modules.add(mod)
 
         # Every owned token (providers + controllers + agents + workflows + evals)

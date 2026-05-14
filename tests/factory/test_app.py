@@ -1,7 +1,6 @@
 """Acceptance: ``AjolopyApp`` lifecycle, pass-throughs, context manager."""
 
 import asyncio
-import contextlib
 
 import pytest
 from starlette.applications import Starlette
@@ -171,9 +170,14 @@ async def test_listen_ephemeral_port_serves_then_cancels() -> None:
     await asyncio.sleep(0.05)
     listen_task.cancel()
 
+    # Cancellation is the success path. CodeQL flags ``await`` inside
+    # ``contextlib.suppress`` as "no effect" (false positive), so we keep
+    # the explicit try/except shape and suppress SIM105 locally.
     async with asyncio.timeout(2.0):
-        with contextlib.suppress(asyncio.CancelledError):
+        try:  # noqa: SIM105 — see comment above
             await listen_task
+        except asyncio.CancelledError:
+            pass
     # aclose ran via listen()'s finally; the inner _closed flag is set
     # so a second aclose is a no-op (no double-shutdown errors).
     await app.aclose()

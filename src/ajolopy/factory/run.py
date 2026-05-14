@@ -55,8 +55,13 @@ async def _run_async(root_module: type, *, port: int, host: str) -> None:
         with contextlib.suppress(NotImplementedError):
             loop.add_signal_handler(sig, _request_stop)
 
-    # Expected cancellation: a signal handler cancels the serve task.
-    # The ``listen`` ``finally`` block already ran ``aclose``; just let
-    # the cancellation propagate out as a normal shutdown.
-    with contextlib.suppress(asyncio.CancelledError):
+    # Expected cancellation: a signal handler cancels the serve task. The
+    # ``listen`` ``finally`` block already ran ``aclose``; just let the
+    # cancellation propagate out as a normal shutdown. SIM105 prefers
+    # ``contextlib.suppress`` here but CodeQL flags the ``await`` inside
+    # the context manager as "no effect" (false positive), so we keep
+    # the explicit try/except shape and suppress SIM105 locally.
+    try:  # noqa: SIM105 — see comment above
         await serve_task
+    except asyncio.CancelledError:
+        pass

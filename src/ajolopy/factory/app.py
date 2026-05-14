@@ -12,7 +12,6 @@ the same container would share state; production code builds exactly
 one per process.
 """
 
-import logging
 from typing import TYPE_CHECKING, Any
 
 from ajolopy.http import set_global_pipe
@@ -27,8 +26,6 @@ if TYPE_CHECKING:
     from ajolopy.http.pipes import Pipe
     from ajolopy.lifecycle import LifecycleManager
     from ajolopy.modules import CompiledModule
-
-_LOGGER = logging.getLogger("ajolopy.factory")
 
 
 class AjolopyApp:

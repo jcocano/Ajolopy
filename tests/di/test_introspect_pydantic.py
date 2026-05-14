@@ -69,14 +69,25 @@ def test_introspect_skips_underscore_prefixed_params() -> None:
 
 
 def test_introspect_skips_pydantic_self_alias() -> None:
-    """``__pydantic_self__`` is treated like ``self`` and skipped."""
+    """``__pydantic_self__`` is treated like ``self`` and skipped.
+
+    Build the ``__init__`` as a standalone function and attach it
+    to a vanilla class. Defining the method inside a class body would
+    trigger static-analysis checks (CodeQL's ``py/not-named-self``)
+    that mistake pydantic-settings's convention for a real bug.
+    """
     from ajolopy.di._introspect import introspect_dependencies
 
+    namespace: dict[str, object] = {}
+    exec(  # noqa: S102 — synthetic test fixture with __pydantic_self__ first param
+        "def _init(__pydantic_self__, db: object) -> None:\n    __pydantic_self__.db = db\n",
+        namespace,
+    )
+
     class FakePydantic:
-        # Match pydantic-settings's signature shape — ``__pydantic_self__``
-        # in place of ``self``, a real dep param next to it.
-        def __init__(__pydantic_self__, db: object) -> None:  # noqa: N805 — mirroring pydantic's convention  # pyright: ignore[reportSelfClsParameterName]
-            __pydantic_self__.db = db
+        pass
+
+    FakePydantic.__init__ = namespace["_init"]  # type: ignore[assignment]
 
     deps = introspect_dependencies(FakePydantic)
     assert list(deps.keys()) == ["db"]
