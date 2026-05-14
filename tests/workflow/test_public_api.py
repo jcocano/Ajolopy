@@ -11,9 +11,7 @@ import ajolopy
 
 def test_workflow_re_exported_from_top_level_package() -> None:
     assert hasattr(ajolopy, "Workflow")
-    from ajolopy import Workflow
-
-    assert Workflow is ajolopy.Workflow
+    assert ajolopy.Workflow is ajolopy.workflow.Workflow
 
 
 def test_workflow_in_top_level_dunder_all() -> None:

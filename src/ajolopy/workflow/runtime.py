@@ -36,7 +36,6 @@ the private ``cost_sink`` kwarg.
 
 import inspect
 import json
-import logging
 from collections.abc import AsyncIterator, Awaitable, Callable, Generator
 from contextlib import contextmanager
 from typing import Any
@@ -92,7 +91,6 @@ from .events import (
 )
 
 _TRACER = get_tracer("ajolopy.workflow")
-_LOGGER = logging.getLogger("ajolopy.workflow")
 
 _COORDINATOR_SYSTEM_PROMPT = (
     "You are a coordinator. Delegate the user's request to one of the "
