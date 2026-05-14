@@ -834,7 +834,7 @@
       "slug": "pricing-catalog",
       "type": "feature",
       "title": "Internal pricing catalog + automatic gen_ai.cost_usd per span",
-      "status": "in_review",
+      "status": "done",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -852,7 +852,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-14",
-      "closed_at": null
+      "closed_at": "2026-05-14"
     },
     {
       "id": "AJ-31",
@@ -1301,7 +1301,7 @@
       "id": "AJ-48",
       "slug": "docs-tutorial-3-steps",
       "type": "docs",
-      "title": "Tutorial \u2014 killer demo arc (3 steps: hello, evals, team)",
+      "title": "Tutorial — killer demo arc (3 steps: hello, evals, team)",
       "status": "backlog",
       "priority": "p0",
       "milestone": "v0.1",
