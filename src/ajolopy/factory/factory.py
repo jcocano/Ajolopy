@@ -34,6 +34,7 @@ from ajolopy.modules import (
     UnresolvedForwardRefError,
     compile_module,
 )
+from ajolopy.observability import setup_tracing_from_env
 from ajolopy.routes import mount_routes
 from ajolopy.stream import iter_stream_methods, mount_streams
 
@@ -94,6 +95,14 @@ class AjolopyFactory:
         #    directly against os.environ so missing required env vars fail
         #    before any container work runs.
         _validate_env_early(root_module)
+
+        # 1a. Tracing setup. Idempotent and side-effect free when the user
+        #     installed their own TracerProvider, or when the `ajolopy[otel]`
+        #     extra is not installed (in which case spans stay no-ops at the
+        #     api layer). Running this before compile_module / lifecycle so
+        #     every downstream bootstrap span is already routed through the
+        #     configured exporter.
+        setup_tracing_from_env()
 
         # 2. Compile the module graph.
         try:

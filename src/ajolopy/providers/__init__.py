@@ -26,6 +26,7 @@ from .registry import (
 )
 from .types import (
     Chunk,
+    ChunkUsage,
     FinishReason,
     Message,
     Response,
@@ -37,6 +38,7 @@ from .types import (
 
 __all__ = [
     "Chunk",
+    "ChunkUsage",
     "FinishReason",
     "LLMProvider",
     "LLMProviderError",

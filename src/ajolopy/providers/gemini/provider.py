@@ -36,6 +36,7 @@ from google.genai import types as genai_types
 from ajolopy.providers.base import LLMProvider
 from ajolopy.providers.types import (
     Chunk,
+    ChunkUsage,
     FinishReason,
     Message,
     Response,
@@ -211,6 +212,8 @@ class GeminiProvider(LLMProvider):
       that need a custom timeout, Vertex AI mode, or any other SDK-level
       configuration. The provider does not introspect the client.
     """
+
+    GEN_AI_SYSTEM = "gcp.gemini"
 
     def __init__(
         self,
@@ -966,6 +969,15 @@ class GeminiProvider(LLMProvider):
                     "Gemini stream finished with reason=%r; surfacing as 'error'.",
                     raw_reason,
                 )
-            emitted.append(Chunk(delta="", finish_reason=mapped))
+            # Gemini reports cumulative usage on every stream event under
+            # ``usage_metadata``; the terminal event carries the final totals.
+            usage_metadata = getattr(event, "usage_metadata", None)
+            usage: ChunkUsage | None = None
+            if usage_metadata is not None:
+                input_tokens = int(getattr(usage_metadata, "prompt_token_count", 0) or 0)
+                output_tokens = int(getattr(usage_metadata, "response_token_count", 0) or 0)
+                if input_tokens > 0 or output_tokens > 0:
+                    usage = ChunkUsage(input_tokens=input_tokens, output_tokens=output_tokens)
+            emitted.append(Chunk(delta="", finish_reason=mapped, usage=usage))
 
         return emitted

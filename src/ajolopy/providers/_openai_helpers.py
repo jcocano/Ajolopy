@@ -25,6 +25,7 @@ import openai
 
 from ajolopy.providers.types import (
     Chunk,
+    ChunkUsage,
     FinishReason,
     Response,
     ToolCall,
@@ -208,9 +209,30 @@ def convert_stream_event(event: Any, logger: logging.Logger) -> list[Chunk]:
     ``finish_reason``. A single SDK chunk can carry *both* a text delta
     and one or more tool-call deltas, so this helper may return more
     than one wire-level :class:`Chunk`.
+
+    When the request was made with ``stream_options={"include_usage": True}``
+    the server emits a final ``ChatCompletionChunk`` with **empty choices**
+    and a populated ``usage`` field. That trailing chunk is converted to a
+    single wire-level :class:`Chunk` with ``delta=""`` and
+    :attr:`Chunk.usage` populated, so the runtime can read it off the
+    iterator and attach the values to its ``chat`` span.
     """
     choices = cast("list[Any]", getattr(event, "choices", None) or [])
     if not choices:
+        usage = getattr(event, "usage", None)
+        if usage is not None:
+            prompt_tokens = int(getattr(usage, "prompt_tokens", 0) or 0)
+            completion_tokens = int(getattr(usage, "completion_tokens", 0) or 0)
+            if prompt_tokens > 0 or completion_tokens > 0:
+                return [
+                    Chunk(
+                        delta="",
+                        usage=ChunkUsage(
+                            input_tokens=prompt_tokens,
+                            output_tokens=completion_tokens,
+                        ),
+                    )
+                ]
         return []
     first: Any = choices[0]
     delta: Any = getattr(first, "delta", None)

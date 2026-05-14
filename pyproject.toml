@@ -36,6 +36,17 @@ dependencies = [
     "uvicorn>=0.46.0",
 ]
 
+[project.optional-dependencies]
+# Observability: install the OTel SDK + an OTLP HTTP exporter so the spans
+# emitted by `@Agent`, the provider layer, and tool dispatch get exported to
+# any compliant backend (Langfuse, Honeycomb, Grafana Tempo, Datadog, Sentry).
+# Without this extra, the framework still calls into the OTel api but every
+# span is a cheap no-op (no recording, no export).
+otel = [
+    "opentelemetry-sdk>=1.41.1",
+    "opentelemetry-exporter-otlp-proto-http>=1.41.1",
+]
+
 [project.urls]
 Homepage = "https://github.com/jcocano/ajolopy"
 Repository = "https://github.com/jcocano/ajolopy"

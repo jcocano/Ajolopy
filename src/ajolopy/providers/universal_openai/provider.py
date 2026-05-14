@@ -151,6 +151,26 @@ class UniversalOpenAIProvider(LLMProvider):
     registering the new route with :func:`register_route`.
     """
 
+    GEN_AI_SYSTEM = "openai_compatible"
+
+    @classmethod
+    @override
+    def gen_ai_system_for(cls, model: str) -> str:
+        """Return ``openai_compatible.<prefix>`` so observability backends can
+        differentiate spans by upstream provider (Groq vs Ollama vs Together).
+
+        The model string is required to follow the ``"<prefix>:<model>"``
+        contract documented on this class. When the string is malformed we
+        return the bare ``openai_compatible`` value — span emission must never
+        crash because a span attribute could not be computed; the actual
+        request will fail loudly downstream.
+        """
+        try:
+            prefix, _ = _split_prefix(model)
+        except UniversalProviderError:
+            return cls.GEN_AI_SYSTEM
+        return f"{cls.GEN_AI_SYSTEM}.{prefix}"
+
     def __init__(
         self,
         *,
@@ -230,6 +250,12 @@ class UniversalOpenAIProvider(LLMProvider):
             "model": sdk_model,
             "messages": convert_messages(messages),
             "stream": True,
+            # OpenAI-compatible extension: when the upstream understands the
+            # flag, it will emit a terminal usage-only chunk that the helper
+            # converts to ``Chunk(usage=...)`` for the runtime to read. When
+            # the upstream silently ignores it (Ollama, llama.cpp, etc.) the
+            # stream still works — ``Chunk.usage`` simply stays ``None``.
+            "stream_options": {"include_usage": True},
         }
         if tools:
             kwargs["tools"] = convert_tools(tools)

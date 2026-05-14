@@ -10,19 +10,50 @@ carries ``tool_calls``, the runtime resolves each call against the agent's
 registered ``@Tool`` bindings, dispatches them, appends ``tool_result``
 messages to the conversation, and re-calls the provider until the response
 is tool-free or ``max_tool_iterations`` is exceeded.
+
+Observability is unconditional. Every ``run`` / ``stream`` invocation opens an
+``agent.invoke {AgentName}`` root span; every provider call gets a
+``chat {model}`` child span with OpenTelemetry GenAI semantic-convention
+attributes; every tool dispatch gets an ``execute_tool {tool_name}`` grandchild
+span. When the ``ajolopy[otel]`` SDK extra is not installed the spans are
+cheap no-ops emitted by the api layer.
 """
 
 import asyncio
 import inspect
 import json
 import logging
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable, Generator
+from contextlib import contextmanager
 from typing import Any, Literal
 
-from opentelemetry import trace
+from opentelemetry.trace import Span, Status, StatusCode
 from pydantic import ValidationError
 
 from ajolopy.memory import Memory, resolve_memory
+from ajolopy.observability import (
+    AJOLOPY_AGENT_NAME,
+    AJOLOPY_AGENT_OPERATION,
+    AJOLOPY_STREAMING,
+    GEN_AI_COMPLETION,
+    GEN_AI_OPERATION_NAME,
+    GEN_AI_PROMPT,
+    GEN_AI_REQUEST_MAX_TOKENS,
+    GEN_AI_REQUEST_MODEL,
+    GEN_AI_REQUEST_TEMPERATURE,
+    GEN_AI_RESPONSE_FINISH_REASONS,
+    GEN_AI_SYSTEM,
+    GEN_AI_TOOL_CALL_ID,
+    GEN_AI_TOOL_NAME,
+    GEN_AI_USAGE_INPUT_TOKENS,
+    GEN_AI_USAGE_OUTPUT_TOKENS,
+    OPERATION_CHAT,
+    agent_invoke_span_name,
+    chat_span_name,
+    execute_tool_span_name,
+    get_tracer,
+    is_content_capture_enabled,
+)
 from ajolopy.providers import (
     LLMProvider,
     LLMProviderError,
@@ -44,7 +75,7 @@ from .errors import (
 )
 from .tool import ToolBinding, discover_tools
 
-_TRACER = trace.get_tracer("ajolopy.agent")
+_TRACER = get_tracer("ajolopy.agent")
 _LOGGER = logging.getLogger(__name__)
 
 # Default session id used when the agent is configured with memory and the
@@ -77,7 +108,6 @@ class AgentRuntime:
         model: str,
         system: SystemPrompt,
         memory: object,
-        trace_enabled: bool,
         cache: Literal["prompt"] | None,
         fallback: FallbackSpec,
         temperature: float | None,
@@ -97,7 +127,6 @@ class AgentRuntime:
         self._agent_cls = agent_cls
         self._agent_name = agent_cls.__name__
         self._system: SystemPrompt = system
-        self._trace_enabled = trace_enabled
         self._cache_prompt = cache == "prompt"
         self._temperature = temperature
         self._max_tokens = max_tokens
@@ -168,8 +197,8 @@ class AgentRuntime:
         last_error: BaseException | None = None
         wire_tools: list[Tool] | None = self._wire_tools or None
 
-        for model_str, provider in self._models:
-            with self._span("run", model=model_str, provider_cls=type(provider)):
+        with self._invoke_span(operation="run", streaming=False):
+            for model_str, provider in self._models:
                 try:
                     final_text = await self._run_tool_loop(
                         agent_instance=agent_instance,
@@ -187,13 +216,13 @@ class AgentRuntime:
                 await self._persist_turn(message, final_text)
                 return final_text
 
-        if self._fallback_callable is not None:
-            return await self._run_callable_fallback(message)
+            if self._fallback_callable is not None:
+                return await self._run_callable_fallback(message)
 
-        raise AgentProviderError(
-            f"Agent {self._agent_name!r} exhausted all providers"
-            f"{f' (last error: {last_error})' if last_error is not None else ''}."
-        ) from last_error
+            raise AgentProviderError(
+                f"Agent {self._agent_name!r} exhausted all providers"
+                f"{f' (last error: {last_error})' if last_error is not None else ''}."
+            ) from last_error
 
     def stream(self, agent_instance: Any, message: str) -> AsyncIterator[str]:
         async def _iterator() -> AsyncIterator[str]:
@@ -201,9 +230,9 @@ class AgentRuntime:
             wire_tools: list[Tool] | None = self._wire_tools or None
             last_error: BaseException | None = None
 
-            for model_str, provider in self._models:
-                prompt_messages = self._build_messages(history, message)
-                with self._span("stream", model=model_str, provider_cls=type(provider)):
+            with self._invoke_span(operation="stream", streaming=True):
+                for model_str, provider in self._models:
+                    prompt_messages = self._build_messages(history, message)
                     try:
                         collected: list[str] = []
                         async for delta in self._stream_tool_loop(
@@ -221,15 +250,15 @@ class AgentRuntime:
                     await self._persist_turn(message, "".join(collected))
                     return
 
-            if self._fallback_callable is not None:
-                text = await self._run_callable_fallback(message)
-                yield text
-                return
+                if self._fallback_callable is not None:
+                    text = await self._run_callable_fallback(message)
+                    yield text
+                    return
 
-            raise AgentProviderError(
-                f"Agent {self._agent_name!r} exhausted all providers"
-                f"{f' (last error: {last_error})' if last_error is not None else ''}."
-            ) from last_error
+                raise AgentProviderError(
+                    f"Agent {self._agent_name!r} exhausted all providers"
+                    f"{f' (last error: {last_error})' if last_error is not None else ''}."
+                ) from last_error
 
         return _iterator()
 
@@ -253,13 +282,11 @@ class AgentRuntime:
         fallback retry starts from the original prompt list.
         """
         for iteration in range(self._max_tool_iterations + 1):
-            response = await provider.complete(
-                model=model_str,
-                messages=prompt_messages,
-                tools=wire_tools,
-                temperature=self._temperature,
-                max_tokens=self._max_tokens,
-                cache=self._cache_prompt,
+            response = await self._complete_with_span(
+                provider=provider,
+                model_str=model_str,
+                prompt_messages=prompt_messages,
+                wire_tools=wire_tools,
             )
             if not response.tool_calls:
                 return response.text
@@ -299,30 +326,49 @@ class AgentRuntime:
             # index → {id, name, args_buffer}
             tool_accum: dict[int, dict[str, Any]] = {}
             finish_reason: str | None = None
+            input_tokens = 0
+            output_tokens = 0
 
-            async for chunk in provider.stream(
-                model=model_str,
-                messages=prompt_messages,
-                tools=wire_tools,
-                temperature=self._temperature,
-                max_tokens=self._max_tokens,
-                cache=self._cache_prompt,
-            ):
-                if chunk.tool_call_delta is not None:
-                    delta = chunk.tool_call_delta
-                    key = delta.index if delta.index is not None else len(tool_accum)
-                    entry = tool_accum.setdefault(key, {"id": "", "name": "", "args": ""})
-                    if delta.id:
-                        entry["id"] = delta.id
-                    if delta.name:
-                        entry["name"] = delta.name
-                    if delta.arguments_delta:
-                        entry["args"] += delta.arguments_delta
-                if chunk.delta:
-                    text_parts.append(chunk.delta)
-                    yield chunk.delta
-                if chunk.finish_reason is not None:
-                    finish_reason = chunk.finish_reason
+            with self._chat_span(provider=provider, model_str=model_str) as span:
+                self._record_chat_request(span, prompt_messages=prompt_messages, streaming=True)
+                try:
+                    async for chunk in provider.stream(
+                        model=model_str,
+                        messages=prompt_messages,
+                        tools=wire_tools,
+                        temperature=self._temperature,
+                        max_tokens=self._max_tokens,
+                        cache=self._cache_prompt,
+                    ):
+                        if chunk.tool_call_delta is not None:
+                            delta = chunk.tool_call_delta
+                            key = delta.index if delta.index is not None else len(tool_accum)
+                            entry = tool_accum.setdefault(key, {"id": "", "name": "", "args": ""})
+                            if delta.id:
+                                entry["id"] = delta.id
+                            if delta.name:
+                                entry["name"] = delta.name
+                            if delta.arguments_delta:
+                                entry["args"] += delta.arguments_delta
+                        if chunk.delta:
+                            text_parts.append(chunk.delta)
+                            yield chunk.delta
+                        if chunk.finish_reason is not None:
+                            finish_reason = chunk.finish_reason
+                        if chunk.usage is not None:
+                            input_tokens = chunk.usage.input_tokens
+                            output_tokens = chunk.usage.output_tokens
+                except LLMProviderError as exc:
+                    span.record_exception(exc)
+                    span.set_status(Status(StatusCode.ERROR, str(exc)))
+                    raise
+                self._record_chat_response(
+                    span,
+                    text="".join(text_parts),
+                    finish_reasons=[finish_reason] if finish_reason else [],
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                )
 
             if finish_reason != "tool_calls" or not tool_accum:
                 return
@@ -351,6 +397,38 @@ class AgentRuntime:
         raise AgentToolLoopError(
             f"Agent {self._agent_name!r} stream tool loop exited without a response."
         )
+
+    async def _complete_with_span(
+        self,
+        *,
+        provider: LLMProvider,
+        model_str: str,
+        prompt_messages: list[Message],
+        wire_tools: list[Tool] | None,
+    ) -> Response:
+        with self._chat_span(provider=provider, model_str=model_str) as span:
+            self._record_chat_request(span, prompt_messages=prompt_messages, streaming=False)
+            try:
+                response = await provider.complete(
+                    model=model_str,
+                    messages=prompt_messages,
+                    tools=wire_tools,
+                    temperature=self._temperature,
+                    max_tokens=self._max_tokens,
+                    cache=self._cache_prompt,
+                )
+            except LLMProviderError as exc:
+                span.record_exception(exc)
+                span.set_status(Status(StatusCode.ERROR, str(exc)))
+                raise
+            self._record_chat_response(
+                span,
+                text=response.text,
+                finish_reasons=[response.finish_reason],
+                input_tokens=response.tokens_in,
+                output_tokens=response.tokens_out,
+            )
+            return response
 
     @staticmethod
     def _assemble_stream_tool_calls(accum: dict[int, dict[str, Any]]) -> list[ToolCall]:
@@ -413,11 +491,12 @@ class AgentRuntime:
                 is_error=True,
             )
 
-        with self._tool_span(binding.metadata.name, iteration=iteration) as span:
+        with self._tool_span(call.name, call_id=call.id, iteration=iteration) as span:
             try:
                 kwargs = binding.metadata.validate_arguments(call.arguments)
             except ValidationError as exc:
-                _set_attr(span, "tool.success", False)
+                span.record_exception(exc)
+                span.set_status(Status(StatusCode.ERROR, "invalid arguments"))
                 return Message(
                     role="tool",
                     content=f"Invalid arguments for {call.name!r}: {exc}",
@@ -438,14 +517,14 @@ class AgentRuntime:
                     self._agent_name,
                     exc,
                 )
-                _set_attr(span, "tool.success", False)
+                span.record_exception(exc)
+                span.set_status(Status(StatusCode.ERROR, str(exc)))
                 return Message(
                     role="tool",
                     content=f"{type(exc).__name__}: {exc}",
                     tool_call_id=call.id,
                     is_error=True,
                 )
-            _set_attr(span, "tool.success", True)
             return Message(
                 role="tool",
                 content=_stringify_tool_result(result),
@@ -461,6 +540,85 @@ class AgentRuntime:
             instance = binding.owner_cls()
             self._extra_instances[binding.owner_cls] = instance
         return instance
+
+    # ------------------------------------------------------------------
+    # span helpers
+    # ------------------------------------------------------------------
+
+    @contextmanager
+    def _invoke_span(self, *, operation: str, streaming: bool) -> Generator[Span]:
+        with _TRACER.start_as_current_span(agent_invoke_span_name(self._agent_name)) as span:
+            span.set_attribute(AJOLOPY_AGENT_NAME, self._agent_name)
+            span.set_attribute(AJOLOPY_AGENT_OPERATION, operation)
+            span.set_attribute(AJOLOPY_STREAMING, streaming)
+            yield span
+
+    @contextmanager
+    def _chat_span(
+        self,
+        *,
+        provider: LLMProvider,
+        model_str: str,
+    ) -> Generator[Span]:
+        with _TRACER.start_as_current_span(chat_span_name(model_str)) as span:
+            span.set_attribute(GEN_AI_SYSTEM, provider.gen_ai_system_for(model_str))
+            span.set_attribute(GEN_AI_OPERATION_NAME, OPERATION_CHAT)
+            span.set_attribute(GEN_AI_REQUEST_MODEL, model_str)
+            if self._temperature is not None:
+                span.set_attribute(GEN_AI_REQUEST_TEMPERATURE, self._temperature)
+            if self._max_tokens is not None:
+                span.set_attribute(GEN_AI_REQUEST_MAX_TOKENS, self._max_tokens)
+            yield span
+
+    @contextmanager
+    def _tool_span(
+        self,
+        tool_name: str,
+        *,
+        call_id: str,
+        iteration: int,
+    ) -> Generator[Span]:
+        with _TRACER.start_as_current_span(execute_tool_span_name(tool_name)) as span:
+            span.set_attribute(GEN_AI_TOOL_NAME, tool_name)
+            span.set_attribute(GEN_AI_TOOL_CALL_ID, call_id)
+            span.set_attribute("ajolopy.tool.iteration", iteration)
+            yield span
+
+    @staticmethod
+    def _record_chat_request(
+        span: Span,
+        *,
+        prompt_messages: list[Message],
+        streaming: bool,
+    ) -> None:
+        span.set_attribute(AJOLOPY_STREAMING, streaming)
+        if is_content_capture_enabled():
+            span.set_attribute(
+                GEN_AI_PROMPT,
+                json.dumps(
+                    [{"role": m.role, "content": m.content} for m in prompt_messages],
+                    ensure_ascii=False,
+                ),
+            )
+
+    @staticmethod
+    def _record_chat_response(
+        span: Span,
+        *,
+        text: str,
+        finish_reasons: list[str | None],
+        input_tokens: int,
+        output_tokens: int,
+    ) -> None:
+        reasons = [r for r in finish_reasons if r]
+        if reasons:
+            span.set_attribute(GEN_AI_RESPONSE_FINISH_REASONS, reasons)
+        if input_tokens > 0:
+            span.set_attribute(GEN_AI_USAGE_INPUT_TOKENS, input_tokens)
+        if output_tokens > 0:
+            span.set_attribute(GEN_AI_USAGE_OUTPUT_TOKENS, output_tokens)
+        if is_content_capture_enabled() and text:
+            span.set_attribute(GEN_AI_COMPLETION, text)
 
     # ------------------------------------------------------------------
     # helpers
@@ -504,18 +662,6 @@ class AgentRuntime:
             )
         return result
 
-    def _span(self, op: str, *, model: str, provider_cls: type[LLMProvider]) -> Any:
-        if not self._trace_enabled:
-            return _NULL_SPAN
-        span = _TRACER.start_as_current_span(f"agent.{op}")
-        return _SpanAttrs(span, agent_name=self._agent_name, model=model, provider_cls=provider_cls)
-
-    def _tool_span(self, tool_name: str, *, iteration: int) -> Any:
-        if not self._trace_enabled:
-            return _NULL_SPAN
-        span = _TRACER.start_as_current_span("agent.tool")
-        return _ToolSpanAttrs(span, tool_name=tool_name, iteration=iteration)
-
     # Exposed for tests so they can inspect the bindings without touching
     # the private attribute directly.
     @property
@@ -530,79 +676,6 @@ def _stringify_tool_result(value: Any) -> str:
         return json.dumps(value, default=str, ensure_ascii=False)
     except TypeError, ValueError:
         return str(value)
-
-
-def _set_attr(span_ctx: Any, key: str, value: Any) -> None:
-    """Best-effort attribute setter that tolerates the no-op null span."""
-    setter = getattr(span_ctx, "set_attribute", None)
-    if callable(setter):
-        setter(key, value)
-
-
-# We need a small thin adapter so the tool span can also record attributes
-# from the body of the `with` block (success/failure). The base
-# `_SpanAttrs` only sets attrs on enter.
-class _ToolSpanAttrs:
-    def __init__(self, ctx: Any, *, tool_name: str, iteration: int) -> None:
-        self._ctx = ctx
-        self._tool_name = tool_name
-        self._iteration = iteration
-        self._span: Any = None
-
-    def __enter__(self) -> _ToolSpanAttrs:
-        self._span = self._ctx.__enter__()
-        self._span.set_attribute("tool.name", self._tool_name)
-        self._span.set_attribute("tool.iteration", self._iteration)
-        return self
-
-    def __exit__(self, exc_type: object, exc: object, tb: object) -> bool | None:
-        return self._ctx.__exit__(exc_type, exc, tb)
-
-    def set_attribute(self, key: str, value: Any) -> None:
-        if self._span is not None:
-            self._span.set_attribute(key, value)
-
-
-class _SpanAttrs:
-    """Context manager that sets standard agent.* attributes on its span."""
-
-    def __init__(
-        self,
-        ctx: Any,
-        *,
-        agent_name: str,
-        model: str,
-        provider_cls: type[LLMProvider],
-    ) -> None:
-        self._ctx = ctx
-        self._agent_name = agent_name
-        self._model = model
-        self._provider_cls = provider_cls
-
-    def __enter__(self) -> None:
-        span = self._ctx.__enter__()
-        span.set_attribute("agent.name", self._agent_name)
-        span.set_attribute("agent.model", self._model)
-        span.set_attribute("agent.provider", self._provider_cls.__module__)
-
-    def __exit__(self, exc_type: object, exc: object, tb: object) -> bool | None:
-        return self._ctx.__exit__(exc_type, exc, tb)
-
-
-class _NullSpan:
-    """No-op context manager used when ``trace=False``."""
-
-    def __enter__(self) -> _NullSpan:
-        return self
-
-    def __exit__(self, *_: object) -> bool:
-        return False
-
-    def set_attribute(self, _key: str, _value: Any) -> None:
-        return None
-
-
-_NULL_SPAN = _NullSpan()
 
 
 __all__ = [

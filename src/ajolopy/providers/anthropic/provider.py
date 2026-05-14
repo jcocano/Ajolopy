@@ -16,6 +16,7 @@ import anthropic
 from ajolopy.providers.base import LLMProvider
 from ajolopy.providers.types import (
     Chunk,
+    ChunkUsage,
     FinishReason,
     Message,
     Response,
@@ -64,6 +65,37 @@ def _map_stop_reason(raw: object) -> FinishReason:
     return "stop"
 
 
+def _track_stream_usage(event: Any, input_tokens: int, output_tokens: int) -> tuple[int, int]:
+    """Pull running input/output token counts from Anthropic stream events.
+
+    Anthropic emits ``message_start`` with the prompt's ``input_tokens`` and
+    an initial ``output_tokens`` of zero, then increments ``output_tokens``
+    on each ``message_delta``. The terminal ``message_delta`` (with
+    ``stop_reason``) carries the final ``output_tokens``. This helper accepts
+    any event and returns the latest running totals so the caller can attach
+    the final pair to the terminal chunk.
+    """
+    event_type = getattr(event, "type", None)
+    if event_type == "message_start":
+        message = getattr(event, "message", None)
+        usage = getattr(message, "usage", None)
+        if usage is not None:
+            input_tokens = int(getattr(usage, "input_tokens", input_tokens) or input_tokens)
+            output_tokens = int(getattr(usage, "output_tokens", output_tokens) or output_tokens)
+    elif event_type == "message_delta":
+        usage = getattr(event, "usage", None)
+        if usage is not None:
+            # Anthropic only re-emits the keys that changed; fall back to the
+            # current running value when a key is absent.
+            new_input = getattr(usage, "input_tokens", None)
+            new_output = getattr(usage, "output_tokens", None)
+            if new_input is not None:
+                input_tokens = int(new_input or input_tokens)
+            if new_output is not None:
+                output_tokens = int(new_output or output_tokens)
+    return input_tokens, output_tokens
+
+
 def _estimate_tokens(text: str) -> int:
     """Char-based fallback (~4 chars per token, matches OpenAI's rule of thumb)."""
     return max(1, len(text) // 4)
@@ -81,6 +113,8 @@ class AnthropicProvider(LLMProvider):
     - ``AnthropicProvider(client=...)`` — pre-built ``AsyncAnthropic`` for
       callers that need a custom timeout, proxy, base_url, or retry policy.
     """
+
+    GEN_AI_SYSTEM = "anthropic"
 
     def __init__(
         self,
@@ -168,12 +202,36 @@ class AnthropicProvider(LLMProvider):
             kwargs["temperature"] = temperature
 
         async def _generator() -> AsyncIterator[Chunk]:
+            # Anthropic streams usage in two events: ``message_start`` carries
+            # the prompt's input_tokens, and each ``message_delta`` updates
+            # ``output_tokens`` (final values land on the message_delta that
+            # also carries ``stop_reason``). We accumulate both and attach
+            # them to the terminal chunk so the runtime can populate
+            # ``gen_ai.usage.*`` on the surrounding span.
+            input_tokens = 0
+            output_tokens = 0
             try:
                 async with self._client.messages.stream(**kwargs) as stream:
                     async for event in stream:
+                        input_tokens, output_tokens = _track_stream_usage(
+                            event, input_tokens, output_tokens
+                        )
                         chunk = self._convert_stream_event(event)
-                        if chunk is not None:
-                            yield chunk
+                        if chunk is None:
+                            continue
+                        if chunk.finish_reason is not None and (
+                            input_tokens > 0 or output_tokens > 0
+                        ):
+                            chunk = Chunk(
+                                delta=chunk.delta,
+                                tool_call_delta=chunk.tool_call_delta,
+                                finish_reason=chunk.finish_reason,
+                                usage=ChunkUsage(
+                                    input_tokens=input_tokens,
+                                    output_tokens=output_tokens,
+                                ),
+                            )
+                        yield chunk
             except _RETRIABLE_SDK_EXCEPTIONS as exc:
                 raise AnthropicProviderError(f"Anthropic SDK error during stream(): {exc}") from exc
 
