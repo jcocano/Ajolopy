@@ -482,7 +482,7 @@
       "slug": "guards",
       "type": "feature",
       "title": "@UseGuards basic auth middleware",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -491,7 +491,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/guards",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/54",
       "spec": "specs/guards.md",
       "blocks": [
         "AJ-60"
