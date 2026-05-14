@@ -132,6 +132,22 @@ def mcp_discover_span_name(server_key: str) -> str:
     return f"mcp.discover {server_key}"
 
 
+def mcp_server_call_tool_span_name(server_name: str, tool_name: str) -> str:
+    """Span name for a publish-side ``@MCPServer`` tool dispatch.
+
+    Format: ``mcp_server.call_tool {server_name}/{tool_name}``. Mirrors
+    the agent runtime's ``execute_tool`` span shape so dashboards can
+    distinguish publish-side dispatch (AJ-60) from consume-side calls
+    (``mcp.call_tool``, AJ-7).
+    """
+    return f"mcp_server.call_tool {server_name}/{tool_name}"
+
+
+def mcp_server_boot_span_name(server_name: str) -> str:
+    """Span name for the one-time server boot (stdio CLI or HTTP/SSE mount)."""
+    return f"mcp_server.boot {server_name}"
+
+
 # ---------------------------------------------------------------------------
 # Ajolopy-specific attributes (root span only)
 # ---------------------------------------------------------------------------
@@ -206,10 +222,38 @@ MCP_IS_ERROR = "mcp.is_error"
 call, or when the call timed out / raised before reaching the server.
 Set on both ``mcp.call_tool`` and ``mcp.discover`` spans."""
 
+# ---------------------------------------------------------------------------
+# MCP server attributes (AJ-60 -- publish side)
+# ---------------------------------------------------------------------------
+
+AJOLOPY_MCP_SERVER_NAME = "ajolopy.mcp_server.name"
+"""User-visible name reported in the MCP ``initialize`` handshake
+(kebab-cased class name by default)."""
+
+AJOLOPY_MCP_SERVER_TRANSPORT = "ajolopy.mcp_server.transport"
+"""Transport family for the published server: ``"stdio"``, ``"http"``,
+or ``"sse"``."""
+
+AJOLOPY_MCP_SERVER_TOOL_NAME = "ajolopy.mcp_server.tool.name"
+"""The raw ``@Tool`` method name as exposed to MCP clients."""
+
+AJOLOPY_MCP_SERVER_IS_ERROR = "ajolopy.mcp_server.is_error"
+"""``True`` when the dispatch raised (validation, runtime exception,
+unknown tool name). Set on every ``mcp_server.call_tool`` span."""
+
+AJOLOPY_MCP_SERVER_DURATION_MS = "ajolopy.mcp_server.duration_ms"
+"""Wall-clock duration (ms) of one tool dispatch, including the
+host-class instantiation amortised on first call."""
+
 __all__ = [
     "AJOLOPY_AGENT_NAME",
     "AJOLOPY_AGENT_OPERATION",
     "AJOLOPY_COST_USD_TOTAL",
+    "AJOLOPY_MCP_SERVER_DURATION_MS",
+    "AJOLOPY_MCP_SERVER_IS_ERROR",
+    "AJOLOPY_MCP_SERVER_NAME",
+    "AJOLOPY_MCP_SERVER_TOOL_NAME",
+    "AJOLOPY_MCP_SERVER_TRANSPORT",
     "AJOLOPY_STREAMING",
     "AJOLOPY_WORKFLOW_COORDINATOR_MODEL",
     "AJOLOPY_WORKFLOW_HANDOFF_COUNT",
@@ -249,5 +293,7 @@ __all__ = [
     "execute_tool_span_name",
     "mcp_call_tool_span_name",
     "mcp_discover_span_name",
+    "mcp_server_boot_span_name",
+    "mcp_server_call_tool_span_name",
     "workflow_invoke_span_name",
 ]
