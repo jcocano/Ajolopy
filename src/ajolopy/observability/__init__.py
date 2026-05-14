@@ -1,11 +1,14 @@
-"""Observability surface: OpenTelemetry tracing helpers and GenAI conventions.
+"""Observability surface: structlog setup, OpenTelemetry tracing, GenAI conventions.
 
 The framework keeps this module thin on purpose. Higher-level primitives
 (``@Agent``, the provider runtime, tool dispatch) reach in for ``get_tracer``
 and the ``gen_ai.*`` attribute constants; user code rarely touches this
-module directly. The setup helper :func:`setup_tracing_from_env` is the one
-exception — ``AjolopyFactory.create()`` calls it once at bootstrap to
-auto-install an SDK + OTLP exporter when ``ajolopy[otel]`` is available.
+module directly. The setup helpers are the one exception:
+``AjolopyFactory.create()`` calls :func:`configure_logging` and
+:func:`setup_tracing_from_env` once at bootstrap so every Ajolopy app —
+plus every third-party library running in the same process — emits logs
+and spans through a single configured pipeline. Logging is universal and
+runs first; tracing is opt-in via the ``ajolopy[otel]`` extra.
 """
 
 from .conventions import (
@@ -31,6 +34,7 @@ from .conventions import (
     chat_span_name,
     execute_tool_span_name,
 )
+from .logging import configure_logging, get_logger
 from .tracing import get_tracer, is_content_capture_enabled, setup_tracing_from_env
 
 __all__ = [
@@ -54,7 +58,9 @@ __all__ = [
     "OPERATION_EMBEDDINGS",
     "agent_invoke_span_name",
     "chat_span_name",
+    "configure_logging",
     "execute_tool_span_name",
+    "get_logger",
     "get_tracer",
     "is_content_capture_enabled",
     "setup_tracing_from_env",
