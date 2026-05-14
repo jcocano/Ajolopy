@@ -185,6 +185,12 @@ def convert_response(raw: Any, logger: logging.Logger) -> Response:
     usage: Any = getattr(raw, "usage", None)
     tokens_in = int(getattr(usage, "prompt_tokens", 0) or 0)
     tokens_out = int(getattr(usage, "completion_tokens", 0) or 0)
+    # OpenAI exposes prompt-cache reads under ``usage.prompt_tokens_details``.
+    # Cache *writes* are billed at the same rate as regular input tokens, so
+    # only the read tier is split out — keep ``cache_creation_input_tokens``
+    # at 0 for OpenAI / OpenAI-compatible payloads.
+    prompt_details: Any = getattr(usage, "prompt_tokens_details", None)
+    cache_read = int(getattr(prompt_details, "cached_tokens", 0) or 0)
 
     finish_reason: FinishReason
     if tool_calls and not isinstance(finish_reason_raw, str):
@@ -198,6 +204,7 @@ def convert_response(raw: Any, logger: logging.Logger) -> Response:
         tokens_in=tokens_in,
         tokens_out=tokens_out,
         finish_reason=finish_reason,
+        cache_read_input_tokens=cache_read,
     )
 
 
@@ -223,6 +230,12 @@ def convert_stream_event(event: Any, logger: logging.Logger) -> list[Chunk]:
         if usage is not None:
             prompt_tokens = int(getattr(usage, "prompt_tokens", 0) or 0)
             completion_tokens = int(getattr(usage, "completion_tokens", 0) or 0)
+            # OpenAI's terminal usage chunk carries the same
+            # ``prompt_tokens_details.cached_tokens`` field as the
+            # non-streaming response. Universal-OpenAI servers that omit
+            # it (Ollama, llama.cpp) leave the value at 0 gracefully.
+            prompt_details = getattr(usage, "prompt_tokens_details", None)
+            cache_read = int(getattr(prompt_details, "cached_tokens", 0) or 0)
             if prompt_tokens > 0 or completion_tokens > 0:
                 return [
                     Chunk(
@@ -230,6 +243,7 @@ def convert_stream_event(event: Any, logger: logging.Logger) -> list[Chunk]:
                         usage=ChunkUsage(
                             input_tokens=prompt_tokens,
                             output_tokens=completion_tokens,
+                            cache_read_input_tokens=cache_read,
                         ),
                     )
                 ]

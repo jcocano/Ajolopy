@@ -13,6 +13,8 @@ from .runtime import AgentRuntime
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Callable
 
+    from ajolopy.observability import Catalog
+
     from .runtime import FallbackSpec, SystemPrompt
 
 _DEFAULT_MAX_TOOL_ITERATIONS = 10
@@ -29,6 +31,7 @@ def Agent[T](  # noqa: N802 — public surface mirrors the Brief's primitive nam
     max_tokens: int | None = None,
     tools: list[type[Any]] | None = None,
     max_tool_iterations: int = _DEFAULT_MAX_TOOL_ITERATIONS,
+    catalog: Catalog | None = None,
 ) -> Callable[[type[T]], type[T]]:
     """Class decorator factory — see ``specs/agent.md`` for the full surface.
 
@@ -52,6 +55,7 @@ def Agent[T](  # noqa: N802 — public surface mirrors the Brief's primitive nam
             max_tokens=max_tokens,
             tools=tools,
             max_tool_iterations=max_tool_iterations,
+            catalog=catalog,
         )
 
         async def run(self: T, message: str) -> str:

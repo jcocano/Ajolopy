@@ -1,0 +1,66 @@
+name: Sync LiteLLM pricing snapshot
+
+on:
+  schedule:
+    # First day of every month at 09:00 UTC. Matches the cadence the spec
+    # locked for AJ-30 — a monthly cron is frequent enough to keep up with
+    # LiteLLM price changes without flooding reviewers with PRs.
+    - cron: '0 9 1 * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Detect drift + open PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
+        with:
+          enable-cache: true
+      - name: Install Python
+        run: uv python install 3.14
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: Check pricing drift
+        id: check
+        run: |
+          set +e
+          uv run python tools/sync_pricing.py --check | tee /tmp/sync-pricing-diff.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          set -e
+      - name: Resolve upstream HEAD SHA
+        if: steps.check.outputs.exit_code != '0'
+        id: head
+        run: |
+          set -eu
+          sha="$(git ls-remote https://github.com/BerriAI/litellm.git HEAD | awk '{print $1}')"
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+          echo "Upstream HEAD: ${sha}"
+      - name: Rewrite snapshot to upstream
+        if: steps.check.outputs.exit_code != '0'
+        run: |
+          uv run python tools/sync_pricing.py --write --head-sha "${{ steps.head.outputs.sha }}"
+      - name: Open sync PR
+        if: steps.check.outputs.exit_code != '0'
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e  # v7.0.8
+        with:
+          branch: chore/pricing-sync
+          base: main
+          delete-branch: true
+          commit-message: |
+            chore(pricing): sync LiteLLM snapshot ${{ steps.head.outputs.sha }}
+          title: "chore(pricing): sync LiteLLM snapshot"
+          body-file: /tmp/sync-pricing-diff.txt
+          labels: |
+            pricing
+            dependencies

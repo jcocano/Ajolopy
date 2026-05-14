@@ -157,140 +157,140 @@ Every item ships behind at least one passing test.
 
 ### Catalog data + loader
 
-- [ ] `src/ajolopy/observability/pricing.json` is the **full LiteLLM
+- [x] `src/ajolopy/observability/pricing.json` is the **full LiteLLM
       `model_prices_and_context_window.json`** snapshot, copied verbatim from
       upstream's `main` at a pinned commit. No curation, no field renaming —
       whatever LiteLLM ships, we ship, so the sync script's field-by-field
       diff stays trivial. The pinned upstream commit SHA is recorded in the
       file's leading `metadata` block (LiteLLM already keeps this) or in
       `tools/sync_pricing.py` as a constant.
-- [ ] `NOTICE` file at repo root attributes LiteLLM with the MIT licence text
+- [x] `NOTICE` file at repo root attributes LiteLLM with the MIT licence text
       and a link to the upstream JSON, plus the snapshot date.
-- [ ] `Catalog.load_default()` returns a `Catalog` with every model in the
+- [x] `Catalog.load_default()` returns a `Catalog` with every model in the
       snapshot loaded. Asserted by lookups for: an Anthropic model, an OpenAI
       model, a Gemini model, an embeddings model, and an
       OpenAI-compatible-aliased model (e.g. `groq/llama-3.3-70b-versatile`).
-- [ ] Loading the catalog at import time costs < 50 ms despite the full
+- [x] Loading the catalog at import time costs < 50 ms despite the full
       snapshot being ~500 KB (asserted with a `perf_counter` smoke test). If
       the simple `json.load` pass exceeds the budget, the loader falls back
       to a lazy lookup that parses on demand.
 
 ### Model-name normalisation (universal-OpenAI lookup)
 
-- [ ] `Catalog.get(model)` normalises the lookup key by replacing the
+- [x] `Catalog.get(model)` normalises the lookup key by replacing the
       universal provider's `:` separator with LiteLLM's `/` separator before
       the table lookup. So an Ajolopy model string
       `"groq:llama-3.3-70b-versatile"` resolves against the LiteLLM entry
       `"groq/llama-3.3-70b-versatile"` transparently.
-- [ ] When the normalised key is still not present, the same lookup is
+- [x] When the normalised key is still not present, the same lookup is
       attempted with the route prefix stripped (e.g. `"groq:llama-3.3-70b"`
       → `"groq/llama-3.3-70b"` → `"llama-3.3-70b"`). This matches users who
       route a bare model through their own custom prefix.
-- [ ] Native providers (Anthropic, OpenAI, Gemini) pass the model unchanged
+- [x] Native providers (Anthropic, OpenAI, Gemini) pass the model unchanged
       to `Catalog.get`; the normalisation is a no-op for them.
-- [ ] The normalisation rule is documented in the module docstring of
+- [x] The normalisation rule is documented in the module docstring of
       `pricing.py` so future provider authors know to either match the
       LiteLLM key or register an alias.
 
 ### `compute_cost_usd` math
 
-- [ ] Signature: `compute_cost_usd(model: str, *, input_tokens: int = 0, output_tokens: int = 0, cache_creation_input_tokens: int = 0, cache_read_input_tokens: int = 0, catalog: Catalog | None = None) -> float | None`.
-- [ ] Returns `None` for an unknown model (precondition for the omit-attr
+- [x] Signature: `compute_cost_usd(model: str, *, input_tokens: int = 0, output_tokens: int = 0, cache_creation_input_tokens: int = 0, cache_read_input_tokens: int = 0, catalog: Catalog | None = None) -> float | None`.
+- [x] Returns `None` for an unknown model (precondition for the omit-attr
       branch in the emitter).
-- [ ] Returns `0.0` only when the model is known AND every token count is 0.
-- [ ] Math: `cost = sum_over_tiers(tokens × price_per_token)`. Asserted with
+- [x] Returns `0.0` only when the model is known AND every token count is 0.
+- [x] Math: `cost = sum_over_tiers(tokens × price_per_token)`. Asserted with
       two real-world numbers (Sonnet 4.7 input 1000 tokens × $3/MTok = $0.003;
       Sonnet 4.7 cache read 1000 tokens at $0.30/MTok = $0.0003).
-- [ ] When a tier price is missing in the snapshot (e.g. OpenAI models without
+- [x] When a tier price is missing in the snapshot (e.g. OpenAI models without
       `cache_creation_input_token_cost`), the missing tier contributes 0 to
       the total (does NOT make the whole call return None).
-- [ ] Float precision: 1 billion input tokens at $3/MTok returns $3000.0 with
+- [x] Float precision: 1 billion input tokens at $3/MTok returns $3000.0 with
       sub-cent precision intact (regression guard on float arithmetic).
 
 ### Override merging
 
-- [ ] `Catalog.with_overrides({"acme-model": ModelPrice(input_cost_per_token=1e-6, output_cost_per_token=3e-6)})` returns a new catalog where
+- [x] `Catalog.with_overrides({"acme-model": ModelPrice(input_cost_per_token=1e-6, output_cost_per_token=3e-6)})` returns a new catalog where
       `compute_cost_usd("acme-model", input_tokens=1000)` returns 0.001.
-- [ ] Overriding a model already in the snapshot replaces its prices entirely
+- [x] Overriding a model already in the snapshot replaces its prices entirely
       (no per-tier merge — explicit, predictable).
-- [ ] `pricing_overrides` accepted at `AjolopyFactory.create(...)` flows
+- [x] `pricing_overrides` accepted at `AjolopyFactory.create(...)` flows
       through to the runtime's catalog instance.
 
 ### Wire-type extension (touches AJ-28 surface)
 
-- [ ] `ChunkUsage` gains `cache_creation_input_tokens: int = 0` and
+- [x] `ChunkUsage` gains `cache_creation_input_tokens: int = 0` and
       `cache_read_input_tokens: int = 0` (back-compat: default 0 means the
       existing `Chunk` instantiations in tests keep compiling).
-- [ ] `Response` gains the same two fields. Existing constructions stay
+- [x] `Response` gains the same two fields. Existing constructions stay
       compatible.
-- [ ] AnthropicProvider populates both from `message.usage.cache_creation_input_tokens` and `message.usage.cache_read_input_tokens` on `complete()`; same in the streaming `message_start` / `message_delta` events.
-- [ ] OpenAIProvider populates `cache_read_input_tokens` from
+- [x] AnthropicProvider populates both from `message.usage.cache_creation_input_tokens` and `message.usage.cache_read_input_tokens` on `complete()`; same in the streaming `message_start` / `message_delta` events.
+- [x] OpenAIProvider populates `cache_read_input_tokens` from
       `usage.prompt_tokens_details.cached_tokens` on `complete()` and on the
       streaming terminal usage chunk. `cache_creation_input_tokens` stays 0
       (OpenAI does not split that out — cache writes are billed at the input
       rate).
-- [ ] GeminiProvider populates `cache_read_input_tokens` from
+- [x] GeminiProvider populates `cache_read_input_tokens` from
       `usage_metadata.cached_content_token_count`. `cache_creation_input_tokens` stays 0 (Gemini cache creation is billed separately as part of input).
-- [ ] UniversalOpenAIProvider mirrors OpenAI; missing fields stay 0
+- [x] UniversalOpenAIProvider mirrors OpenAI; missing fields stay 0
       gracefully when an upstream server does not report cache details.
 
 ### `chat`-span emission
 
-- [ ] When the chat-span helper closes a non-streaming call to a known model,
+- [x] When the chat-span helper closes a non-streaming call to a known model,
       it sets `gen_ai.cost_usd`, `gen_ai.cost_usd.input`,
       `gen_ai.cost_usd.output`, `gen_ai.cost_usd.cache_creation`,
       `gen_ai.cost_usd.cache_read`. Asserted with the OTel SDK
       `InMemorySpanExporter`.
-- [ ] The same five attrs land on a streaming chat span (uses
+- [x] The same five attrs land on a streaming chat span (uses
       `Chunk.usage` populated by the terminal chunk).
-- [ ] When the model is unknown and no override applies, none of the five
+- [x] When the model is unknown and no override applies, none of the five
       attrs are present on the chat span.
-- [ ] When the model is unknown, exactly one warning is logged per `model`
+- [x] When the model is unknown, exactly one warning is logged per `model`
       string per process — repeat calls do not flood the log.
 
 ### `agent.invoke` roll-up
 
-- [ ] A run with a single chat call sets `ajolopy.cost_usd.total` on the
+- [x] A run with a single chat call sets `ajolopy.cost_usd.total` on the
       `agent.invoke` root equal to the chat span's `gen_ai.cost_usd`.
-- [ ] A run with N chat calls (tool loop) sets `ajolopy.cost_usd.total`
+- [x] A run with N chat calls (tool loop) sets `ajolopy.cost_usd.total`
       equal to the sum of the children's `gen_ai.cost_usd` values.
-- [ ] When at least one child chat span has no cost (unknown model), the
+- [x] When at least one child chat span has no cost (unknown model), the
       root's `ajolopy.cost_usd.total` is the sum of the children that DO
       have cost. The root attr is still emitted unless **every** child is
       uncovered, in which case it is omitted.
-- [ ] Fallback runs (sibling chat spans under one invoke from AJ-28) roll
+- [x] Fallback runs (sibling chat spans under one invoke from AJ-28) roll
       up the same way.
 
 ### `compute_cost_usd` is the public embeddings entry point
 
-- [ ] `from ajolopy.observability import compute_cost_usd` is part of the
+- [x] `from ajolopy.observability import compute_cost_usd` is part of the
       package public surface.
-- [ ] Calling `compute_cost_usd("text-embedding-3-small", input_tokens=1000)`
+- [x] Calling `compute_cost_usd("text-embedding-3-small", input_tokens=1000)`
       against the default catalog returns a non-`None` float (proof that
       embedding entries are populated and reachable via the same helper).
-- [ ] No spans are emitted around `provider.embed()` in v0.1. This is
+- [x] No spans are emitted around `provider.embed()` in v0.1. This is
       verified by a regression test: an embed call against a configured
       tracer yields zero new spans.
 
 ### Sync script + workflow
 
-- [ ] `uv run python tools/sync_pricing.py --check` returns exit code 0 when
+- [x] `uv run python tools/sync_pricing.py --check` returns exit code 0 when
       the embedded snapshot matches the upstream `main` JSON; non-zero with
       a human-readable diff otherwise. (The `--check` flag is what the
       monthly workflow runs to decide whether to open a PR.)
-- [ ] The CI workflow `.github/workflows/sync-pricing.yml` runs on a
+- [x] The CI workflow `.github/workflows/sync-pricing.yml` runs on a
       monthly cron and opens a PR with the new snapshot when a diff exists.
       No PR when the snapshot matches.
-- [ ] The workflow uses `actions/checkout@<pinned-sha>` and
+- [x] The workflow uses `actions/checkout@<pinned-sha>` and
       `peter-evans/create-pull-request@<pinned-sha>` (or equivalent) — no
       floating tags, per the project's security baseline.
 
 ### Lint / type / format / test gates
 
-- [ ] `uv run ruff check` clean.
-- [ ] `uv run ruff format --check` clean.
-- [ ] `uv run pyright` clean in strict mode.
-- [ ] `uv run pytest` green — the full suite, not just the new tests.
+- [x] `uv run ruff check` clean.
+- [x] `uv run ruff format --check` clean.
+- [x] `uv run pyright` clean in strict mode.
+- [x] `uv run pytest` green — the full suite, not just the new tests.
 
 ## Implementation pointers
 
@@ -330,4 +330,29 @@ Every item ships behind at least one passing test.
 
 ## Implementation notes
 
-(empty — fill in during the implementation PR)
+- **Snapshot pinning.** The bundled `pricing.json` is the full LiteLLM
+  `model_prices_and_context_window.json` at upstream commit
+  `410ce761dc234ba0f5a874c1415f5c423e87d860`. The SHA is recorded in
+  `tools/sync_pricing.py` (`LITELLM_UPSTREAM_SHA` constant) and in the
+  repo-root `NOTICE`. The sync script's `--write` mode updates both.
+- **Default-catalog seam.** `AgentRuntime` resolves the active catalog
+  *lazily* on first chat-span emission via `get_active_catalog()`. The
+  factory installs the merged catalog (default + `pricing_overrides`)
+  via `set_default_catalog` at bootstrap. This decouples decorator-time
+  construction from factory-time bootstrap so agents declared at import
+  time still see overrides applied at `AjolopyFactory.create(...)` time.
+- **Unknown-model logging.** `Catalog._warn_unknown` keeps a per-instance
+  `_warned_unknown` set behind a `threading.Lock`, so each model string
+  fires at most one warning per process. The warning routes through
+  stdlib `logging.getLogger("ajolopy.observability.pricing")` so
+  `pytest`'s `caplog` fixture captures it without requiring the framework's
+  structlog pipeline to be configured first.
+- **Embeddings.** `compute_cost_usd` is exposed as a public helper but
+  `provider.embed()` is left un-instrumented per the spec — a regression
+  test in `test_pricing_math.py` guards that an embed call yields zero
+  spans. The wrapping span lands later with `@Embed` / `@Memory`.
+- **Pricing emit module.** The private `pricing_emit.py` carries
+  `set_chat_cost_attrs` (per-call) and `set_root_cost_total` (per-invoke
+  roll-up). The runtime threads a `child_costs: list[float | None]`
+  through the `run` / `stream` paths; the invoke-span helper reads it
+  once the body finishes to write `ajolopy.cost_usd.total`.

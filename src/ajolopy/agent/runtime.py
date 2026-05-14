@@ -25,10 +25,13 @@ import json
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable, Generator
 from contextlib import contextmanager
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from opentelemetry.trace import Span, Status, StatusCode
 from pydantic import ValidationError
+
+if TYPE_CHECKING:
+    from ajolopy.providers.types import ChunkUsage
 
 from ajolopy.memory import Memory, resolve_memory
 from ajolopy.observability import (
@@ -48,12 +51,15 @@ from ajolopy.observability import (
     GEN_AI_USAGE_INPUT_TOKENS,
     GEN_AI_USAGE_OUTPUT_TOKENS,
     OPERATION_CHAT,
+    Catalog,
     agent_invoke_span_name,
     chat_span_name,
     execute_tool_span_name,
     get_tracer,
     is_content_capture_enabled,
 )
+from ajolopy.observability.pricing import get_active_catalog
+from ajolopy.observability.pricing_emit import set_chat_cost_attrs, set_root_cost_total
 from ajolopy.providers import (
     LLMProvider,
     LLMProviderError,
@@ -114,6 +120,7 @@ class AgentRuntime:
         max_tokens: int | None,
         tools: list[type[Any]] | None,
         max_tool_iterations: int,
+        catalog: Catalog | None = None,
     ) -> None:
         if cache == "prompt" and callable(system):
             raise AgentConfigError(
@@ -151,6 +158,12 @@ class AgentRuntime:
 
         self._primary_provider_key = self._resolve_provider_key(model)
         self._memory: Memory | None = resolve_memory(memory)  # type: ignore[arg-type]
+
+        # ``catalog`` defaults to None — pricing emission resolves the active
+        # catalog lazily on first chat-span emission via :func:`get_active_catalog`.
+        # That keeps decorator-time construction independent of the factory's
+        # ``pricing_overrides`` plumbing (which runs later, at bootstrap).
+        self._catalog: Catalog | None = catalog
 
     @staticmethod
     def _normalize_fallback(fallback: FallbackSpec) -> list[str]:
@@ -196,8 +209,13 @@ class AgentRuntime:
         prompt_messages = self._build_messages(history, message)
         last_error: BaseException | None = None
         wire_tools: list[Tool] | None = self._wire_tools or None
+        # Per-invoke accumulator for chat-span costs. Each chat helper
+        # appends one entry (float for known model, None for unknown). The
+        # invoke span reads it once the body finishes to write the root
+        # ``ajolopy.cost_usd.total`` attr.
+        child_costs: list[float | None] = []
 
-        with self._invoke_span(operation="run", streaming=False):
+        with self._invoke_span(operation="run", streaming=False) as invoke_span:
             for model_str, provider in self._models:
                 try:
                     final_text = await self._run_tool_loop(
@@ -206,6 +224,7 @@ class AgentRuntime:
                         model_str=model_str,
                         prompt_messages=prompt_messages,
                         wire_tools=wire_tools,
+                        child_costs=child_costs,
                     )
                 except LLMProviderError as exc:
                     last_error = exc
@@ -214,8 +233,10 @@ class AgentRuntime:
                     prompt_messages = self._build_messages(history, message)
                     continue
                 await self._persist_turn(message, final_text)
+                set_root_cost_total(invoke_span, child_costs)
                 return final_text
 
+            set_root_cost_total(invoke_span, child_costs)
             if self._fallback_callable is not None:
                 return await self._run_callable_fallback(message)
 
@@ -229,8 +250,9 @@ class AgentRuntime:
             history = await self._load_history()
             wire_tools: list[Tool] | None = self._wire_tools or None
             last_error: BaseException | None = None
+            child_costs: list[float | None] = []
 
-            with self._invoke_span(operation="stream", streaming=True):
+            with self._invoke_span(operation="stream", streaming=True) as invoke_span:
                 for model_str, provider in self._models:
                     prompt_messages = self._build_messages(history, message)
                     try:
@@ -241,6 +263,7 @@ class AgentRuntime:
                             model_str=model_str,
                             prompt_messages=prompt_messages,
                             wire_tools=wire_tools,
+                            child_costs=child_costs,
                         ):
                             collected.append(delta)
                             yield delta
@@ -248,8 +271,10 @@ class AgentRuntime:
                         last_error = exc
                         continue
                     await self._persist_turn(message, "".join(collected))
+                    set_root_cost_total(invoke_span, child_costs)
                     return
 
+                set_root_cost_total(invoke_span, child_costs)
                 if self._fallback_callable is not None:
                     text = await self._run_callable_fallback(message)
                     yield text
@@ -274,6 +299,7 @@ class AgentRuntime:
         model_str: str,
         prompt_messages: list[Message],
         wire_tools: list[Tool] | None,
+        child_costs: list[float | None],
     ) -> str:
         """Drive the function-calling loop until a tool-free response.
 
@@ -287,6 +313,7 @@ class AgentRuntime:
                 model_str=model_str,
                 prompt_messages=prompt_messages,
                 wire_tools=wire_tools,
+                child_costs=child_costs,
             )
             if not response.tool_calls:
                 return response.text
@@ -319,6 +346,7 @@ class AgentRuntime:
         model_str: str,
         prompt_messages: list[Message],
         wire_tools: list[Tool] | None,
+        child_costs: list[float | None],
     ) -> AsyncIterator[str]:
         """Stream text deltas, transparently handling tool-call rounds."""
         for iteration in range(self._max_tool_iterations + 1):
@@ -328,6 +356,9 @@ class AgentRuntime:
             finish_reason: str | None = None
             input_tokens = 0
             output_tokens = 0
+            cache_creation = 0
+            cache_read = 0
+            terminal_usage: ChunkUsage | None = None
 
             with self._chat_span(provider=provider, model_str=model_str) as span:
                 self._record_chat_request(span, prompt_messages=prompt_messages, streaming=True)
@@ -358,6 +389,9 @@ class AgentRuntime:
                         if chunk.usage is not None:
                             input_tokens = chunk.usage.input_tokens
                             output_tokens = chunk.usage.output_tokens
+                            cache_creation = chunk.usage.cache_creation_input_tokens
+                            cache_read = chunk.usage.cache_read_input_tokens
+                            terminal_usage = chunk.usage
                 except LLMProviderError as exc:
                     span.record_exception(exc)
                     span.set_status(Status(StatusCode.ERROR, str(exc)))
@@ -369,6 +403,16 @@ class AgentRuntime:
                     input_tokens=input_tokens,
                     output_tokens=output_tokens,
                 )
+                cost = set_chat_cost_attrs(
+                    span,
+                    model=model_str,
+                    usage=terminal_usage,
+                    catalog=self._resolve_catalog(),
+                )
+                child_costs.append(cost)
+                # Silence unused-name warnings while keeping the cache token
+                # state available for future per-call logging.
+                _ = (cache_creation, cache_read)
 
             if finish_reason != "tool_calls" or not tool_accum:
                 return
@@ -405,6 +449,7 @@ class AgentRuntime:
         model_str: str,
         prompt_messages: list[Message],
         wire_tools: list[Tool] | None,
+        child_costs: list[float | None],
     ) -> Response:
         with self._chat_span(provider=provider, model_str=model_str) as span:
             self._record_chat_request(span, prompt_messages=prompt_messages, streaming=False)
@@ -428,7 +473,27 @@ class AgentRuntime:
                 input_tokens=response.tokens_in,
                 output_tokens=response.tokens_out,
             )
+            cost = set_chat_cost_attrs(
+                span,
+                model=model_str,
+                usage=response,
+                catalog=self._resolve_catalog(),
+            )
+            child_costs.append(cost)
             return response
+
+    def _resolve_catalog(self) -> Catalog:
+        """Return the catalog to bill against on the next chat-span emission.
+
+        Constructor-supplied ``catalog`` wins; otherwise we read the
+        process-wide active catalog lazily — that way decorator-time
+        construction never has to depend on the factory's
+        ``pricing_overrides=`` plumbing (factory bootstrap runs *after*
+        decoration).
+        """
+        if self._catalog is not None:
+            return self._catalog
+        return get_active_catalog()
 
     @staticmethod
     def _assemble_stream_tool_calls(accum: dict[int, dict[str, Any]]) -> list[ToolCall]:
