@@ -7,6 +7,7 @@ from .modules import Module, compile_module, forwardRef
 from .observability import get_logger
 from .routes import Controller, Delete, Get, Patch, Post, Put
 from .stream import Stream
+from .workflow import Workflow
 
 __version__ = "0.0.1"
 
@@ -24,6 +25,7 @@ __all__ = [
     "Put",
     "Stream",
     "Tool",
+    "Workflow",
     "__version__",
     "compile_module",
     "forwardRef",

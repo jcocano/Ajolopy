@@ -111,6 +111,11 @@ def agent_invoke_span_name(agent_name: str) -> str:
     return f"agent.invoke {agent_name}"
 
 
+def workflow_invoke_span_name(name: str) -> str:
+    """Span name for the Ajolopy workflow root. Format: ``workflow.invoke {Name}``."""
+    return f"workflow.invoke {name}"
+
+
 # ---------------------------------------------------------------------------
 # Ajolopy-specific attributes (root span only)
 # ---------------------------------------------------------------------------
@@ -131,11 +136,50 @@ Equal to the sum of every child ``chat`` span's ``gen_ai.cost_usd``. When
 *every* child chat span has an unknown model (no cost computed), this attr
 is omitted; otherwise it is the partial sum of children with known cost."""
 
+# ---------------------------------------------------------------------------
+# Workflow span attributes (root + handoff breadcrumbs)
+# ---------------------------------------------------------------------------
+
+AJOLOPY_WORKFLOW_NAME = "ajolopy.workflow.name"
+"""The decorated workflow class's ``__name__``. Lives on the
+``workflow.invoke`` root span."""
+
+AJOLOPY_WORKFLOW_OPERATION = "ajolopy.workflow.operation"
+"""``run`` for the awaited path, ``stream`` for the async-iterator path."""
+
+AJOLOPY_WORKFLOW_COORDINATOR_MODEL = "ajolopy.workflow.coordinator.model"
+"""The ``coordinator=`` model string. Absent when ``route()`` overrides."""
+
+AJOLOPY_WORKFLOW_MAX_STEPS = "ajolopy.workflow.max_steps"
+"""The configured cap on coordinator turns. Absent on the ``route()`` path."""
+
+AJOLOPY_WORKFLOW_STEP_COUNT = "ajolopy.workflow.step_count"
+"""How many coordinator turns actually executed during this invocation."""
+
+AJOLOPY_WORKFLOW_HANDOFF_COUNT = "ajolopy.workflow.handoff.count"
+"""How many delegations the workflow performed during this invocation."""
+
+AJOLOPY_WORKFLOW_HANDOFF_FROM = "ajolopy.workflow.handoff.from"
+"""Set on each ``agent.invoke`` child of a workflow span. Either
+``coordinator`` (default path) or ``route`` (override path)."""
+
+AJOLOPY_WORKFLOW_HANDOFF_TO = "ajolopy.workflow.handoff.to"
+"""The delegated agent's class name. Set on the same ``agent.invoke`` child
+as :data:`AJOLOPY_WORKFLOW_HANDOFF_FROM`."""
+
 __all__ = [
     "AJOLOPY_AGENT_NAME",
     "AJOLOPY_AGENT_OPERATION",
     "AJOLOPY_COST_USD_TOTAL",
     "AJOLOPY_STREAMING",
+    "AJOLOPY_WORKFLOW_COORDINATOR_MODEL",
+    "AJOLOPY_WORKFLOW_HANDOFF_COUNT",
+    "AJOLOPY_WORKFLOW_HANDOFF_FROM",
+    "AJOLOPY_WORKFLOW_HANDOFF_TO",
+    "AJOLOPY_WORKFLOW_MAX_STEPS",
+    "AJOLOPY_WORKFLOW_NAME",
+    "AJOLOPY_WORKFLOW_OPERATION",
+    "AJOLOPY_WORKFLOW_STEP_COUNT",
     "GEN_AI_COMPLETION",
     "GEN_AI_COST_USD",
     "GEN_AI_COST_USD_CACHE_CREATION",
@@ -159,4 +203,5 @@ __all__ = [
     "agent_invoke_span_name",
     "chat_span_name",
     "execute_tool_span_name",
+    "workflow_invoke_span_name",
 ]

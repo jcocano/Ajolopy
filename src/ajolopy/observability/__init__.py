@@ -21,6 +21,14 @@ from .conventions import (
     AJOLOPY_AGENT_OPERATION,
     AJOLOPY_COST_USD_TOTAL,
     AJOLOPY_STREAMING,
+    AJOLOPY_WORKFLOW_COORDINATOR_MODEL,
+    AJOLOPY_WORKFLOW_HANDOFF_COUNT,
+    AJOLOPY_WORKFLOW_HANDOFF_FROM,
+    AJOLOPY_WORKFLOW_HANDOFF_TO,
+    AJOLOPY_WORKFLOW_MAX_STEPS,
+    AJOLOPY_WORKFLOW_NAME,
+    AJOLOPY_WORKFLOW_OPERATION,
+    AJOLOPY_WORKFLOW_STEP_COUNT,
     GEN_AI_COMPLETION,
     GEN_AI_COST_USD,
     GEN_AI_COST_USD_CACHE_CREATION,
@@ -44,6 +52,7 @@ from .conventions import (
     agent_invoke_span_name,
     chat_span_name,
     execute_tool_span_name,
+    workflow_invoke_span_name,
 )
 from .logging import configure_logging, get_logger
 from .pricing import Catalog, ModelPrice, compute_cost_usd
@@ -54,6 +63,14 @@ __all__ = [
     "AJOLOPY_AGENT_OPERATION",
     "AJOLOPY_COST_USD_TOTAL",
     "AJOLOPY_STREAMING",
+    "AJOLOPY_WORKFLOW_COORDINATOR_MODEL",
+    "AJOLOPY_WORKFLOW_HANDOFF_COUNT",
+    "AJOLOPY_WORKFLOW_HANDOFF_FROM",
+    "AJOLOPY_WORKFLOW_HANDOFF_TO",
+    "AJOLOPY_WORKFLOW_MAX_STEPS",
+    "AJOLOPY_WORKFLOW_NAME",
+    "AJOLOPY_WORKFLOW_OPERATION",
+    "AJOLOPY_WORKFLOW_STEP_COUNT",
     "GEN_AI_COMPLETION",
     "GEN_AI_COST_USD",
     "GEN_AI_COST_USD_CACHE_CREATION",
@@ -85,4 +102,5 @@ __all__ = [
     "get_tracer",
     "is_content_capture_enabled",
     "setup_tracing_from_env",
+    "workflow_invoke_span_name",
 ]
