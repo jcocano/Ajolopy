@@ -779,7 +779,7 @@
       "slug": "otel-instrumentation",
       "type": "feature",
       "title": "OpenTelemetry spans for @Agent/@Tool/@Workflow/@MCP/@Stream with gen_ai.* attrs",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -788,7 +788,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/otel-instrumentation",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/44",
       "spec": "specs/otel-instrumentation.md",
       "blocks": [
         "AJ-30",
