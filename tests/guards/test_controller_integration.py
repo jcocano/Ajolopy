@@ -101,3 +101,48 @@ class TestClassGuardAndMethodGuardCompose:
         with TestClient(_build_app(X)) as client:
             response = client.get("/x/")
         assert response.status_code == 200
+
+
+class TestVerbDecoratorComposability:
+    """``@UseGuards`` composes with every HTTP verb decorator."""
+
+    def test_useguards_with_post(self) -> None:
+        @Controller("/x")
+        class X:
+            @UseGuards(_AllowGuard())
+            @Post("/")
+            async def create(self, body: Annotated[_CreateDto, Body()]) -> dict[str, str]:
+                return {"name": body.name}
+
+        with TestClient(_build_app(X)) as client:
+            response = client.post("/x/", json={"name": "Alice", "age": 30})
+        assert response.status_code == 200
+        assert response.json() == {"name": "Alice"}
+
+
+class TestDecoratorOrderComposability:
+    """``@UseGuards`` is composable with ``@Controller`` in both orderings."""
+
+    def test_useguards_above_controller(self) -> None:
+        @UseGuards(_AllowGuard())
+        @Controller("/x")
+        class X:
+            @Get("/")
+            async def index(self) -> dict[str, str]:
+                return {"hi": "ok"}
+
+        with TestClient(_build_app(X)) as client:
+            response = client.get("/x/")
+        assert response.status_code == 200
+
+    def test_useguards_below_controller(self) -> None:
+        @Controller("/x")
+        @UseGuards(_AllowGuard())
+        class X:
+            @Get("/")
+            async def index(self) -> dict[str, str]:
+                return {"hi": "ok"}
+
+        with TestClient(_build_app(X)) as client:
+            response = client.get("/x/")
+        assert response.status_code == 200
