@@ -82,23 +82,6 @@ def test_missing_coordinator_and_route_raises_with_helpful_message() -> None:
             pass
 
 
-def test_integrations_kwarg_reserved_for_aj_7() -> None:
-    agent_a, _ = _make_agents()
-
-    class _Integration:
-        pass
-
-    with pytest.raises(WorkflowConfigError, match="AJ-7"):
-
-        @Workflow(
-            coordinator="claude-sonnet-4-7",
-            agents=[agent_a],
-            integrations=[_Integration],
-        )
-        class _Team:
-            pass
-
-
 def test_max_steps_zero_raises() -> None:
     agent_a, _ = _make_agents()
     with pytest.raises(WorkflowConfigError, match=">= 1"):
