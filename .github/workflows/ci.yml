@@ -63,10 +63,11 @@ jobs:
       - name: Install Python
         run: uv python install 3.14
       - name: Install dependencies
-        # Pull the `otel` extra so pyright can resolve the SDK imports used
-        # by `ajolopy.observability.tracing` and `tests/observability/`.
-        # End-user installs still keep the SDK opt-in via the extra.
-        run: uv sync --frozen --extra otel
+        # Pull the `otel` + `mcp` extras so pyright can resolve the SDK
+        # imports used by `ajolopy.observability.tracing`,
+        # `ajolopy.mcp.*`, and `ajolopy.mcp_server.*`. End-user installs
+        # still keep both SDKs opt-in.
+        run: uv sync --frozen --extra otel --extra mcp
       - name: pyright
         run: uv run pyright
 
@@ -87,10 +88,10 @@ jobs:
       - name: Install Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
       - name: Install dependencies
-        # Pull the `otel` extra so the observability test suite
-        # (`tests/observability/test_tracing.py`) can import the SDK's
-        # `InMemorySpanExporter`. The OTel SDK stays opt-in for end users.
-        run: uv sync --frozen --extra otel
+        # Pull the `otel` + `mcp` extras so the observability and
+        # mcp/mcp_server test suites can import the SDKs. Both extras
+        # stay opt-in for end users.
+        run: uv sync --frozen --extra otel --extra mcp
       - name: pytest
         run: uv run pytest
 
