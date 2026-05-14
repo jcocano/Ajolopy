@@ -809,7 +809,7 @@
       "slug": "structlog-integration",
       "type": "feature",
       "title": "structlog setup (JSON in prod, human-readable in dev, trace_id correlation)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -827,7 +827,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-13",
-      "closed_at": null
+      "closed_at": "2026-05-13"
     },
     {
       "id": "AJ-30",
