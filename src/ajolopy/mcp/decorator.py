@@ -26,7 +26,7 @@ The decorator's contract:
 import numbers
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypeVar
 
 from .client import MCPClient
 from .errors import MCPConfigError
@@ -34,6 +34,15 @@ from .registry import ServerEntry, get_mcp_registry
 from .spec import Transport, parse_spec, validate_env_refs
 
 _DEFAULT_TIMEOUT_S = 30.0
+
+# NOTE: ``MCP`` keeps a manual ``TypeVar`` instead of the PEP 695 form used
+# by ``@Agent`` / ``@Workflow``. CodeQL's flow analyzer mis-classifies the
+# PEP 695 type parameter as a local variable when the function body has
+# pre-decorator validation that may raise (it doesn't flag the simpler
+# decorators because their body goes straight to the inner ``def``). The
+# classic TypeVar shape is semantically identical and silences the false
+# positive without changing public typing.
+T = TypeVar("T")
 
 
 @dataclass(slots=True, frozen=True)
@@ -49,7 +58,7 @@ class MCPMetadata:
     timeout: float
 
 
-def MCP[T](  # noqa: N802 — public surface mirrors the Brief's primitive name.
+def MCP(  # noqa: N802 — public surface mirrors the Brief's primitive name.
     *,
     servers: Mapping[str, str | MCPClient] | list[str | MCPClient],
     auth: dict[str, dict[str, Any]] | None = None,
