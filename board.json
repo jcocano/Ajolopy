@@ -192,7 +192,7 @@
       "slug": "mcp",
       "type": "feature",
       "title": "@MCP decorator (consume external MCP servers)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -201,7 +201,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/mcp",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/52",
       "spec": "specs/mcp.md",
       "blocks": [
         "AJ-48",
