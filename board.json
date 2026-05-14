@@ -106,15 +106,15 @@
       "slug": "eval",
       "type": "feature",
       "title": "@Eval + @Metric decorators + regression detection core",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "primitive",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/eval",
       "pr": null,
       "spec": "specs/eval.md",
       "blocks": [
