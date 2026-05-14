@@ -834,15 +834,15 @@
       "slug": "pricing-catalog",
       "type": "feature",
       "title": "Internal pricing catalog + automatic gen_ai.cost_usd per span",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "observability",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/pricing-catalog",
       "pr": null,
       "spec": "specs/pricing-catalog.md",
       "blocks": [],
@@ -851,7 +851,7 @@
       ],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-14",
+      "updated_at": "2026-05-13",
       "closed_at": null
     },
     {
