@@ -73,15 +73,25 @@ class TestMethodValidation:
 
 
 class TestAuthValidation:
-    def test_auth_true_raises_until_aj17(self) -> None:
-        with pytest.raises(StreamConfigError, match="AJ-17"):
-            Stream("/chat", auth=True)(_fresh_ok())
+    def test_auth_true_is_legal_at_decoration_time(self) -> None:
+        # AJ-17 flipped the reservation: ``auth=True`` is now legal at
+        # decoration. The mount-time check (covered in
+        # ``tests/guards/test_stream_integration.py``) is the new
+        # enforcement point.
+        decorated = Stream("/chat", auth=True)(_fresh_ok())
+        metadata = get_stream_metadata(decorated)
+        assert metadata is not None
+        assert metadata.auth is True
 
     def test_auth_false_is_default_no_op(self) -> None:
         decorated = Stream("/chat")(_fresh_ok())
         metadata = get_stream_metadata(decorated)
         assert metadata is not None
         assert metadata.auth is False
+
+    def test_auth_non_bool_rejected(self) -> None:
+        with pytest.raises(StreamConfigError, match="must be a bool"):
+            Stream("/chat", auth="true")(_fresh_ok())  # pyright: ignore[reportArgumentType]
 
 
 class TestHeartbeatValidation:
