@@ -177,6 +177,9 @@ async def test_listen_ephemeral_port_serves_then_cancels() -> None:
         try:  # noqa: SIM105 — see comment above
             await listen_task
         except asyncio.CancelledError:
+            # We explicitly cancelled ``listen_task`` above; this is the
+            # expected path. Swallow it so the test continues to the
+            # ``aclose`` assertion below.
             pass
     # aclose ran via listen()'s finally; the inner _closed flag is set
     # so a second aclose is a no-op (no double-shutdown errors).

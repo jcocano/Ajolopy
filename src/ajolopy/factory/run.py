@@ -57,11 +57,14 @@ async def _run_async(root_module: type, *, port: int, host: str) -> None:
 
     # Expected cancellation: a signal handler cancels the serve task. The
     # ``listen`` ``finally`` block already ran ``aclose``; just let the
-    # cancellation propagate out as a normal shutdown. SIM105 prefers
-    # ``contextlib.suppress`` here but CodeQL flags the ``await`` inside
-    # the context manager as "no effect" (false positive), so we keep
-    # the explicit try/except shape and suppress SIM105 locally.
-    try:  # noqa: SIM105 — see comment above
+    # cancellation propagate out as a normal shutdown. ``contextlib.suppress``
+    # would be shorter but CodeQL flags ``await`` inside the context
+    # manager as "no effect" (false positive), so the explicit try/except
+    # shape stays.
+    try:
         await serve_task
     except asyncio.CancelledError:
-        pass
+        # Signal-driven shutdown reached this wrapper. ``listen``'s
+        # ``finally`` block already fired ``aclose``; we have nothing
+        # left to do, so swallow the cancellation and return normally.
+        return
