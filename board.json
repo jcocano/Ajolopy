@@ -482,15 +482,15 @@
       "slug": "guards",
       "type": "feature",
       "title": "@UseGuards basic auth middleware",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "foundation",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/guards",
       "pr": null,
       "spec": "specs/guards.md",
       "blocks": [
