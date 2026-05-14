@@ -1,0 +1,3 @@
+{"input": {"x": 1}, "expected": {"y": 2}}
+{not valid json}
+{"input": {"x": 3}, "expected": {"y": 4}}

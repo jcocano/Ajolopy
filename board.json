@@ -704,24 +704,24 @@
       "slug": "dataset-loader",
       "type": "feature",
       "title": "Dataset base class + JSONL loader",
-      "status": "backlog",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "primitive-support",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
-      "pr": null,
-      "spec": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/dataset-loader",
+      "pr": "https://github.com/jcocano/Ajolopy/pull/58",
+      "spec": "specs/dataset-loader.md",
       "blocks": [
         "AJ-4"
       ],
       "blocked_by": [],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-12",
+      "updated_at": "2026-05-14",
       "closed_at": null
     },
     {
