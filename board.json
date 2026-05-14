@@ -1627,15 +1627,15 @@
       "slug": "mcp-server",
       "type": "feature",
       "title": "@MCPServer decorator (publish @Tools via MCP transport)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "primitive",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/mcp-server",
       "pr": null,
       "spec": "specs/mcp-server.md",
       "blocks": [
