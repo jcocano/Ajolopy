@@ -903,6 +903,10 @@ class GeminiProvider(LLMProvider):
         usage = getattr(raw, "usage_metadata", None)
         tokens_in = int(getattr(usage, "prompt_token_count", 0) or 0)
         tokens_out = int(getattr(usage, "response_token_count", 0) or 0)
+        # Gemini reports cache hits under ``cached_content_token_count``.
+        # Cache *creation* is billed as part of input on Gemini, so the
+        # creation tier stays 0 here — mirrors the OpenAI policy.
+        cache_read = int(getattr(usage, "cached_content_token_count", 0) or 0)
 
         finish_reason_raw = getattr(first, "finish_reason", None)
         mapped, raw_reason = _map_finish_reason(finish_reason_raw)
@@ -919,6 +923,7 @@ class GeminiProvider(LLMProvider):
             tokens_in=tokens_in,
             tokens_out=tokens_out,
             finish_reason=mapped,
+            cache_read_input_tokens=cache_read,
         )
 
     @staticmethod
@@ -976,8 +981,13 @@ class GeminiProvider(LLMProvider):
             if usage_metadata is not None:
                 input_tokens = int(getattr(usage_metadata, "prompt_token_count", 0) or 0)
                 output_tokens = int(getattr(usage_metadata, "response_token_count", 0) or 0)
-                if input_tokens > 0 or output_tokens > 0:
-                    usage = ChunkUsage(input_tokens=input_tokens, output_tokens=output_tokens)
+                cache_read = int(getattr(usage_metadata, "cached_content_token_count", 0) or 0)
+                if input_tokens > 0 or output_tokens > 0 or cache_read > 0:
+                    usage = ChunkUsage(
+                        input_tokens=input_tokens,
+                        output_tokens=output_tokens,
+                        cache_read_input_tokens=cache_read,
+                    )
             emitted.append(Chunk(delta="", finish_reason=mapped, usage=usage))
 
         return emitted

@@ -9,6 +9,10 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: check-added-large-files
+        # The bundled LiteLLM pricing snapshot (pricing.json) is ~1.4 MB.
+        # Bump the limit just enough to allow it — anything appreciably
+        # larger is still rejected (catches accidental binary commits).
+        args: ['--maxkb=2048']
       - id: check-merge-conflict
       - id: debug-statements
 

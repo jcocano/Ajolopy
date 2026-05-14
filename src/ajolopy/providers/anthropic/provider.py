@@ -65,15 +65,23 @@ def _map_stop_reason(raw: object) -> FinishReason:
     return "stop"
 
 
-def _track_stream_usage(event: Any, input_tokens: int, output_tokens: int) -> tuple[int, int]:
-    """Pull running input/output token counts from Anthropic stream events.
+def _track_stream_usage(
+    event: Any,
+    input_tokens: int,
+    output_tokens: int,
+    cache_creation_input_tokens: int,
+    cache_read_input_tokens: int,
+) -> tuple[int, int, int, int]:
+    """Pull running input/output/cache token counts from Anthropic stream events.
 
     Anthropic emits ``message_start`` with the prompt's ``input_tokens`` and
     an initial ``output_tokens`` of zero, then increments ``output_tokens``
     on each ``message_delta``. The terminal ``message_delta`` (with
-    ``stop_reason``) carries the final ``output_tokens``. This helper accepts
-    any event and returns the latest running totals so the caller can attach
-    the final pair to the terminal chunk.
+    ``stop_reason``) carries the final ``output_tokens``. Cache-tier counts
+    (``cache_creation_input_tokens`` / ``cache_read_input_tokens``) ride on
+    the same ``message.usage`` payload. This helper accepts any event and
+    returns the latest running totals so the caller can attach the final
+    quadruple to the terminal chunk.
     """
     event_type = getattr(event, "type", None)
     if event_type == "message_start":
@@ -82,6 +90,14 @@ def _track_stream_usage(event: Any, input_tokens: int, output_tokens: int) -> tu
         if usage is not None:
             input_tokens = int(getattr(usage, "input_tokens", input_tokens) or input_tokens)
             output_tokens = int(getattr(usage, "output_tokens", output_tokens) or output_tokens)
+            cache_creation_input_tokens = int(
+                getattr(usage, "cache_creation_input_tokens", cache_creation_input_tokens)
+                or cache_creation_input_tokens
+            )
+            cache_read_input_tokens = int(
+                getattr(usage, "cache_read_input_tokens", cache_read_input_tokens)
+                or cache_read_input_tokens
+            )
     elif event_type == "message_delta":
         usage = getattr(event, "usage", None)
         if usage is not None:
@@ -89,11 +105,17 @@ def _track_stream_usage(event: Any, input_tokens: int, output_tokens: int) -> tu
             # current running value when a key is absent.
             new_input = getattr(usage, "input_tokens", None)
             new_output = getattr(usage, "output_tokens", None)
+            new_cache_create = getattr(usage, "cache_creation_input_tokens", None)
+            new_cache_read = getattr(usage, "cache_read_input_tokens", None)
             if new_input is not None:
                 input_tokens = int(new_input or input_tokens)
             if new_output is not None:
                 output_tokens = int(new_output or output_tokens)
-    return input_tokens, output_tokens
+            if new_cache_create is not None:
+                cache_creation_input_tokens = int(new_cache_create or cache_creation_input_tokens)
+            if new_cache_read is not None:
+                cache_read_input_tokens = int(new_cache_read or cache_read_input_tokens)
+    return input_tokens, output_tokens, cache_creation_input_tokens, cache_read_input_tokens
 
 
 def _estimate_tokens(text: str) -> int:
@@ -205,22 +227,37 @@ class AnthropicProvider(LLMProvider):
             # Anthropic streams usage in two events: ``message_start`` carries
             # the prompt's input_tokens, and each ``message_delta`` updates
             # ``output_tokens`` (final values land on the message_delta that
-            # also carries ``stop_reason``). We accumulate both and attach
-            # them to the terminal chunk so the runtime can populate
-            # ``gen_ai.usage.*`` on the surrounding span.
+            # also carries ``stop_reason``). Cache-tier counts (cache_creation
+            # / cache_read) ride on the same usage payload, so we accumulate
+            # all four and attach them to the terminal chunk for the runtime
+            # to populate ``gen_ai.usage.*`` plus ``gen_ai.cost_usd.*``.
             input_tokens = 0
             output_tokens = 0
+            cache_creation_input_tokens = 0
+            cache_read_input_tokens = 0
             try:
                 async with self._client.messages.stream(**kwargs) as stream:
                     async for event in stream:
-                        input_tokens, output_tokens = _track_stream_usage(
-                            event, input_tokens, output_tokens
+                        (
+                            input_tokens,
+                            output_tokens,
+                            cache_creation_input_tokens,
+                            cache_read_input_tokens,
+                        ) = _track_stream_usage(
+                            event,
+                            input_tokens,
+                            output_tokens,
+                            cache_creation_input_tokens,
+                            cache_read_input_tokens,
                         )
                         chunk = self._convert_stream_event(event)
                         if chunk is None:
                             continue
                         if chunk.finish_reason is not None and (
-                            input_tokens > 0 or output_tokens > 0
+                            input_tokens > 0
+                            or output_tokens > 0
+                            or cache_creation_input_tokens > 0
+                            or cache_read_input_tokens > 0
                         ):
                             chunk = Chunk(
                                 delta=chunk.delta,
@@ -229,6 +266,8 @@ class AnthropicProvider(LLMProvider):
                                 usage=ChunkUsage(
                                     input_tokens=input_tokens,
                                     output_tokens=output_tokens,
+                                    cache_creation_input_tokens=cache_creation_input_tokens,
+                                    cache_read_input_tokens=cache_read_input_tokens,
                                 ),
                             )
                         yield chunk
@@ -385,6 +424,8 @@ class AnthropicProvider(LLMProvider):
         usage = getattr(raw, "usage", None)
         tokens_in = int(getattr(usage, "input_tokens", 0) or 0)
         tokens_out = int(getattr(usage, "output_tokens", 0) or 0)
+        cache_creation = int(getattr(usage, "cache_creation_input_tokens", 0) or 0)
+        cache_read = int(getattr(usage, "cache_read_input_tokens", 0) or 0)
 
         return Response(
             text="".join(text_parts),
@@ -392,6 +433,8 @@ class AnthropicProvider(LLMProvider):
             tokens_in=tokens_in,
             tokens_out=tokens_out,
             finish_reason=_map_stop_reason(getattr(raw, "stop_reason", None)),
+            cache_creation_input_tokens=cache_creation,
+            cache_read_input_tokens=cache_read,
         )
 
     @staticmethod

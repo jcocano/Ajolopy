@@ -35,7 +35,8 @@ from ajolopy.modules import (
     UnresolvedForwardRefError,
     compile_module,
 )
-from ajolopy.observability import configure_logging, setup_tracing_from_env
+from ajolopy.observability import Catalog, ModelPrice, configure_logging, setup_tracing_from_env
+from ajolopy.observability.pricing import set_default_catalog
 from ajolopy.routes import mount_routes
 from ajolopy.stream import iter_stream_methods, mount_streams
 
@@ -59,6 +60,7 @@ class AjolopyFactory:
         *,
         container: Container | None = None,
         http: Starlette | None = None,
+        pricing_overrides: dict[str, ModelPrice] | None = None,
     ) -> AjolopyApp:
         """Build and return an :class:`AjolopyApp` for ``root_module``.
 
@@ -73,6 +75,15 @@ class AjolopyFactory:
             Optional pre-built Starlette app for tests that exercise
             the framework without rebuilding the HTTP layer. Routes
             and streams from the module graph are mounted onto it.
+        pricing_overrides:
+            Optional ``{model: ModelPrice}`` mapping that wins over the
+            embedded LiteLLM snapshot for cost emission on every
+            ``chat`` span. Use this for custom / on-prem / brand-new
+            models the snapshot does not ship yet, or for negotiated
+            contract rates. The merged catalog becomes the
+            process-wide default — agents decorated before factory
+            bootstrap pick it up on the next chat-span emission
+            (the runtime resolves the catalog lazily).
 
         Raises
         ------
@@ -96,6 +107,19 @@ class AjolopyFactory:
         #    directly against os.environ so missing required env vars fail
         #    before any container work runs.
         _validate_env_early(root_module)
+
+        # 1.5. Install the active pricing catalog. ``pricing_overrides`` is
+        #     merged on top of the embedded LiteLLM snapshot and the merged
+        #     catalog becomes the process-wide default — agents decorated
+        #     before factory bootstrap pick it up lazily on the next chat
+        #     span emission (the runtime resolves the catalog at call time,
+        #     not at decoration time). Passing ``None`` clears any prior
+        #     override so re-bootstrapping with a fresh factory in tests
+        #     does not leak state from the previous run.
+        if pricing_overrides:
+            set_default_catalog(Catalog.from_snapshot().with_overrides(pricing_overrides))
+        else:
+            set_default_catalog(None)
 
         # 1a. Logging setup. Universal (every app emits logs), so it runs
         #     before tracing — any log line emitted by the tracing setup

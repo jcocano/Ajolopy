@@ -9,13 +9,24 @@ module directly. The setup helpers are the one exception:
 plus every third-party library running in the same process — emits logs
 and spans through a single configured pipeline. Logging is universal and
 runs first; tracing is opt-in via the ``ajolopy[otel]`` extra.
+
+AJ-30 added the pricing layer: :func:`compute_cost_usd` is the public
+embeddings / vectorstore entry point for cost emission, and
+:class:`Catalog` / :class:`ModelPrice` are the override surface used by
+``AjolopyFactory.create(pricing_overrides=...)``.
 """
 
 from .conventions import (
     AJOLOPY_AGENT_NAME,
     AJOLOPY_AGENT_OPERATION,
+    AJOLOPY_COST_USD_TOTAL,
     AJOLOPY_STREAMING,
     GEN_AI_COMPLETION,
+    GEN_AI_COST_USD,
+    GEN_AI_COST_USD_CACHE_CREATION,
+    GEN_AI_COST_USD_CACHE_READ,
+    GEN_AI_COST_USD_INPUT,
+    GEN_AI_COST_USD_OUTPUT,
     GEN_AI_OPERATION_NAME,
     GEN_AI_PROMPT,
     GEN_AI_REQUEST_MAX_TOKENS,
@@ -35,13 +46,20 @@ from .conventions import (
     execute_tool_span_name,
 )
 from .logging import configure_logging, get_logger
+from .pricing import Catalog, ModelPrice, compute_cost_usd
 from .tracing import get_tracer, is_content_capture_enabled, setup_tracing_from_env
 
 __all__ = [
     "AJOLOPY_AGENT_NAME",
     "AJOLOPY_AGENT_OPERATION",
+    "AJOLOPY_COST_USD_TOTAL",
     "AJOLOPY_STREAMING",
     "GEN_AI_COMPLETION",
+    "GEN_AI_COST_USD",
+    "GEN_AI_COST_USD_CACHE_CREATION",
+    "GEN_AI_COST_USD_CACHE_READ",
+    "GEN_AI_COST_USD_INPUT",
+    "GEN_AI_COST_USD_OUTPUT",
     "GEN_AI_OPERATION_NAME",
     "GEN_AI_PROMPT",
     "GEN_AI_REQUEST_MAX_TOKENS",
@@ -56,8 +74,11 @@ __all__ = [
     "GEN_AI_USAGE_OUTPUT_TOKENS",
     "OPERATION_CHAT",
     "OPERATION_EMBEDDINGS",
+    "Catalog",
+    "ModelPrice",
     "agent_invoke_span_name",
     "chat_span_name",
+    "compute_cost_usd",
     "configure_logging",
     "execute_tool_span_name",
     "get_logger",
