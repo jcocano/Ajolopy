@@ -60,6 +60,12 @@ mcp = [
 Homepage = "https://github.com/jcocano/ajolopy"
 Repository = "https://github.com/jcocano/ajolopy"
 
+# Console scripts: the ``ajolopy`` binary dispatches to ``ajolopy.cli.main``.
+# AJ-60 ships the first subcommand (``mcp-serve``); future items (AJ-32 ff)
+# register additional subcommands without changing the entry point.
+[project.scripts]
+ajolopy = "ajolopy.cli:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/ajolopy"]
 

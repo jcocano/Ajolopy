@@ -5,6 +5,7 @@ from .di import Injectable
 from .factory import AjolopyApp, AjolopyFactory, run
 from .guards import UseGuards
 from .mcp import MCP
+from .mcp_server import MCPServer
 from .modules import Module, compile_module, forwardRef
 from .observability import get_logger
 from .routes import Controller, Delete, Get, Patch, Post, Put
@@ -22,6 +23,7 @@ __all__ = [
     "Delete",
     "Get",
     "Injectable",
+    "MCPServer",
     "Module",
     "Patch",
     "Post",
