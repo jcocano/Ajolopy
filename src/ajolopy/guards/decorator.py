@@ -20,7 +20,7 @@ order the user sees top-to-bottom: ``[A, B]`` — outer decorator wins
 the leading slot.
 """
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, cast
 
 from .base import Guard, GuardLike, _normalize_guard
 from .errors import UseGuardsConfigError
@@ -73,7 +73,7 @@ def UseGuards(*guards: GuardLike) -> Callable[[T], T]:  # noqa: N802 — public 
         # ``setattr`` on a function or class is unconditional; on a
         # method object Python would refuse, but ``_is_decoration_target``
         # already filtered those out.
-        setattr(target, GUARDS_META_ATTR, combined)  # pyright: ignore[reportAttributeAccessIssue]
+        setattr(target, GUARDS_META_ATTR, combined)
         return target
 
     return _decorate
@@ -109,7 +109,7 @@ def _read_existing_guards(target: object) -> tuple[Guard, ...]:
     else:
         own = getattr(target, GUARDS_META_ATTR, ())
     if isinstance(own, tuple):
-        return own
+        return cast("tuple[Guard, ...]", own)
     return ()
 
 
@@ -126,7 +126,7 @@ def get_guard_chain(obj: object) -> tuple[Guard, ...]:
         if func is not None:
             chain = getattr(func, GUARDS_META_ATTR, None)
     if isinstance(chain, tuple):
-        return chain
+        return cast("tuple[Guard, ...]", chain)
     return ()
 
 

@@ -21,7 +21,7 @@ consistent.
 import abc
 import inspect
 from collections.abc import Awaitable, Callable
-from typing import Any, override
+from typing import Any, cast, override
 
 from starlette.requests import Request
 
@@ -117,7 +117,11 @@ def _normalize_guard(arg: object) -> Guard:
                 f"@UseGuards({arg.__name__}(...))."
             ) from exc
     if callable(arg):
-        return _CallableGuard(arg)
+        # ``arg`` was narrowed to ``object & Callable[..., object]``. The
+        # adapter awaits / coerces the return value at request time, so
+        # any signature shape that ``callable()`` accepts is safe; the
+        # cast satisfies pyright's strict argument-type check.
+        return _CallableGuard(cast("Callable[[Request], Awaitable[bool] | bool]", arg))
     raise UseGuardsConfigError(
         f"@UseGuards received {arg!r} ({type(arg).__name__}). {_ACCEPTED_FORMS}"
     )
