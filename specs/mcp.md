@@ -388,97 +388,97 @@ implementation in `tests/mcp/fakes.py`.
 
 ### Decoration-time validation
 
-- [ ] `@MCP(servers={"github": "stdio:npx -y @mcp/github"})` on a class
+- [x] `@MCP(servers={"github": "stdio:npx -y @mcp/github"})` on a class
       returns a class whose `_ajolopy_mcp` metadata contains exactly
       one parsed entry `(key="github", spec_str="stdio:npx -y @mcp/github",
       transport="stdio", auth=None)`. The class type is preserved
       (pyright sees the original class).
-- [ ] `@MCP(servers=[])` raises `MCPConfigError` at decoration time
+- [x] `@MCP(servers=[])` raises `MCPConfigError` at decoration time
       naming the class.
-- [ ] `@MCP(servers={"github": "ftp://..."})` (unrecognised scheme)
+- [x] `@MCP(servers={"github": "ftp://..."})` (unrecognised scheme)
       raises `MCPConfigError` listing accepted prefixes.
-- [ ] `@MCP(servers=["stdio:..."])` (list form) auto-derives the key
+- [x] `@MCP(servers=["stdio:..."])` (list form) auto-derives the key
       `"server_0"`; a two-entry list yields `"server_0"` and
       `"server_1"`.
-- [ ] `@MCP(servers={"a": "stdio:..."}, auth={"b": {...}})` raises
+- [x] `@MCP(servers={"a": "stdio:..."}, auth={"b": {...}})` raises
       `MCPConfigError` because `b` is not a server key.
-- [ ] `@MCP(servers={"x": CustomClient()}, auth={"x": {...}})` raises
+- [x] `@MCP(servers={"x": CustomClient()}, auth={"x": {...}})` raises
       `MCPConfigError` because instance entries own their auth.
-- [ ] `@MCP(servers={"x": "stdio:..."}, timeout=0)` and any negative
+- [x] `@MCP(servers={"x": "stdio:..."}, timeout=0)` and any negative
       timeout raise `MCPConfigError`.
-- [ ] `${VAR}` substitution inside auth string values is resolved at
+- [x] `${VAR}` substitution inside auth string values is resolved at
       DECORATION time when the env var is present; absent vars are
       tolerated until boot (where they emit a WARN and mark unhealthy).
 
 ### Server spec parsing
 
-- [ ] `stdio:npx -y @mcp/github` parses to `command=["npx", "-y",
+- [x] `stdio:npx -y @mcp/github` parses to `command=["npx", "-y",
       "@mcp/github"]` with `shlex.split` semantics.
-- [ ] `stdio:python -m my.server --flag "hello world"` honours quoted
+- [x] `stdio:python -m my.server --flag "hello world"` honours quoted
       args.
-- [ ] `https://api.example.com/mcp` and `http://localhost:9000/mcp`
+- [x] `https://api.example.com/mcp` and `http://localhost:9000/mcp`
       both classify as `transport="http"`.
-- [ ] `sse://example.com/sse` and `mcp+sse://example.com/sse` both
+- [x] `sse://example.com/sse` and `mcp+sse://example.com/sse` both
       classify as `transport="sse"`. The framework normalises to a
       runnable URL form internally.
-- [ ] An `MCPClient` instance entry sets `transport="custom"` and
+- [x] An `MCPClient` instance entry sets `transport="custom"` and
       copies the instance verbatim into metadata.
 
 ### `integrations=` wiring (cross-cuts to AJ-1, AJ-6)
 
-- [ ] `@Agent(model="...", system="...", integrations=[Integrations])`
+- [x] `@Agent(model="...", system="...", integrations=[Integrations])`
       stamps the agent runtime with the `@MCP` class set; the agent's
       wire tool list (post-boot) contains both `@Tool` methods and
       `<server_key>__<tool_name>` MCP entries.
-- [ ] `@Agent(model="...", system="...")` on a class that defines
+- [x] `@Agent(model="...", system="...")` on a class that defines
       `integrations = [Integrations]` as a class attribute works
       identically.
-- [ ] When BOTH kwarg and class attribute are present, the kwarg's
+- [x] When BOTH kwarg and class attribute are present, the kwarg's
       list is used and an INFO message logs the shadowed attribute.
-- [ ] `@Workflow(coordinator=..., agents=[A, B], integrations=[I])`
+- [x] `@Workflow(coordinator=..., agents=[A, B], integrations=[I])`
       no longer raises (the AJ-6 reservation flips to wiring). MCP
       tools are exposed in the coordinator's synthetic tool list
       AND in each delegated agent's wire tool list.
-- [ ] `@Workflow(agents=[A, B])` on a class that defines
+- [x] `@Workflow(agents=[A, B])` on a class that defines
       `integrations = [I]` works identically.
-- [ ] Two agents that both reference the same `@MCP` class share the
+- [x] Two agents that both reference the same `@MCP` class share the
       same set of registered tools (one discovery roundtrip across
       the whole app).
-- [ ] An agent that references a `@MCP` class with two servers, one
+- [x] An agent that references a `@MCP` class with two servers, one
       healthy and one unhealthy, boots with only the healthy server's
       tools and a WARN log for the unhealthy one.
 
 ### Registry / process sharing
 
-- [ ] Two `@MCP` classes that both reference `"stdio:npx -y @mcp/x"`
+- [x] Two `@MCP` classes that both reference `"stdio:npx -y @mcp/x"`
       open exactly ONE child process at boot (verified by patching the
       MCP SDK stdio client and asserting one connect call). Both
       classes see the same tool list.
-- [ ] The same string with leading/trailing whitespace or extra
+- [x] The same string with leading/trailing whitespace or extra
       internal spaces is canonicalised before pool lookup so it still
       dedupes.
-- [ ] `MCPClient` instances are NOT deduped — passing two instances
+- [x] `MCPClient` instances are NOT deduped — passing two instances
       with the same `canonical_spec` still results in two `connect()`
       calls (the framework trusts that instances are intentionally
       separate).
-- [ ] `registry.shutdown()` closes every open client and returns only
+- [x] `registry.shutdown()` closes every open client and returns only
       after all `aclose()` coroutines complete (verified by ordering
       assertions on a fake client).
-- [ ] `reset_mcp_registry()` builds a fresh registry instance;
+- [x] `reset_mcp_registry()` builds a fresh registry instance;
       subsequent calls to `get_mcp_registry()` return the new one
       (used by tests).
 
 ### Tool injection
 
-- [ ] An MCP server exposing two tools (`create_issue`, `list_issues`)
+- [x] An MCP server exposing two tools (`create_issue`, `list_issues`)
       under server key `"github"` results in agent wire tools named
       `github__create_issue` and `github__list_issues`.
-- [ ] Tool descriptions and input schemas from the MCP SDK are copied
+- [x] Tool descriptions and input schemas from the MCP SDK are copied
       verbatim into the `Tool` wire object.
-- [ ] An agent's own `@Tool` method `create_issue` and an MCP tool
+- [x] An agent's own `@Tool` method `create_issue` and an MCP tool
       `<key>__create_issue` coexist without collision (different
       namespaced names).
-- [ ] An MCP tool whose namespaced name collides with an existing
+- [x] An MCP tool whose namespaced name collides with an existing
       tool on the same agent (e.g. two `@MCP` classes accidentally
       generating the same `<key>__<name>`) is DROPPED at injection
       with a WARN; the first one registered wins. The boot does NOT
@@ -486,75 +486,75 @@ implementation in `tests/mcp/fakes.py`.
 
 ### MCP tool dispatch
 
-- [ ] An LLM tool_call for `github__create_issue` causes the agent
+- [x] An LLM tool_call for `github__create_issue` causes the agent
       runtime to call `registry.call_tool("github",
       "create_issue", args)`, get back a string result, and return a
       `tool_result` message with the result as `content`.
-- [ ] An MCP tool that returns `isError=true` produces a `tool_result`
+- [x] An MCP tool that returns `isError=true` produces a `tool_result`
       with `is_error=True`. The error body matches the server's
       reported message.
-- [ ] An MCP tool call that exceeds `timeout` (default 30s) raises an
+- [x] An MCP tool call that exceeds `timeout` (default 30s) raises an
       `MCPToolTimeoutError` which is converted to a `tool_result` with
       `is_error=True` and a clear message.
-- [ ] Concurrent tool_calls from one LLM turn (one `@Tool` method and
+- [x] Concurrent tool_calls from one LLM turn (one `@Tool` method and
       one MCP tool) execute concurrently via `asyncio.gather` (verified
       with timed fakes).
 
 ### Boot resilience
 
-- [ ] A server whose `connect()` raises causes a WARN log and zero
+- [x] A server whose `connect()` raises causes a WARN log and zero
       registered tools for that server; the factory still completes
       bootstrap and other servers in the same `@MCP` class continue
       normally.
-- [ ] A server whose `list_tools()` raises after a successful
+- [x] A server whose `list_tools()` raises after a successful
       `connect()` is closed and marked unhealthy; the factory continues.
-- [ ] A `${VAR}` substitution missing at boot logs a WARN, marks the
+- [x] A `${VAR}` substitution missing at boot logs a WARN, marks the
       server unhealthy, and the factory completes.
-- [ ] Boot succeeds even when every server in every `@MCP` class is
+- [x] Boot succeeds even when every server in every `@MCP` class is
       unhealthy (the app comes up with no MCP tools).
 
 ### Observability
 
-- [ ] Each MCP tool call produces a `mcp.call_tool {server_key}/{tool_name}`
+- [x] Each MCP tool call produces a `mcp.call_tool {server_key}/{tool_name}`
       span that is a child of the agent runtime's
       `execute_tool {namespaced_name}` span. Attributes
       `mcp.server.key`, `mcp.tool.name`, `mcp.transport`,
       `mcp.duration_ms`, and `mcp.is_error` are populated.
-- [ ] Boot discovery produces one `mcp.discover {server_key}` span
+- [x] Boot discovery produces one `mcp.discover {server_key}` span
       per UNIQUE spec (not one per `@MCP` class referencing it).
-- [ ] `mcp.call_tool` spans DO NOT contribute to
+- [x] `mcp.call_tool` spans DO NOT contribute to
       `ajolopy.cost_usd.total` (cost roll-up ignores them).
-- [ ] An unhealthy server's `mcp.discover` span carries
+- [x] An unhealthy server's `mcp.discover` span carries
       `mcp.is_error=true` and an exception record.
 
 ### `MCPClient` escape hatch
 
-- [ ] A user-defined `MCPClient` subclass passed as an entry of
+- [x] A user-defined `MCPClient` subclass passed as an entry of
       `servers=` is used verbatim (its `connect`, `list_tools`,
       `call_tool`, `aclose` are called by the registry).
-- [ ] Custom-client tool calls produce `mcp.call_tool` spans with
+- [x] Custom-client tool calls produce `mcp.call_tool` spans with
       `mcp.transport="custom"`.
-- [ ] A subclass that fails to implement an abstract method raises
+- [x] A subclass that fails to implement an abstract method raises
       `TypeError` at instantiation (Python's normal ABC behaviour); no
       special framework error.
 
 ### Dependency surface
 
-- [ ] `from ajolopy import MCP` works without the `mcp` extra
+- [x] `from ajolopy import MCP` works without the `mcp` extra
       installed.
-- [ ] `@MCP(servers={...})` at decoration time works without the `mcp`
+- [x] `@MCP(servers={...})` at decoration time works without the `mcp`
       extra.
-- [ ] Calling `await registry.connect_all_for(module)` (or factory
+- [x] Calling `await registry.connect_all_for(module)` (or factory
       bootstrap) without the `mcp` extra raises `MCPDependencyError`
       with a message naming the extra.
 
 ### Public re-exports
 
-- [ ] `from ajolopy import MCP` works.
-- [ ] `from ajolopy.mcp import (MCPClient, MCPConfigError, MCPError,
+- [x] `from ajolopy import MCP` works.
+- [x] `from ajolopy.mcp import (MCPClient, MCPConfigError, MCPError,
       MCPDependencyError, MCPToolTimeoutError, MCPRegistry,
       get_mcp_registry, reset_mcp_registry, ToolSchema)` works.
-- [ ] `MCP` is added to `src/ajolopy/__init__.py`'s `__all__` next to
+- [x] `MCP` is added to `src/ajolopy/__init__.py`'s `__all__` next to
       the other primitive names.
 
 ## Implementation pointers
@@ -622,4 +622,38 @@ implementation in `tests/mcp/fakes.py`.
 
 ## Implementation notes
 
-(Empty — populated by the implementation PR.)
+- The decorator is import-clean: `from ajolopy import MCP` works
+  without the `mcp` SDK installed. The lazy `_load_mcp` helper inside
+  `src/ajolopy/mcp/client.py` raises `MCPDependencyError` only when a
+  built-in transport actually tries to open a connection — that error
+  surfaces as a per-server unhealthy mark, never as a factory abort.
+- Tool dispatch is wired in two places: `AgentRuntime` carries an
+  `_mcp_by_namespaced_name` lookup table and routes through
+  `MCPRegistry.call_tool` when a tool name matches the namespaced
+  shape `<server_key>__<tool_name>`. The `WorkflowRuntime` mirrors the
+  same shape for the coordinator's direct MCP calls AND propagates the
+  workflow's `integrations=` set into every delegated agent at
+  `wire_mcp_tools` time, so a coordinator can either delegate or call
+  the MCP tool itself.
+- The connection pool keys instances by `id()` rather than
+  `canonical_spec`. Two instance entries with identical canonical
+  specs still trigger two `connect()` calls; the framework trusts the
+  caller's intent when they wire a custom client manually.
+- Boot-time discovery emits a single `mcp.discover {server_key}` span
+  per unique canonical spec (not per `@MCP` class), so two consumers
+  of the same server show one discovery roundtrip in the trace.
+- `${VAR}` substitution is syntactically validated at decoration time
+  (well-formed identifier, closed braces) and resolved at boot time
+  against `os.environ`. Missing variables emit WARN logs and mark the
+  affected server unhealthy; the rest of the factory completes.
+- Registry shutdown is wired through `AjolopyApp.aclose`, which fires
+  after the lifecycle manager's `on_app_shutdown` so user-defined
+  hooks see the registry still alive when they run. Stdio child
+  processes are stopped via the MCP SDK's own `aclose` path.
+- Cross-cuts: the AJ-6 `integrations=` reservation flipped from
+  raising `WorkflowConfigError` to real wiring. AJ-1 gained a new
+  `integrations=` kwarg on `@Agent` plus a class-attribute fallback.
+  Both resolve the kwarg-vs-attribute precedence at decoration time
+  via the matching `_resolve_integrations` /
+  `_resolve_workflow_integrations` helpers, with an INFO log when
+  both are present.
