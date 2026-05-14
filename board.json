@@ -779,7 +779,7 @@
       "slug": "otel-instrumentation",
       "type": "feature",
       "title": "OpenTelemetry spans for @Agent/@Tool/@Workflow/@MCP/@Stream with gen_ai.* attrs",
-      "status": "in_review",
+      "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -802,7 +802,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-13",
-      "closed_at": null
+      "closed_at": "2026-05-13"
     },
     {
       "id": "AJ-29",
