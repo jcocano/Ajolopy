@@ -35,6 +35,7 @@ build on this seam without forcing a structlog re-config.
 
 import logging
 import os
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, cast
 
@@ -65,14 +66,29 @@ _LEVEL_BY_ENV: dict[str, int] = {
     "test": logging.WARNING,
 }
 
-# Track whether we have already installed our pipeline, so a second
-# `configure_logging` call short-circuits instead of stacking handlers.
-_configured: bool = False
 
-# The handler we attach to the stdlib root logger. Kept at module level so
-# `_reset_for_tests` can find and detach it without nuking handlers the user
-# (or pytest's caplog) installed on their own.
-_installed_handler: logging.Handler | None = None
+# Module-level state is held on a single mutable instance so static analysers
+# (CodeQL specifically) can see the cross-function read/write pattern. Bare
+# module-level globals trigger CodeQL's "unused global variable" rule because
+# its intra-procedural pass cannot trace name rebindings across functions.
+@dataclass(slots=True)
+class _State:
+    """Mutable module state for the structlog pipeline install.
+
+    ``configured`` — short-circuits a second :func:`configure_logging` call so
+    a second invocation does not stack handlers.
+
+    ``installed_handler`` — the :class:`logging.Handler` we attach to the
+    stdlib root logger. Kept here so :func:`_reset_for_tests` can find and
+    detach it without nuking handlers the user (or pytest's ``caplog``) put
+    on their own.
+    """
+
+    configured: bool = False
+    installed_handler: logging.Handler | None = None
+
+
+_state = _State()
 
 
 # ---------------------------------------------------------------------------
@@ -129,9 +145,7 @@ def configure_logging(
     second invocation. Tests can opt back into a clean state via
     :func:`_reset_for_tests`.
     """
-    global _configured, _installed_handler
-
-    if _configured:
+    if _state.configured:
         return
 
     # Resolve the threshold *first*, before mutating any global state. A
@@ -188,7 +202,7 @@ def configure_logging(
     )
 
     if capture_stdlib:
-        _installed_handler = _install_stdlib_handler(
+        _state.installed_handler = _install_stdlib_handler(
             level=level,
             foreign_pre_chain=pre_chain,
             renderer=renderer,
@@ -199,7 +213,7 @@ def configure_logging(
         # `logging.getLogger(...).getEffectiveLevel()`.
         logging.getLogger(_LOGGER_ROOT_NAME).setLevel(level)
 
-    _configured = True
+    _state.configured = True
 
 
 def get_logger(name: str | None = None) -> BoundLogger:
@@ -388,22 +402,20 @@ def _reset_for_tests() -> None:  # pyright: ignore[reportUnusedFunction]  # cons
     """Undo :func:`configure_logging` so the next call re-installs cleanly.
 
     Detaches the stdlib handler we installed, resets structlog to its
-    library defaults, and clears the module-level ``_configured`` flag.
+    library defaults, and clears the module-level configured flag.
     Intended for use from test fixtures only — never call from production
     code.
     """
-    global _configured, _installed_handler
-
-    if _installed_handler is not None:
-        logging.getLogger().removeHandler(_installed_handler)
-        _installed_handler = None
+    if _state.installed_handler is not None:
+        logging.getLogger().removeHandler(_state.installed_handler)
+        _state.installed_handler = None
 
     # structlog has no public "reset" helper, so call the same primitive
     # `structlog.configure_once` uses internally and rebuild the default
     # processor chain. `reset_defaults` is part of the public test API.
     structlog.reset_defaults()
 
-    _configured = False
+    _state.configured = False
 
 
 __all__ = [
