@@ -80,7 +80,8 @@ class MetricMetadata:
 
 
 @overload
-def Metric(fn: Callable[..., Any], /) -> Callable[..., Any]: ...
+def Metric(fn: Callable[..., Any], /) -> Callable[..., Any]:
+    """Bare-form ``@Metric``: decorates the metric method directly."""
 
 
 @overload
@@ -89,7 +90,8 @@ def Metric(
     aggregator: _AggregatorName = "mean",
     weight: float = 1.0,
     pass_threshold: float = 0.5,
-) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """Parameterised ``@Metric(...)``: returns the actual decorator."""
 
 
 def Metric(  # noqa: N802 — public surface mirrors the Brief's primitive name.

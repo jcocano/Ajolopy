@@ -44,7 +44,38 @@ __all__ = [
     "EvalOutput",
     "EvalRun",
     "MetricDelta",
+    "bind_persistence",
 ]
+
+
+# Persistence callables bound at package init time by ``ajolopy.eval.__init__``
+# to break what would otherwise be a ``results <-> storage`` import cycle
+# (CodeQL flags the lazy in-method imports as cyclic). ``storage.py``
+# unconditionally imports the dataclasses defined here; this module never
+# imports ``storage`` — instead :meth:`EvalRun.save` / :meth:`EvalRun.load`
+# dispatch through these slots, which :func:`bind_persistence` populates.
+# Slots are typed ``Any`` (and named lower-case) so pyright treats them as
+# mutable variables rather than constants the binder is forbidden to touch.
+_save_eval_run: Any = None
+_load_eval_run: Any = None
+
+
+def bind_persistence(save_fn: Any, load_fn: Any) -> None:
+    """Register the storage-layer implementations of save/load.
+
+    Called once at :mod:`ajolopy.eval` import time. The indirection
+    keeps this module free of any :mod:`ajolopy.eval.storage` import
+    (avoids a CodeQL-flagged cyclic import) while still letting
+    :meth:`EvalRun.save` / :meth:`EvalRun.load` behave like ordinary
+    methods to consumers. ``save_fn`` / ``load_fn`` are typed ``Any``
+    here because exposing the real signatures would force importing
+    :class:`~pathlib.Path` plus the ``Callable`` generic into runtime
+    scope just to satisfy annotations — the public surface
+    (``EvalRun.save`` / ``EvalRun.load``) keeps its typed signature.
+    """
+    global _save_eval_run, _load_eval_run
+    _save_eval_run = save_fn
+    _load_eval_run = load_fn
 
 
 @dataclass(slots=True, frozen=True)
@@ -154,25 +185,36 @@ class EvalRun:
         """Persist this run to a JSON snapshot; return the written path.
 
         Default location is ``.ajolopy/eval-runs/<timestamp>.json``.
-        Delegates to :func:`ajolopy.eval.storage.save_eval_run`; the
-        import is lazy to keep the result module import-cheap.
+        Dispatches through :data:`_SAVE_EVAL_RUN`, which the package
+        ``__init__`` binds to
+        :func:`ajolopy.eval.storage.save_eval_run`. The indirection
+        keeps this module import-free of :mod:`ajolopy.eval.storage`
+        (avoids a CodeQL-flagged cyclic import).
         """
-        from .storage import save_eval_run
-
-        return save_eval_run(self, path)
+        if _save_eval_run is None:
+            raise RuntimeError(
+                "EvalRun.save dispatcher is not bound. Import "
+                "ajolopy.eval (which wires the persistence layer) before "
+                "calling EvalRun.save."
+            )
+        return _save_eval_run(self, path)
 
     @classmethod
     def load(cls, path: str | os.PathLike[str]) -> EvalRun:
         """Read a previously-written :class:`EvalRun` JSON snapshot.
 
-        Delegates to :func:`ajolopy.eval.storage.load_eval_run`. The
-        :class:`os.PathLike` accepted form mirrors :meth:`save`.
+        Dispatches through :data:`_LOAD_EVAL_RUN`. See :meth:`save`
+        for the rationale behind the indirection.
         Raises :class:`EvalRunError` on a schema-version mismatch.
         """
-        from .storage import load_eval_run
-
         _ = cls
-        return load_eval_run(path)
+        if _load_eval_run is None:
+            raise RuntimeError(
+                "EvalRun.load dispatcher is not bound. Import "
+                "ajolopy.eval (which wires the persistence layer) before "
+                "calling EvalRun.load."
+            )
+        return _load_eval_run(path)
 
 
 @dataclass(slots=True, frozen=True)

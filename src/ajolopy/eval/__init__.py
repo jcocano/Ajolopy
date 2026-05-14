@@ -50,8 +50,16 @@ from .results import (
     EvalRun,
     MetricDelta,
 )
+from .results import bind_persistence as _bind_persistence
 from .runner import EvalRunner
-from .storage import EVAL_RUN_SCHEMA_VERSION
+from .storage import EVAL_RUN_SCHEMA_VERSION, load_eval_run, save_eval_run
+
+# Wire EvalRun.save / EvalRun.load to their storage-layer
+# implementations. The dispatch table lives on ``results`` so that
+# module never has to import ``storage`` directly (which would create
+# a cycle CodeQL flags). Binding happens exactly once at package
+# import.
+_bind_persistence(save_eval_run, load_eval_run)
 
 __all__ = [
     "AGGREGATOR_NAMES",
