@@ -809,7 +809,7 @@
       "slug": "structlog-integration",
       "type": "feature",
       "title": "structlog setup (JSON in prod, human-readable in dev, trace_id correlation)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -818,7 +818,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/structlog-integration",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/46",
       "spec": "specs/structlog-integration.md",
       "blocks": [],
       "blocked_by": [
