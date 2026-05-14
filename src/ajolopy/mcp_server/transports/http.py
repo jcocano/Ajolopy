@@ -8,7 +8,6 @@ endpoint coroutine the mount layer registers AND an async-context
 factory the mount layer chains into the Starlette ``lifespan_context``.
 """
 
-import logging
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
@@ -23,8 +22,6 @@ if TYPE_CHECKING:
     from starlette.requests import Request
 
     from ajolopy.mcp_server.runtime import MCPServerRuntime
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)

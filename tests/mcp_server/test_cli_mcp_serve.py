@@ -12,9 +12,11 @@ from typing import TYPE_CHECKING
 import pytest
 
 import ajolopy
-from ajolopy import MCPServer, Tool
 from ajolopy.cli import main as cli_main
 from ajolopy.cli.commands import mcp_serve as mcp_serve_cmd
+
+MCPServer = ajolopy.MCPServer
+Tool = ajolopy.Tool
 
 if TYPE_CHECKING:
     pass

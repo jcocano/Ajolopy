@@ -7,7 +7,6 @@ client-to-server messages). Both endpoints are registered by the mount
 layer; this module focuses on the per-endpoint adapter.
 """
 
-import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
@@ -21,8 +20,6 @@ if TYPE_CHECKING:
     from starlette.requests import Request
 
     from ajolopy.mcp_server.runtime import MCPServerRuntime
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)

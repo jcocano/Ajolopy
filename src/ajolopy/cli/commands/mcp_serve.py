@@ -24,14 +24,11 @@ module pulls it in lazily so the dispatcher (and the rest of the
 import argparse  # noqa: TC003 -- argparse.Namespace is used at runtime by argparse itself
 import asyncio
 import importlib
-import logging
 
 from ajolopy.mcp_server.decorator import MCP_SERVER_META_ATTR
 from ajolopy.mcp_server.metadata import MCPServerMetadata
 from ajolopy.mcp_server.runtime import MCPServerRuntime
 from ajolopy.mcp_server.transports.stdio import run_stdio
-
-_LOGGER = logging.getLogger(__name__)
 
 # Module-level exit-code constants -- shared with the CLI tests so a
 # rename in one place updates both. Mirrors the convention used by GNU
