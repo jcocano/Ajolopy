@@ -1,0 +1,5 @@
+{"input": {"x": 1}, "expected": {"y": 2}}
+
+{"input": {"x": 3}, "expected": {"y": 4}}
+
+{"input": {"x": 5}, "expected": {"y": 6}}
