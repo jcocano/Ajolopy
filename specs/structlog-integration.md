@@ -236,14 +236,30 @@ assertions and `capsys` for renderer-output assertions.
 
 - [ ] `from ajolopy import get_logger` is exported. `get_logger("x.y")`
       returns a `structlog.stdlib.BoundLogger` whose name is `"x.y"`.
-- [ ] `get_logger()` with no argument returns a logger bound to the
-      caller's `__name__` (via `inspect`-free convention: the helper
-      simply requires the caller to pass `__name__`; the no-arg path
-      returns the root `ajolopy` logger so it remains useful in REPL).
+- [ ] `get_logger()` with no argument returns the root `ajolopy` logger
+      (REPL convenience). The recommended convention — documented in
+      the helper's docstring — is `_LOGGER = get_logger(__name__)` in
+      module-level code; the no-arg path is intentionally non-strict so
+      a quick REPL session does not require importing `__name__`.
 - [ ] Existing code that uses `logging.getLogger(__name__)` from
       `ajolopy.agent.runtime`, `ajolopy.stream.runtime`,
       `ajolopy.providers.*` continues to produce output (no behavioural
       change after capture is enabled).
+
+### Pipeline extension hook
+
+- [ ] `configure_logging(env="production", add_processors=[my_proc])`
+      runs `my_proc(logger, name, event_dict)` **before** the
+      renderer. The processor's mutated `event_dict` is what the
+      renderer receives. Asserted by registering a processor that
+      injects a deterministic key and reading it back off the rendered
+      JSON line.
+- [ ] `add_processors` is optional (default: empty). Passing
+      `add_processors=None` or omitting the kwarg leaves the default
+      pipeline unchanged.
+- [ ] The hook is the documented seam for v0.2 features that need
+      per-event enrichment (request_id, tenant_id, user_id) without
+      forcing a structlog re-config.
 
 ### Idempotency
 
@@ -257,17 +273,26 @@ assertions and `capsys` for renderer-output assertions.
 ### Factory invocation
 
 - [ ] `AjolopyFactory.create(RootModule)` calls `configure_logging`
-      exactly once. Order: after `_validate_env_early`, before
-      `compile_module`. Verified by patching the helper and asserting
-      the call count + position relative to other patched helpers.
-- [ ] The `env` passed to `configure_logging` is read from
-      `os.environ.get("APP_ENV", "development")` (or from a
-      `ConfigService` instance if one is already available in the
-      bootstrap path; see "Implementation notes" for the chosen seam).
+      exactly once. Order: after `_validate_env_early`, **before**
+      AJ-28's `setup_tracing_from_env()` (logging is universal; tracing
+      is opt-in), both before `compile_module`. Verified by patching
+      the helper and asserting the call count + position relative to
+      other patched helpers.
+- [ ] The `env` passed to `configure_logging` is read **directly from
+      `os.environ.get("APP_ENV", "development")`** — not from a
+      `ConfigService` instance, which only exists after
+      `compile_module()` runs. Same source `_validate_env_early` reads
+      from, so the bootstrap stays single-sourced.
 - [ ] When `AjolopyFactory.create` raises a `FactoryStartupError` from
       a later step, the configured renderer is already in effect — the
       framework's own error log line is rendered in the correct format
       (JSON in production).
+- [ ] Existing `AjolopyFactory` tests under `tests/factory/` keep
+      passing. Where they assert against captured log output or rely on
+      stdlib defaults, the test fixture invokes
+      `ajolopy.observability.logging._reset_for_tests()` in teardown so
+      each test starts from a clean handler state. (No new behaviour
+      asserted here — this is a regression guard.)
 
 ### Lint / type / format gates
 
@@ -343,4 +368,42 @@ assertions and `capsys` for renderer-output assertions.
 
 ## Implementation notes
 
-(empty — fill in during the implementation PR)
+- **2026-05-13 — Coordination with AJ-28.** AJ-28's
+  `feature/otel-instrumentation` branch already lands these changes on
+  the same files:
+  - `src/ajolopy/observability/__init__.py` — created and exports
+    `get_tracer`, `setup_tracing_from_env`, `is_content_capture_enabled`
+    and the `gen_ai.*` / `ajolopy.*` constants.
+  - `src/ajolopy/factory/factory.py` — inserts
+    `setup_tracing_from_env()` at step 1a, right after
+    `_validate_env_early`.
+  - `pyproject.toml` — adds the `[project.optional-dependencies] otel`
+    extra (no overlap with AJ-29's core `structlog>=24.1.0`).
+
+  AJ-29's implementation must:
+  1. Extend (not replace) `src/ajolopy/observability/__init__.py` to
+     re-export `configure_logging` and `get_logger` alongside AJ-28's
+     existing exports. **Expected merge conflict** — resolution is
+     textual only (combine both export lists; no semantic overlap).
+  2. Insert `configure_logging()` in `factory.py` **before** AJ-28's
+     `setup_tracing_from_env()` call. Logging is universal and must
+     render any log line emitted by tracing setup.
+  3. Read the bootstrap `env` directly from
+     `os.environ.get("APP_ENV", "development")`. Do **not** read it
+     from `ConfigService` — that instance only exists after
+     `compile_module()`, which runs after `configure_logging`.
+
+- **Existing factory tests.** `tests/factory/` tests do not currently
+  assert against captured log output, but `configure_logging` mutates
+  global stdlib handler state. The AJ-29 test fixture exposes
+  `_reset_for_tests()` (private helper); factory tests opt in by
+  invoking it in `pytest.fixture`'s teardown. The plan when AJ-29
+  lands: audit each `tests/factory/test_*.py`, add the reset where
+  needed, then re-run the full suite. No behavioural change expected.
+
+- **APP_ENV correction.** This spec was originally briefed with
+  `ENV` as the env-var name. The canonical field on
+  `src/ajolopy/config/service.py` is **`APP_ENV`** — the helpers
+  `is_development()`, `is_production()`, `is_test()` all key off it.
+  This spec uses `APP_ENV` throughout. Update any AJ-29-adjacent docs
+  that still reference `ENV`.
