@@ -151,6 +151,16 @@ def _get_pipe(app: Starlette) -> Pipe:
     return pipe
 
 
+def set_global_pipe(app: Starlette, pipe: Pipe) -> None:
+    """Swap the app's global :class:`Pipe`.
+
+    Public seam used by :meth:`AjolopyApp.use_global_pipes` (AJ-14) so
+    higher layers don't have to reach into Starlette's state attribute
+    directly. Idempotent — overrides any previously set pipe.
+    """
+    setattr(app.state, _PIPE_STATE_ATTR, pipe)
+
+
 def _build_endpoint(
     handler: Handler,
     resolved_params: list[ResolvedParam],
