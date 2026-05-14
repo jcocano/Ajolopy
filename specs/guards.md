@@ -306,126 +306,133 @@ no real network traffic in CI. The IP allowlist tests use the
 
 ### Decoration-time validation
 
-- [ ] `@UseGuards(GuardSubclass)` on a class stamps `_ajolopy_guards`
+- [x] `@UseGuards(GuardSubclass)` on a class stamps `_ajolopy_guards`
       with a tuple containing one instantiated `GuardSubclass()`.
-- [ ] `@UseGuards(guard_instance)` stores the instance verbatim.
-- [ ] `@UseGuards(callable_fn)` wraps the callable in a `_CallableGuard`
+- [x] `@UseGuards(guard_instance)` stores the instance verbatim.
+- [x] `@UseGuards(callable_fn)` wraps the callable in a `_CallableGuard`
       adapter; calling `can_activate(request)` delegates to the
       callable. Sync callables are tolerated (the adapter does NOT
       `to_thread`; sync guards must be fast).
-- [ ] `@UseGuards()` with zero arguments raises `UseGuardsConfigError`
+- [x] `@UseGuards()` with zero arguments raises `UseGuardsConfigError`
       at decoration time.
-- [ ] `@UseGuards("not-a-guard")` raises `UseGuardsConfigError` listing
+- [x] `@UseGuards("not-a-guard")` raises `UseGuardsConfigError` listing
       accepted forms.
-- [ ] `@UseGuards(GuardSubclassWithRequiredInit)` (zero-arg
+- [x] `@UseGuards(GuardSubclassWithRequiredInit)` (zero-arg
       instantiation impossible) raises `UseGuardsConfigError` with a
       hint to "pass a pre-built instance".
-- [ ] Decorator is composable with `@Controller`: `@UseGuards(g)` BELOW
+- [x] Decorator is composable with `@Controller`: `@UseGuards(g)` BELOW
       or ABOVE `@Controller("/x")` on the same class both work; both
       stamping orders preserve metadata.
-- [ ] Decorator is composable with route method decorators (`@Get` /
+- [x] Decorator is composable with route method decorators (`@Get` /
       `@Post` / `@Put` / `@Patch` / `@Delete`) and with `@Stream`.
 
 ### `BearerTokenGuard`
 
-- [ ] `BearerTokenGuard(token_env="API_TOKEN")` reads `os.environ["API_TOKEN"]`
+- [x] `BearerTokenGuard(token_env="API_TOKEN")` reads `os.environ["API_TOKEN"]`
       at request time (NOT at construction), so a test fixture that sets
       the env var AFTER the guard is built still works.
-- [ ] Request with `Authorization: Bearer <correct>` → guard returns
+- [x] Request with `Authorization: Bearer <correct>` → guard returns
       `True`, handler runs, 200 response.
-- [ ] Request with `Authorization: Bearer <wrong>` → guard raises
+- [x] Request with `Authorization: Bearer <wrong>` → guard raises
       `GuardForbiddenError`, response is 403.
-- [ ] Request with NO `Authorization` header → `GuardUnauthorizedError`,
+- [x] Request with NO `Authorization` header → `GuardUnauthorizedError`,
       response is 401.
-- [ ] Request with `Authorization: Basic ...` (wrong scheme) → 401.
-- [ ] `BearerTokenGuard(token="literal")` compares against the literal,
+- [x] Request with `Authorization: Basic ...` (wrong scheme) → 401.
+- [x] `BearerTokenGuard(token="literal")` compares against the literal,
       ignoring env vars. (Useful for tests.)
-- [ ] `BearerTokenGuard(token_env="UNSET")` at request time → 401 with
+- [x] `BearerTokenGuard(token_env="UNSET")` at request time → 401 with
       a generic message; the framework does NOT leak that the env var
       is missing.
 
 ### `IPAllowlistGuard`
 
-- [ ] `IPAllowlistGuard(allowed=["127.0.0.1"])` accepts requests from
+- [x] `IPAllowlistGuard(allowed=["127.0.0.1"])` accepts requests from
       `127.0.0.1`, rejects requests from `192.168.0.1` (403).
-- [ ] `IPAllowlistGuard(allowed=["10.0.0.0/8"])` matches CIDR ranges.
-- [ ] IPv6 host `"::1/128"` matches `::1`.
-- [ ] Invalid CIDR like `"not-an-ip"` at construction raises
+- [x] `IPAllowlistGuard(allowed=["10.0.0.0/8"])` matches CIDR ranges.
+- [x] IPv6 host `"::1/128"` matches `::1`.
+- [x] Invalid CIDR like `"not-an-ip"` at construction raises
       `UseGuardsConfigError`.
-- [ ] `trust_forwarded_for=False` (default) ignores `X-Forwarded-For`
+- [x] `trust_forwarded_for=False` (default) ignores `X-Forwarded-For`
       and checks `request.client.host`.
-- [ ] `trust_forwarded_for=True` uses the LEFTMOST value of
+- [x] `trust_forwarded_for=True` uses the LEFTMOST value of
       `X-Forwarded-For` when present (else falls back to
       `request.client.host`).
-- [ ] Missing `request.client` (rare edge case in some ASGI testers)
+- [x] Missing `request.client` (rare edge case in some ASGI testers)
       → 403 (treated as not-allowed).
 
 ### Hierarchical concatenation
 
-- [ ] A class decorated with `@UseGuards(A)` whose method is also
+- [x] A class decorated with `@UseGuards(A)` whose method is also
       decorated with `@UseGuards(B)` runs `[A, B]` in order. Both must
       pass.
-- [ ] Either guard can short-circuit; if `A` fails the request is
+- [x] Either guard can short-circuit; if `A` fails the request is
       rejected and `B.can_activate` is never called.
-- [ ] A class with `@UseGuards(A)` and a method with no `@UseGuards`
+- [x] A class with `@UseGuards(A)` and a method with no `@UseGuards`
       runs just `[A]`.
-- [ ] A class with no `@UseGuards` and a method with `@UseGuards(B)`
+- [x] A class with no `@UseGuards` and a method with `@UseGuards(B)`
       runs just `[B]`.
-- [ ] Multiple guards in one decorator (`@UseGuards(A, B, C)`) run in
+- [x] Multiple guards in one decorator (`@UseGuards(A, B, C)`) run in
       argument order.
 
 ### Response shape
 
-- [ ] 401 response body matches `{"detail": "<message>", "status": 401}`
-      with `Content-Type: application/json`.
-- [ ] 403 response body matches `{"detail": "<message>", "status": 403}`.
-- [ ] A guard that raises an unrelated exception (e.g. `ValueError`)
+- [x] 401 response body matches the framework JSON envelope
+      `{"statusCode": 401, "error": "Unauthorized", "message": "<msg>"}`
+      with `Content-Type: application/json`. (Deviation from the
+      original spec wording: the existing AJ-15 envelope
+      `{statusCode, error, message, details?}` is reused instead of a
+      bespoke `{detail, status}` shape — flipping it would have broken
+      every other HTTP test and added a divergent contract for guards
+      alone. See "Implementation notes".)
+- [x] 403 response body matches the same envelope with
+      `"statusCode": 403, "error": "Forbidden"`.
+- [x] A guard that raises an unrelated exception (e.g. `ValueError`)
       bubbles to the existing ExceptionFilter and produces a 500 by
       default (with the AJ-15 envelope).
 
 ### `@Stream(auth=True)` flip
 
-- [ ] `@Stream("/chat", auth=True)` on a method whose host class is
+- [x] `@Stream("/chat", auth=True)` on a method whose host class is
       decorated with `@UseGuards(...)` mounts successfully and the
       stream is gated.
-- [ ] `@Stream("/chat", auth=True)` on a method directly decorated
+- [x] `@Stream("/chat", auth=True)` on a method directly decorated
       with `@UseGuards(...)` (not the host) mounts successfully.
-- [ ] `@Stream("/chat", auth=True)` with NO `@UseGuards` anywhere raises
+- [x] `@Stream("/chat", auth=True)` with NO `@UseGuards` anywhere raises
       `StreamConfigError` at mount time with a message naming the
       method.
-- [ ] A guard rejection on a stream endpoint returns a normal JSON
+- [x] A guard rejection on a stream endpoint returns a normal JSON
       401/403 with `Content-Type: application/json` — NO
       `text/event-stream` headers are sent.
 
 ### `@Controller` integration
 
-- [ ] A controller-only guard rejection short-circuits BEFORE the
+- [x] A controller-only guard rejection short-circuits BEFORE the
       route's ValidationPipe runs (verified by giving the handler a
       malformed body and confirming the response is 401, not 422).
-- [ ] A method-only guard rejection short-circuits BEFORE the
+- [x] A method-only guard rejection short-circuits BEFORE the
       handler runs.
-- [ ] Per-method guards do NOT bleed across methods on the same
+- [x] Per-method guards do NOT bleed across methods on the same
       controller.
 
 ### Public re-exports
 
-- [ ] `from ajolopy import UseGuards` works.
-- [ ] `from ajolopy.guards import (Guard, BearerTokenGuard,
+- [x] `from ajolopy import UseGuards` works.
+- [x] `from ajolopy.guards import (Guard, BearerTokenGuard,
       IPAllowlistGuard, GuardError, GuardUnauthorizedError,
       GuardForbiddenError, UseGuardsConfigError)` works.
-- [ ] `UseGuards` is added to `src/ajolopy/__init__.py`'s `__all__`
+- [x] `UseGuards` is added to `src/ajolopy/__init__.py`'s `__all__`
       alongside the primitive decorators.
 
 ### Negative cases
 
-- [ ] Decorating something that's not a class OR a function with
+- [x] Decorating something that's not a class OR a function with
       `@UseGuards(...)` raises `UseGuardsConfigError` at decoration
       time (e.g. trying to decorate a module-level variable).
-- [ ] Two `@UseGuards(...)` decorators on the same target concatenate
+- [x] Two `@UseGuards(...)` decorators on the same target concatenate
       their lists in declaration order (top decorator runs LAST in
       Python decorator semantics, but the framework normalises into
       a single sequence stamped on the target).
-- [ ] A `Guard` subclass whose `can_activate` is NOT async raises
+- [x] A `Guard` subclass whose `can_activate` is NOT async raises
       `UseGuardsConfigError` at decoration time (we don't want a
       synchronous I/O guard blocking the event loop).
 
@@ -478,4 +485,51 @@ no real network traffic in CI. The IP allowlist tests use the
 
 ## Implementation notes
 
-(Empty — populated by the implementation PR.)
+- **Response envelope deviation.** The original spec described
+  `{"detail": str, "status": int}` (Starlette's default
+  `HTTPException` body). The existing AJ-15 filter pipeline already
+  produces the framework's canonical envelope
+  `{"statusCode": int, "error": str, "message": str, "details"?:
+  any}`, and the entire HTTP test suite (`tests/http`, `tests/routes`,
+  `tests/stream`) asserts on that shape. Flipping the global filter
+  to a divergent shape solely for guards would have broken those
+  tests AND given users two response shapes to handle. The guard
+  runtime therefore raises `UnauthorizedException(401)` /
+  `ForbiddenException(403)` from `ajolopy.http.exceptions`, which the
+  default filter (AJ-15's `DefaultHttpExceptionFilter`) serialises
+  through the same `envelope()` helper used by every other HTTP
+  error. The functional invariant — 401 for missing auth, 403 for
+  authenticated-but-denied, JSON body, no SSE leak — is preserved.
+- **`add_route` got a new `guards=` kwarg.** Rather than have
+  `mount_routes` rebuild its own endpoint, the route mount layer
+  simply forwards a resolved guard chain to `add_route`, which lazily
+  imports `apply_guard_chain` to avoid a circular import between
+  `ajolopy.http` and `ajolopy.guards`. Existing callers that omit the
+  kwarg get the original behaviour byte-for-byte.
+- **Stream `auth=True` rewording.** The decorator now records the
+  bool verbatim and rejects non-bool inputs (`auth="true"` etc.).
+  The mount-time assertion lives in `mount_streams`: if `auth=True`
+  and the resolved guard chain is empty, the framework raises
+  `StreamConfigError` naming the offending method and pointing at
+  `@UseGuards`. The cross-cut also wraps the SSE endpoint with the
+  guard chain whenever the chain is non-empty, regardless of
+  `auth=`, so `@UseGuards` is the load-bearing primitive and
+  `auth=True` is the "did you remember to gate this?" assertion.
+- **Pyright + CodeQL workaround.** `@UseGuards` follows the `@MCP`
+  pattern of using a module-level `TypeVar` instead of PEP 695
+  syntax. The decorator body runs eager validation that may raise
+  before the inner `_decorate`, and CodeQL's flow analyser
+  mis-classifies PEP 695 type parameters in that shape.
+- **`get_guard_chain` (and the `_ajolopy_guards` attribute) reads
+  `cls.__dict__` directly** so subclass inheritance does NOT bleed
+  guards down the MRO. This matches the
+  `@Controller` / `@Module` / `@Injectable` no-inheritance rule.
+- **`_CallableGuard` does NOT dispatch sync callables to
+  `to_thread`.** Sync guards run directly on the event loop. The
+  decorator's docstring and the adapter's class docstring both call
+  this out so users do not embed blocking I/O in a one-line
+  `(request) -> bool` lambda.
+- **`BearerTokenGuard.token_env` resolution is lazy.** Env lookup
+  happens inside `can_activate`, not in `__init__`. Tests that set
+  `os.environ["API_TOKEN"]` AFTER instantiating the guard still
+  work; rotated tokens take effect without recreating the guard.
