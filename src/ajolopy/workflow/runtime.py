@@ -135,13 +135,15 @@ def _delegate_tool_description(agent_cls: type[Any]) -> str:
     return f"Delegate to the {agent_cls.__name__} agent."
 
 
-def _is_agent_class(cls: object) -> bool:
+def is_agent_class(cls: object) -> bool:
     """``True`` when ``cls`` was decorated with :func:`ajolopy.Agent`.
 
     The agent decorator binds an ``_agent_runtime`` attribute on the
     class itself; checking for it (and that it is an :class:`AgentRuntime`
     instance) is the cheapest way to validate without importing the
-    decorator module and risking a circular dependency.
+    decorator module and risking a circular dependency. Public so the
+    workflow decorator can validate ``agents=`` without reaching across
+    the package boundary into a private helper.
     """
     if not isinstance(cls, type):
         return False
@@ -321,7 +323,7 @@ class WorkflowRuntime:
                 f"route() on {self._workflow_name!r} raised {type(exc).__name__}: {exc}"
             ) from exc
 
-        if not _is_agent_class(chosen):
+        if not is_agent_class(chosen):
             legal = sorted(cls.__name__ for cls in self._agents)
             raise WorkflowRouteError(
                 f"route() on {self._workflow_name!r} returned {chosen!r}, which is "
