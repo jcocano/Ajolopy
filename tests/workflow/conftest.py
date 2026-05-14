@@ -56,8 +56,11 @@ class ScriptedStreamProvider(FakeProvider):
             self._round_index += 1
         else:
             events = [Chunk(delta="default", finish_reason="stop")]
+        should_raise = self.raise_on_stream
 
         async def _it() -> AsyncIterator[Chunk]:
+            if should_raise is not None:
+                raise should_raise
             for event in events:
                 yield event
 

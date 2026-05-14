@@ -384,6 +384,32 @@ async def test_delegated_agent_error_surfaces_as_agent_result_and_recovers(
 
 
 @pytest.mark.asyncio
+async def test_coordinator_llm_provider_error_propagates_out(
+    scripted_stream_provider: type[ScriptedStreamProvider],
+) -> None:
+    _ = scripted_stream_provider
+
+    @Agent(model="claude-sonnet-4-7", system="…")
+    class Billing:
+        """Billing."""
+
+    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    class Team:
+        pass
+
+    from ajolopy.providers import LLMProviderError
+
+    coordinator_provider: ScriptedStreamProvider = (
+        Team._workflow_runtime._coordinator_provider  # type: ignore[attr-defined]
+    )
+    coordinator_provider.raise_on_stream = LLMProviderError("coordinator boom")
+
+    with pytest.raises(LLMProviderError, match="coordinator boom"):
+        async for _ in Team().stream("hi"):  # type: ignore[attr-defined]
+            pass
+
+
+@pytest.mark.asyncio
 async def test_unknown_tool_name_pushes_error_result_back_to_coordinator(
     scripted_stream_provider: type[ScriptedStreamProvider],
 ) -> None:
