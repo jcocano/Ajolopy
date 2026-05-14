@@ -163,15 +163,15 @@
       "slug": "workflow",
       "type": "feature",
       "title": "@Workflow decorator (multi-agent orchestration)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "primitive",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/workflow",
       "pr": null,
       "spec": "specs/workflow.md",
       "blocks": [
