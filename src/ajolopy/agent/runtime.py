@@ -204,7 +204,20 @@ class AgentRuntime:
     # public methods called by the decorator-injected instance methods
     # ------------------------------------------------------------------
 
-    async def run(self, agent_instance: Any, message: str) -> str:
+    async def run(
+        self,
+        agent_instance: Any,
+        message: str,
+        *,
+        cost_sink: list[float | None] | None = None,
+    ) -> str:
+        """Run the agent to completion and return the final assistant text.
+
+        ``cost_sink`` is a private orchestrator hook: when supplied every
+        chat-span cost (including ``None`` for unknown models) is appended
+        to the list in addition to the agent's own root-span roll-up.
+        Public consumers leave it as ``None``.
+        """
         history = await self._load_history()
         prompt_messages = self._build_messages(history, message)
         last_error: BaseException | None = None
@@ -225,6 +238,7 @@ class AgentRuntime:
                         prompt_messages=prompt_messages,
                         wire_tools=wire_tools,
                         child_costs=child_costs,
+                        cost_sink=cost_sink,
                     )
                 except LLMProviderError as exc:
                     last_error = exc
@@ -245,7 +259,19 @@ class AgentRuntime:
                 f"{f' (last error: {last_error})' if last_error is not None else ''}."
             ) from last_error
 
-    def stream(self, agent_instance: Any, message: str) -> AsyncIterator[str]:
+    def stream(
+        self,
+        agent_instance: Any,
+        message: str,
+        *,
+        cost_sink: list[float | None] | None = None,
+    ) -> AsyncIterator[str]:
+        """Stream the agent's response one delta at a time.
+
+        ``cost_sink`` mirrors :meth:`run`: a private orchestrator hook for
+        collecting per-chat costs into a caller-owned accumulator.
+        """
+
         async def _iterator() -> AsyncIterator[str]:
             history = await self._load_history()
             wire_tools: list[Tool] | None = self._wire_tools or None
@@ -264,6 +290,7 @@ class AgentRuntime:
                             prompt_messages=prompt_messages,
                             wire_tools=wire_tools,
                             child_costs=child_costs,
+                            cost_sink=cost_sink,
                         ):
                             collected.append(delta)
                             yield delta
@@ -300,6 +327,7 @@ class AgentRuntime:
         prompt_messages: list[Message],
         wire_tools: list[Tool] | None,
         child_costs: list[float | None],
+        cost_sink: list[float | None] | None = None,
     ) -> str:
         """Drive the function-calling loop until a tool-free response.
 
@@ -314,6 +342,7 @@ class AgentRuntime:
                 prompt_messages=prompt_messages,
                 wire_tools=wire_tools,
                 child_costs=child_costs,
+                cost_sink=cost_sink,
             )
             if not response.tool_calls:
                 return response.text
@@ -347,6 +376,7 @@ class AgentRuntime:
         prompt_messages: list[Message],
         wire_tools: list[Tool] | None,
         child_costs: list[float | None],
+        cost_sink: list[float | None] | None = None,
     ) -> AsyncIterator[str]:
         """Stream text deltas, transparently handling tool-call rounds."""
         for iteration in range(self._max_tool_iterations + 1):
@@ -410,6 +440,8 @@ class AgentRuntime:
                     catalog=self._resolve_catalog(),
                 )
                 child_costs.append(cost)
+                if cost_sink is not None:
+                    cost_sink.append(cost)
                 # Silence unused-name warnings while keeping the cache token
                 # state available for future per-call logging.
                 _ = (cache_creation, cache_read)
@@ -450,6 +482,7 @@ class AgentRuntime:
         prompt_messages: list[Message],
         wire_tools: list[Tool] | None,
         child_costs: list[float | None],
+        cost_sink: list[float | None] | None = None,
     ) -> Response:
         with self._chat_span(provider=provider, model_str=model_str) as span:
             self._record_chat_request(span, prompt_messages=prompt_messages, streaming=False)
@@ -480,6 +513,8 @@ class AgentRuntime:
                 catalog=self._resolve_catalog(),
             )
             child_costs.append(cost)
+            if cost_sink is not None:
+                cost_sink.append(cost)
             return response
 
     def _resolve_catalog(self) -> Catalog:
