@@ -148,9 +148,20 @@ def _qualname(obj: object) -> str:
 
 
 def _validate_path(method: HttpVerb, path: str) -> None:
-    if not isinstance(path, str) or not path:  # pyright: ignore[reportUnnecessaryIsInstance]
-        raise RouteConfigError(f"@{method.capitalize()} path must be a non-empty string.")
-    if not path.startswith("/"):
+    if not isinstance(path, str):  # pyright: ignore[reportUnnecessaryIsInstance]
+        raise RouteConfigError(
+            f"@{method.capitalize()} path must be a str, got {type(path).__name__}."
+        )
+    # The empty string is legal: when the host class is wrapped in
+    # ``@Controller("/users")`` the join rule resolves ``prefix +
+    # path == "/users"``. AJ-10's spec covers this case explicitly.
+    # A standalone (controller-less) class with ``@Get("")`` still
+    # registers a route at the empty path; Starlette treats that as
+    # ``"/"`` at request time, so the misuse surfaces at mount time
+    # rather than decoration time. Non-empty paths must still start
+    # with ``/`` so an Express-style ``"users"`` (no leading slash)
+    # is caught early.
+    if path and not path.startswith("/"):
         raise RouteConfigError(f"@{method.capitalize()} path must start with '/'; got {path!r}.")
     if _EXPRESS_PARAM_RE.search(path) is not None:
         raise RouteConfigError(

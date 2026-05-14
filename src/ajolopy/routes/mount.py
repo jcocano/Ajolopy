@@ -1,9 +1,10 @@
 """Register route-decorated methods as Starlette routes.
 
 ``mount_routes(app, items)`` is the explicit two-line wiring path that
-complements AJ-15's ``add_route``. AJ-10 will later add a
-``@Controller`` wrapper plus a ``create_app(controllers=[...])`` kwarg;
-until then, the user pairs ``create_app()`` with ``mount_routes(app, [...])``.
+complements AJ-15's ``add_route``. AJ-10 adds the ``@Controller``
+wrapper, which stamps ``__ajolopy_route_prefix__`` on a class so this
+module knows to join the prefix to every method-level path before
+forwarding to ``add_route``.
 
 Each item is either a class (instantiated via ``Cls()``) or a pre-built
 instance. Required constructor arguments raise :class:`RouteConfigError`
@@ -16,6 +17,7 @@ from typing import TYPE_CHECKING
 
 from ajolopy.http.app import add_route
 
+from .controller import get_controller_prefix
 from .decorator import iter_route_methods
 from .errors import RouteConfigError
 
@@ -33,6 +35,12 @@ def mount_routes(app: Starlette, items: Iterable[type | object]) -> None:
     ``Header``), pipe execution, and response serialisation all reuse
     AJ-15's machinery.
 
+    For items whose class carries ``__ajolopy_route_prefix__`` (the
+    ``@Controller`` stamp from AJ-10), the prefix is concatenated to
+    each method-level path before registration. Items without the
+    attribute keep the AJ-16 behaviour — method paths registered
+    verbatim.
+
     Duplicate ``(method, path)`` pairs across all items raise
     :class:`RouteConfigError` so collisions surface at boot rather than
     silently shadowing routes.
@@ -42,7 +50,9 @@ def mount_routes(app: Starlette, items: Iterable[type | object]) -> None:
 
     seen: dict[tuple[str, str], str] = {}
     for instance in instances:
-        cls_name = type(instance).__qualname__
+        cls = type(instance)
+        cls_name = cls.__qualname__
+        prefix = get_controller_prefix(cls) or ""
         marked = list(iter_route_methods(instance))
         if not marked:
             raise RouteConfigError(
@@ -52,18 +62,41 @@ def mount_routes(app: Starlette, items: Iterable[type | object]) -> None:
                 f"the list."
             )
         for _attr_name, bound_method, metadata in marked:
-            key = (metadata.method, metadata.path)
+            full_path = _join_prefix(prefix, metadata.path)
+            key = (metadata.method, full_path)
             existing = seen.get(key)
             new_qualname = metadata.handler.__qualname__
             if existing is not None:
                 raise RouteConfigError(
                     f"Duplicate route {metadata.method} "
-                    f"{metadata.path!r}: both {existing} and "
+                    f"{full_path!r}: both {existing} and "
                     f"{new_qualname} declare it."
                 )
             seen[key] = new_qualname
 
-            add_route(app, metadata.method, metadata.path, bound_method)
+            add_route(app, metadata.method, full_path, bound_method)
+
+
+def _join_prefix(prefix: str, path: str) -> str:
+    """Concatenate ``prefix`` with the method-level ``path``.
+
+    Join rules (mirrored in the spec and the test suite):
+
+    - ``prefix=""`` + ``path="/users"`` → ``"/users"``.
+    - ``prefix="/users"`` + ``path="/"`` → ``"/users/"`` — Starlette
+      treats ``/users/`` and ``/users`` as distinct, so the trailing
+      slash on the method path is preserved.
+    - ``prefix="/users"`` + ``path="/{id}"`` → ``"/users/{id}"``.
+    - ``prefix="/users"`` + ``path=""`` → ``"/users"``.
+
+    Simple string concatenation — no slash deduplication beyond the
+    trailing-slash strip the decorator already applied to ``prefix``.
+    Double slashes inside the method path itself (``"/users//{id}"``)
+    are the user's bug, not the mount layer's.
+    """
+    if prefix == "":
+        return path
+    return prefix + path
 
 
 def _normalise(item: type | object) -> object:
