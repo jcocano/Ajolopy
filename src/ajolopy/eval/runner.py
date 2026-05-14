@@ -46,7 +46,6 @@ Cost capture:
 import asyncio
 import hashlib
 import inspect
-import logging
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -93,7 +92,6 @@ __all__ = ["EvalRunner"]
 
 
 _TRACER = get_tracer("ajolopy.eval")
-_LOGGER = logging.getLogger("ajolopy.eval")
 
 
 # Default storage location: ``.ajolopy/eval-runs/`` relative to

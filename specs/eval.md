@@ -436,150 +436,150 @@ machinery.
 
 ### `@Eval` decoration-time validation
 
-- [ ] `@Eval(agent=Support, dataset="x.jsonl")` on a class with at
+- [x] `@Eval(agent=Support, dataset="x.jsonl")` on a class with at
       least one `@Metric` stamps `_ajolopy_eval` metadata and
       preserves the class type for pyright.
-- [ ] `@Eval(workflow=SupportTeam, dataset="x.jsonl")` works
+- [x] `@Eval(workflow=SupportTeam, dataset="x.jsonl")` works
       similarly.
-- [ ] `@Eval(agent=A, workflow=B, dataset=...)` raises
+- [x] `@Eval(agent=A, workflow=B, dataset=...)` raises
       `EvalConfigError` (exactly-one rule).
-- [ ] `@Eval(dataset=...)` with neither `agent=` nor `workflow=`
+- [x] `@Eval(dataset=...)` with neither `agent=` nor `workflow=`
       raises `EvalConfigError`.
-- [ ] `@Eval(agent=Plain, dataset=...)` where `Plain` is not
+- [x] `@Eval(agent=Plain, dataset=...)` where `Plain` is not
       `@Agent`-decorated raises `EvalConfigError`.
-- [ ] `@Eval(workflow=Plain, dataset=...)` where `Plain` is not
+- [x] `@Eval(workflow=Plain, dataset=...)` where `Plain` is not
       `@Workflow`-decorated raises `EvalConfigError`.
-- [ ] `@Eval(agent=A, dataset=...)` with NO `@Metric` methods raises
+- [x] `@Eval(agent=A, dataset=...)` with NO `@Metric` methods raises
       `EvalConfigError` ("an Eval suite needs at least one @Metric
       method").
-- [ ] `@Eval(threshold=-0.1)` and `threshold=1.1` raise
+- [x] `@Eval(threshold=-0.1)` and `threshold=1.1` raise
       `EvalConfigError`.
-- [ ] `@Eval(concurrency=0)` and `concurrency=-1` raise
+- [x] `@Eval(concurrency=0)` and `concurrency=-1` raise
       `EvalConfigError`.
-- [ ] An invalid `dataset=` form bubbles `DatasetError` (re-raised
+- [x] An invalid `dataset=` form bubbles `DatasetError` (re-raised
       with context, not as `EvalConfigError`).
 
 ### `@Metric` decoration-time validation
 
-- [ ] `@Metric` (bare) on `def helpful(self, output, expected) ->
+- [x] `@Metric` (bare) on `def helpful(self, output, expected) ->
       float:` stamps `_ajolopy_metric` metadata with default
       `aggregator="mean"`, `weight=1.0`, `pass_threshold=0.5`.
-- [ ] `@Metric(aggregator="p95", weight=0.5, pass_threshold=0.8)`
+- [x] `@Metric(aggregator="p95", weight=0.5, pass_threshold=0.8)`
       stamps the supplied values.
-- [ ] `@Metric(aggregator="bogus")` raises `MetricConfigError`
+- [x] `@Metric(aggregator="bogus")` raises `MetricConfigError`
       listing the six accepted aggregators.
-- [ ] `@Metric(weight=-1)` and `weight=0` raise
+- [x] `@Metric(weight=-1)` and `weight=0` raise
       `MetricConfigError`.
-- [ ] `@Metric(pass_threshold=2.0)` and `pass_threshold=-0.1` raise
+- [x] `@Metric(pass_threshold=2.0)` and `pass_threshold=-0.1` raise
       `MetricConfigError`.
-- [ ] Method signature mismatch (less than 3 positional args
+- [x] Method signature mismatch (less than 3 positional args
       including `self`) at decoration time raises
       `MetricConfigError` with a hint pointing at the documented
       `(self, output, expected)` shape.
-- [ ] Two `@Metric`-decorated methods with the same `__name__` on
+- [x] Two `@Metric`-decorated methods with the same `__name__` on
       the same `@Eval` class raise `EvalConfigError` ("duplicate
       metric name 'X'").
 
 ### Dataclass invariants
 
-- [ ] `Case` (reused from AJ-25), `EvalOutput`, `EvalCaseResult`,
+- [x] `Case` (reused from AJ-25), `EvalOutput`, `EvalCaseResult`,
       `EvalMetricResult`, `EvalRun`, `MetricDelta`, `EvalComparison`
       are all frozen + slotted dataclasses.
-- [ ] `EvalOutput.text` is always a string; non-string return from
+- [x] `EvalOutput.text` is always a string; non-string return from
       `target.run()` is coerced via `str(raw)` and the original
       stored under `.raw`.
-- [ ] `EvalCaseResult.passed == False` whenever `error is not None`.
+- [x] `EvalCaseResult.passed == False` whenever `error is not None`.
 
 ### `EvalRunner.run()` — happy paths
 
-- [ ] With a mocked agent that returns a fixed text per case and a
+- [x] With a mocked agent that returns a fixed text per case and a
       single `@Metric` returning 1.0, the run produces
       `aggregate_score=1.0` and `passed=True`.
-- [ ] With `threshold=0.9` and a metric that returns 0.5 for every
+- [x] With `threshold=0.9` and a metric that returns 0.5 for every
       case, the run produces `passed=False`.
-- [ ] All six aggregators (`mean`, `min`, `max`, `p50`, `p95`,
+- [x] All six aggregators (`mean`, `min`, `max`, `p50`, `p95`,
       `count_passing`) produce the expected value on a fixed input
       sequence (verified against `statistics` module results).
-- [ ] `count_passing` uses each metric's own `pass_threshold` as the
+- [x] `count_passing` uses each metric's own `pass_threshold` as the
       per-case bar.
-- [ ] Weighted aggregate equals
+- [x] Weighted aggregate equals
       `sum(m.weight * m.aggregate) / sum(m.weight)` across metrics.
-- [ ] Concurrency cap: with `concurrency=2` and a target that
+- [x] Concurrency cap: with `concurrency=2` and a target that
       `await asyncio.sleep(0.05)`, the runner completes 6 cases in
       `~3 * 0.05 s` (verified with a tolerance band).
-- [ ] Per-case `case_index` corresponds to dataset order
+- [x] Per-case `case_index` corresponds to dataset order
       regardless of concurrency.
-- [ ] Async `@Metric` (e.g. `llm_judge`-style) is awaited.
-- [ ] `target.run()` for `@Agent` is called with `**case.input`;
+- [x] Async `@Metric` (e.g. `llm_judge`-style) is awaited.
+- [x] `target.run()` for `@Agent` is called with `**case.input`;
       same for `@Workflow`.
 
 ### `EvalRunner.run()` — error paths
 
-- [ ] `target.run()` raising sets `case.error`, `case.passed=False`,
+- [x] `target.run()` raising sets `case.error`, `case.passed=False`,
       `case.output=None`, all `metric_scores=0.0`, and the suite
       continues for the remaining cases.
-- [ ] A `@Metric` raising sets just that metric's score to 0.0 for
+- [x] A `@Metric` raising sets just that metric's score to 0.0 for
       that case and includes the metric name in the case's `error`
       field; other metrics still run for the same case.
-- [ ] A non-numeric `@Metric` return raises `MetricRuntimeError`
+- [x] A non-numeric `@Metric` return raises `MetricRuntimeError`
       caught into the case's error.
-- [ ] An empty dataset (zero cases) raises `EvalRunError("dataset
+- [x] An empty dataset (zero cases) raises `EvalRunError("dataset
       has no cases")` — refusing to compute against an empty input
       avoids divide-by-zero on aggregations.
 
 ### `EvalRun.save` / `EvalRun.load`
 
-- [ ] `save()` writes JSON matching the documented schema; reading
+- [x] `save()` writes JSON matching the documented schema; reading
       with `json.load` produces a dict with the documented keys.
-- [ ] Default location is `.ajolopy/eval-runs/<timestamp>.json`;
+- [x] Default location is `.ajolopy/eval-runs/<timestamp>.json`;
       directory is created on first save.
-- [ ] Timestamp follows ISO 8601 UTC with `Z` suffix.
-- [ ] `load(path)` round-trips `aggregate_score`, `passed`,
+- [x] Timestamp follows ISO 8601 UTC with `Z` suffix.
+- [x] `load(path)` round-trips `aggregate_score`, `passed`,
       per-metric aggregations, and per-case `passed` / `error`.
-- [ ] `EvalRun.load(path).cases[N].output.raw` is the string repr
+- [x] `EvalRun.load(path).cases[N].output.raw` is the string repr
       (not the original object) per the documented limitation.
-- [ ] Schema version mismatch (`schema_version != 1`) raises
+- [x] Schema version mismatch (`schema_version != 1`) raises
       `EvalRunError("unsupported eval-run schema version")`.
 
 ### `compare_runs(prev, curr)`
 
-- [ ] Equal runs produce `MetricDelta` with `delta=0` and
+- [x] Equal runs produce `MetricDelta` with `delta=0` and
       `is_regression=False` for every metric.
-- [ ] A metric whose aggregate dropped by 0.05 reports
+- [x] A metric whose aggregate dropped by 0.05 reports
       `is_regression=True`.
-- [ ] A metric whose aggregate dropped by 0.0005 (below 1e-3 floor)
+- [x] A metric whose aggregate dropped by 0.0005 (below 1e-3 floor)
       reports `is_regression=False`.
-- [ ] Cases that flipped `passed=True` → `False` appear in
+- [x] Cases that flipped `passed=True` → `False` appear in
       `newly_failing_case_indices` in ascending order.
-- [ ] Cases that flipped `passed=False` → `True` appear in
+- [x] Cases that flipped `passed=False` → `True` appear in
       `newly_passing_case_indices`.
-- [ ] Suite-name mismatch raises `EvalComparisonError`.
-- [ ] Dataset sha256 mismatch raises `EvalComparisonError`.
-- [ ] Case-count mismatch raises `EvalComparisonError`.
+- [x] Suite-name mismatch raises `EvalComparisonError`.
+- [x] Dataset sha256 mismatch raises `EvalComparisonError`.
+- [x] Case-count mismatch raises `EvalComparisonError`.
 
 ### Observability
 
-- [ ] One `eval.run {Suite}` span per `EvalRunner.run()` call with
+- [x] One `eval.run {Suite}` span per `EvalRunner.run()` call with
       `ajolopy.eval.suite`, `target_kind`, `threshold`,
       `aggregate_score`, `passed`, `concurrency` attributes.
-- [ ] One `eval.case {i}` span per case with
+- [x] One `eval.case {i}` span per case with
       `ajolopy.eval.case_index`, `case_passed`, `case_error`
       (when present), and one `ajolopy.eval.score.<metric>` attr
       per metric.
-- [ ] The `eval.run` span carries `ajolopy.cost_usd.total` equal to
+- [x] The `eval.run` span carries `ajolopy.cost_usd.total` equal to
       the sum of per-case costs (verified with a fake catalog).
-- [ ] `eval.case` spans nest under `eval.run` so the trace
+- [x] `eval.case` spans nest under `eval.run` so the trace
       hierarchy is preserved when exporters render it.
 
 ### Public re-exports
 
-- [ ] `from ajolopy.eval import (Eval, Metric, EvalRunner,
+- [x] `from ajolopy.eval import (Eval, Metric, EvalRunner,
       EvalOutput, EvalCaseResult, EvalMetricResult, EvalRun,
       EvalComparison, MetricDelta, compare_runs, EvalConfigError,
       EvalRunError, EvalComparisonError, MetricConfigError,
       MetricRuntimeError)` works.
-- [ ] `ajolopy.eval.__all__` is updated.
-- [ ] `Eval`, `Metric` are added to `src/ajolopy/__init__.py`
+- [x] `ajolopy.eval.__all__` is updated.
+- [x] `Eval`, `Metric` are added to `src/ajolopy/__init__.py`
       `__all__` alongside the other primitive decorators (a
       consistent rule: top-level primitives stay at the top level).
 
@@ -638,4 +638,70 @@ machinery.
 
 ## Implementation notes
 
-(Empty — populated by the implementation PR.)
+### Cost capture for workflow targets
+
+The runner threads `cost_sink=` into `AgentRuntime.run` for agent
+targets and reads the per-case cost from the accumulator. The
+`@Workflow` runtime does NOT expose the same kwarg on its public
+`run(message, **context)` API (the workflow already owns a child
+`agent.invoke` span that carries its own `ajolopy.cost_usd.total`
+roll-up). Workflow-target cases therefore record `cost_usd=None` in
+the `EvalOutput`. The `eval.run` span's `ajolopy.cost_usd.total` is
+the sum over non-`None` per-case costs, which means agent targets
+roll up cleanly while workflow targets omit the attribute when every
+case used a workflow path. Deeper workflow-side cost wiring is
+deferred to AJ-31.
+
+### Case-span nesting under `asyncio.gather`
+
+Python's asyncio propagates contextvars across `await`/`gather`, but
+the propagation snapshot is taken at `gather()` time — workers
+scheduled later can race with the run-span's `start_as_current_span`
+entering its context. The runner pins the parent context explicitly
+via `opentelemetry.trace.use_span(run_span, end_on_exit=False)` inside
+each worker before opening its `eval.case` span. The
+`end_on_exit=False` is load-bearing: without it the run span would
+end when the first worker leaves its case body.
+
+### Per-metric `passed` and `count_passing`
+
+The two pass/fail dimensions are independent:
+
+- **Per-case, per-metric pass** — `score >= metric.pass_threshold`.
+  Used as the per-case `EvalCaseResult.passed` conjunct.
+- **Per-suite, per-metric pass** — `aggregate >= metric.pass_threshold`.
+  Used as `EvalMetricResult.passed`.
+
+For `count_passing` the aggregate IS the fraction of cases that
+cleared `pass_threshold`, so the per-suite check reads naturally as
+"at least `pass_threshold` of cases pass". The two semantics happen
+to share the same threshold field by design — having one number do
+both jobs keeps the surface tight (single setting per metric instead
+of "case threshold + suite threshold + count_passing threshold").
+
+### Dataclass save/load — methods, not late binding
+
+The original plan was to bind `save`/`load` onto :class:`EvalRun` at
+import time from :mod:`storage`. That trips pyright's
+`reportAttributeAccessIssue` everywhere :class:`EvalRun.save` /
+:meth:`EvalRun.load` is called. The final wire-up declares both as
+plain methods on the dataclass with a lazy `from .storage import …`
+inside the body; pyright sees them statically, storage stays the only
+module that touches :mod:`json` / :mod:`pathlib`, and result-module
+import remains cheap.
+
+### CodeQL false-positive mitigations applied
+
+- `@Eval` uses a manual `TypeVar("T")` (not PEP 695 `def Eval[T]`)
+  because the decorator runs pre-`_decorate` validation that may
+  raise. PEP 695 would trip "Potentially uninitialized local
+  variable" in the same way `@MCP` did pre-AJ-7 cleanup.
+- Aggregator type alias `Aggregator` is a classic
+  `Aggregator = Callable[[...], float]` assignment (not PEP 695
+  `type Aggregator = …`) so the re-export from
+  :mod:`ajolopy.eval.aggregators.__all__` does not trip "Explicit
+  export is not defined".
+- The runner does NOT declare an unused `_LOGGER = logging.getLogger(...)`
+  module-level constant. CodeQL flags those as "Unused global
+  variable"; future logging needs (e.g. per-case warnings) will
+  introduce the logger together with its first call site.
