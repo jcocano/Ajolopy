@@ -90,9 +90,22 @@ class TestStampMetadata:
 
 class TestPathValidation:
     @pytest.mark.parametrize("decorator", [Get, Post, Put, Patch, Delete])
-    def test_empty_path_raises(self, decorator: Any) -> None:
-        with pytest.raises(RouteConfigError, match="non-empty"):
-            decorator("")(_fresh_handler())
+    def test_empty_path_is_accepted_for_controller_composition(self, decorator: Any) -> None:
+        # AJ-10 (``@Controller(prefix)``) needs the empty path to be
+        # legal so the spec's ``prefix="/users"`` + ``path=""`` →
+        # ``"/users"`` join rule works. The standalone-class case
+        # (controller-less ``@Get("")``) registers a route at the
+        # empty path; misuse surfaces at mount time rather than
+        # decoration time.
+        decorated = decorator("")(_fresh_handler())
+        metadata = get_route_metadata(decorated)
+        assert metadata is not None
+        assert metadata.path == ""
+
+    @pytest.mark.parametrize("decorator", [Get, Post, Put, Patch, Delete])
+    def test_non_string_path_raises(self, decorator: Any) -> None:
+        with pytest.raises(RouteConfigError, match="must be a str"):
+            decorator(42)(_fresh_handler())
 
     @pytest.mark.parametrize("decorator", [Get, Post, Put, Patch, Delete])
     def test_relative_path_raises(self, decorator: Any) -> None:

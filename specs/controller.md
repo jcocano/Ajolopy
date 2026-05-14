@@ -214,48 +214,48 @@ can transition to `done`.
 
 ### Decorator — metadata stamping
 
-- [ ] `@Controller("/users")` returns the class unchanged.
-- [ ] The decorated class exposes `__ajolopy_route_prefix__ = "/users"`.
-- [ ] `@Controller("/users/")` (with trailing slash) normalises to
+- [x] `@Controller("/users")` returns the class unchanged.
+- [x] The decorated class exposes `__ajolopy_route_prefix__ = "/users"`.
+- [x] `@Controller("/users/")` (with trailing slash) normalises to
       `__ajolopy_route_prefix__ = "/users"`.
-- [ ] `@Controller("")` is legal and stamps the empty string.
-- [ ] `@Controller(42)` raises `ControllerConfigError` at decoration
+- [x] `@Controller("")` is legal and stamps the empty string.
+- [x] `@Controller(42)` raises `ControllerConfigError` at decoration
       time, naming the offending argument and its type.
-- [ ] `@Controller(None)` raises `ControllerConfigError`.
+- [x] `@Controller(None)` raises `ControllerConfigError`.
 
 ### Re-decoration & inheritance
 
-- [ ] Re-decorating an already-`@Controller` class raises
+- [x] Re-decorating an already-`@Controller` class raises
       `ControllerConfigError`.
-- [ ] Subclassing a controller does NOT inherit
+- [x] Subclassing a controller does NOT inherit
       `__ajolopy_route_prefix__` (verified via
       `assert "__ajolopy_route_prefix__" not in Child.__dict__`).
 
 ### `mount_routes` integration — prefix concatenation
 
-- [ ] `@Controller("/users")` + `@Get("/")` mounts as `GET /users/`.
-- [ ] `@Controller("/users")` + `@Get("/{user_id}")` mounts as
+- [x] `@Controller("/users")` + `@Get("/")` mounts as `GET /users/`.
+- [x] `@Controller("/users")` + `@Get("/{user_id}")` mounts as
       `GET /users/{user_id}`.
-- [ ] `@Controller("/users")` + `@Get("")` mounts as `GET /users`.
-- [ ] `@Controller("")` + `@Get("/foo")` mounts as `GET /foo`.
-- [ ] A class **without** `@Controller` (bare class with method
+- [x] `@Controller("/users")` + `@Get("")` mounts as `GET /users`.
+- [x] `@Controller("")` + `@Get("/foo")` mounts as `GET /foo`.
+- [x] A class **without** `@Controller` (bare class with method
       decorators) continues to work as AJ-16 shipped — no prefix,
       method paths used verbatim.
 
 ### Integration with `@Module` (AJ-8) and DI
 
-- [ ] A controller listed in `@Module(controllers=[UsersController])`
+- [x] A controller listed in `@Module(controllers=[UsersController])`
       is registered in the container, mounted via `mount_routes`
       walking `CompiledModule.controllers`, and its prefix applies.
-- [ ] A controller whose `__init__` takes a DI dependency
+- [x] A controller whose `__init__` takes a DI dependency
       (`def __init__(self, db: Db): ...`) is built with the dep
       injected when the route handler resolves it. (Verified by
       hitting the route via Starlette's test client.)
 
 ### Public surface
 
-- [ ] `from ajolopy import Controller` resolves.
-- [ ] `from ajolopy.routes import Controller` (the more specific
+- [x] `from ajolopy import Controller` resolves.
+- [x] `from ajolopy.routes import Controller` (the more specific
       path) also resolves, since the decorator lives next to the
       method decorators.
 
@@ -278,6 +278,111 @@ can transition to `done`.
 
 ## Implementation notes
 
-<!-- Filled during implementation. Capture scope decisions taken at
-write time, edge-case findings, coverage numbers, and any test-only
-quirks. -->
+`@Controller(prefix)` ships as a single-attribute stamp
+(`__ajolopy_route_prefix__`) on the decorated class. The decorator
+returns the class unchanged — no wrapping, no subclassing, no
+instrumentation. `mount_routes` reads the attribute via
+`get_controller_prefix(cls)` (a thin `cls.__dict__.get(...)` helper)
+and joins the prefix to each method-level path before forwarding to
+AJ-15's `add_route`.
+
+### Confirmed design decisions (all six)
+
+1. `Controller` requires a positional `prefix` argument. Bare
+   `@Controller` is rejected (TypeError at call time, mirroring the
+   signature). The decorator's whole purpose is the prefix; supporting
+   a bare form would invite typo'd "decorator without parens" mistakes.
+2. Trailing slashes are stripped at decoration time
+   (`prefix.rstrip("/")`). `@Controller("/users/")` and
+   `@Controller("/users")` produce the same effective prefix. A bare
+   `"/"` collapses to `""` to avoid the `//` foot-gun when concatenated
+   with a method-level path.
+3. Re-decoration is rejected with `ControllerConfigError`, naming the
+   class and its existing prefix. Detection uses `cls.__dict__`, not
+   `getattr`, so a legitimate `class Child(Parent): ...` is not
+   misclassified as a re-decoration of `Parent`.
+4. `__ajolopy_route_prefix__` is not inherited. Subclasses must be
+   re-decorated to count as controllers. Mirrors `@Module` /
+   `@Injectable`.
+5. `mount_routes` uses simple string concatenation
+   (`prefix + method_path`) — no slash deduplication beyond the
+   trailing-slash strip the decorator already applied to the prefix.
+   Double slashes inside the method path itself are the user's bug.
+6. `@Controller("")` is valid and produces unprefixed routes —
+   useful for root-level controllers.
+
+### Public surface
+
+- `src/ajolopy/routes/controller.py` — the `Controller` decorator plus
+  `get_controller_prefix(cls)` and the `CONTROLLER_PREFIX_ATTR`
+  constant.
+- `src/ajolopy/routes/errors.py` — `ControllerError` (base, extends
+  `RuntimeError`) and `ControllerConfigError` (decoration-time misuse).
+- `src/ajolopy/routes/mount.py` — extended to read the prefix and
+  join via the new private `_join_prefix(prefix, path)` helper.
+- Re-exports from `ajolopy.routes` and the top-level `ajolopy`
+  package: `Controller`, `ControllerError`, `ControllerConfigError`.
+
+### Scope decision taken at implementation time
+
+The AJ-10 spec's join rule `prefix="/users"` + `path=""` → `"/users"`
+requires the method decorators to accept an empty path. AJ-16's
+`_validate_path` originally rejected the empty string at decoration
+time, so the rule was unreachable as written. The fix:
+
+- Relax `_validate_path` in `src/ajolopy/routes/decorator.py` to
+  accept `path == ""`. Non-empty paths that do not start with `"/"`
+  are still rejected (so Express-style relative paths still fail
+  early); non-string paths now raise with a clearer
+  `"must be a str"` message.
+- Update AJ-16's `tests/routes/test_decorator.py::TestPathValidation`
+  to mirror the new contract:
+  `test_empty_path_is_accepted_for_controller_composition` replaces
+  `test_empty_path_raises`, and `test_non_string_path_raises` covers
+  the type-check branch.
+
+The relaxation aligns with NestJS' `@Get()` semantics, where a
+method without a path inherits the controller's prefix verbatim.
+Standalone (controller-less) classes that declare `@Get("")` register
+a route at the empty path — Starlette handles that as `"/"`-equivalent
+at request time, so the misuse surfaces in the running app rather than
+at decoration time. No other AJ-16 test changed; the rest of the
+contract (relative paths, Express-style `:id`, stacking,
+`@Stream` conflict) is intact.
+
+### Tests + coverage
+
+- `tests/routes/test_controller.py` — 35 unit tests covering metadata
+  stamping, prefix normalisation, validation errors, re-decoration,
+  inheritance, public surface, and API shape.
+- `tests/routes/test_controller_integration.py` — 15 integration
+  tests covering the four documented join rules, backwards
+  compatibility (bare classes with method decorators), forwarding
+  to `add_route`, duplicate detection on full paths, end-to-end via
+  Starlette's `TestClient`, and `@Module` / `compile_module` /
+  container DI.
+- `src/ajolopy/routes/controller.py` — **100 %** statement + branch
+  coverage.
+- `src/ajolopy/routes/mount.py` — pre-existing AJ-16 lines (the
+  `_normalise` failure paths) remain uncovered; every AJ-10 line is
+  covered.
+- Full suite: **830 passed**, no regressions. Repo coverage 89 %.
+
+### Edge cases worth noting
+
+- `Controller("/")` rstrips to `""` so a bare-slash controller does
+  not silently match every prefix-less route. Documented in
+  `test_leading_slash_is_preserved`.
+- `Controller` uses a bound `TypeVar("_C", bound=type)` so the
+  decorated class keeps its identity for static type checkers
+  (`class Child(MyController): ...` no longer triggers
+  `reportUntypedBaseClass`).
+- `get_controller_prefix(non_class)` returns `None` instead of
+  raising — keeps the helper safe to call on arbitrary objects from
+  introspection / tooling code.
+- The duplicate-detection key in `mount_routes` is the *full* path
+  (`prefix + method_path`), so two controllers can declare the same
+  method-level path under different prefixes without colliding
+  (covered by
+  `test_same_method_path_resolves_to_distinct_full_paths`).
+- No new dependencies — stdlib only.
