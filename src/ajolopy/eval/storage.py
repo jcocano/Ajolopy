@@ -227,32 +227,3 @@ def _dict_to_run(payload: dict[str, Any]) -> EvalRun:
         aggregate_score=float(payload["aggregate_score"]),
         passed=bool(payload["passed"]),
     )
-
-
-# ---------------------------------------------------------------------------
-# Method binders — attach ``save`` / ``load`` to :class:`EvalRun` at import time
-# ---------------------------------------------------------------------------
-
-
-def _save_method(self: EvalRun, path: str | os.PathLike[str] | None = None) -> Path:
-    """Write the in-memory :class:`EvalRun` to disk; return the file path."""
-    return save_eval_run(self, path)
-
-
-@classmethod
-def _load_classmethod(cls: type[EvalRun], path: str | os.PathLike[str]) -> EvalRun:
-    """Read an :class:`EvalRun` JSON snapshot from disk.
-
-    The ``cls`` arg is unused — :class:`EvalRun` has no subclasses that
-    would need a polymorphic load. Kept on the class for parity with
-    the ``save`` instance method.
-    """
-    _ = cls
-    return load_eval_run(path)
-
-
-# Bind the methods. The dataclass uses ``slots=True`` so attribute
-# assignment on instances is locked; assigning at the class level is
-# still permitted and is the standard idiom for late binding.
-EvalRun.save = _save_method  # type: ignore[attr-defined]
-EvalRun.load = _load_classmethod  # type: ignore[attr-defined]

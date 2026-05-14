@@ -24,12 +24,6 @@ runner does not open the dataset or touch the network until its
 :meth:`run` method is called.
 """
 
-# Import :mod:`storage` for its side effect of binding ``save`` /
-# ``load`` onto :class:`EvalRun`. Done at the bottom so the binding
-# runs after :mod:`results` has defined the class. We explicitly read
-# one of the storage helpers below to keep pyright from flagging the
-# import as unused — the read is no-cost.
-from . import storage
 from .aggregators import AGGREGATOR_NAMES
 from .case import Case
 from .comparison import compare_runs
@@ -57,11 +51,7 @@ from .results import (
     MetricDelta,
 )
 from .runner import EvalRunner
-
-# ``storage.EVAL_RUN_SCHEMA_VERSION`` is re-exported below; assigning it
-# here is the load-bearing read that keeps the side-effect import alive
-# in front of pyright's reachability analysis.
-EVAL_RUN_SCHEMA_VERSION = storage.EVAL_RUN_SCHEMA_VERSION
+from .storage import EVAL_RUN_SCHEMA_VERSION
 
 __all__ = [
     "AGGREGATOR_NAMES",

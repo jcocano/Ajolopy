@@ -33,7 +33,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
+    import os
     from collections.abc import Mapping
+    from pathlib import Path
 
 __all__ = [
     "EvalCaseResult",
@@ -147,6 +149,30 @@ class EvalRun:
     cases: tuple[EvalCaseResult, ...]
     aggregate_score: float
     passed: bool
+
+    def save(self, path: str | os.PathLike[str] | None = None) -> Path:
+        """Persist this run to a JSON snapshot; return the written path.
+
+        Default location is ``.ajolopy/eval-runs/<timestamp>.json``.
+        Delegates to :func:`ajolopy.eval.storage.save_eval_run`; the
+        import is lazy to keep the result module import-cheap.
+        """
+        from .storage import save_eval_run
+
+        return save_eval_run(self, path)
+
+    @classmethod
+    def load(cls, path: str | os.PathLike[str]) -> EvalRun:
+        """Read a previously-written :class:`EvalRun` JSON snapshot.
+
+        Delegates to :func:`ajolopy.eval.storage.load_eval_run`. The
+        :class:`os.PathLike` accepted form mirrors :meth:`save`.
+        Raises :class:`EvalRunError` on a schema-version mismatch.
+        """
+        from .storage import load_eval_run
+
+        _ = cls
+        return load_eval_run(path)
 
 
 @dataclass(slots=True, frozen=True)
