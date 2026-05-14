@@ -2,7 +2,7 @@
   "$schema": "./.board-schema.json",
   "version": 1,
   "updated_at": "2026-05-14",
-  "next_id": 60,
+  "next_id": 61,
   "items": [
     {
       "id": "AJ-1",
@@ -191,28 +191,29 @@
       "id": "AJ-7",
       "slug": "mcp",
       "type": "feature",
-      "title": "@MCP decorator (MCP server publish + consume)",
-      "status": "backlog",
+      "title": "@MCP decorator (consume external MCP servers)",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "primitive",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
-      "pr": null,
-      "spec": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/mcp",
+      "pr": "https://github.com/jcocano/Ajolopy/pull/52",
+      "spec": "specs/mcp.md",
       "blocks": [
         "AJ-48",
-        "AJ-55"
+        "AJ-55",
+        "AJ-60"
       ],
       "blocked_by": [
         "AJ-2"
       ],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-12",
+      "updated_at": "2026-05-14",
       "closed_at": null
     },
     {
@@ -1617,6 +1618,31 @@
       "estimate": null,
       "created_at": "2026-05-13",
       "updated_at": "2026-05-13",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-60",
+      "slug": "mcp-server",
+      "type": "feature",
+      "title": "@MCPServer decorator (publish @Tools via MCP transport)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "primitive",
+        "v0.1"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-7"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-14",
+      "updated_at": "2026-05-14",
       "closed_at": null
     }
   ]

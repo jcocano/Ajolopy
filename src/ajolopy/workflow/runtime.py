@@ -36,6 +36,7 @@ the private ``cost_sink`` kwarg.
 
 import inspect
 import json
+import logging
 from collections.abc import AsyncIterator, Awaitable, Callable, Generator
 from contextlib import contextmanager
 from typing import Any
@@ -91,6 +92,7 @@ from .events import (
 )
 
 _TRACER = get_tracer("ajolopy.workflow")
+_LOGGER = logging.getLogger("ajolopy.workflow")
 
 _COORDINATOR_SYSTEM_PROMPT = (
     "You are a coordinator. Delegate the user's request to one of the "
@@ -164,6 +166,7 @@ class WorkflowRuntime:
         max_steps: int,
         route_override: _RouteCallable | None,
         catalog: Catalog | None = None,
+        integrations: list[type[Any]] | None = None,
     ) -> None:
         self._workflow_cls = workflow_cls
         self._workflow_name = workflow_cls.__name__
@@ -178,7 +181,7 @@ class WorkflowRuntime:
 
         # Pre-build the synthetic tool list. Order mirrors ``agents=`` so the
         # coordinator always sees a stable tool list across invocations.
-        self._wire_tools: list[Tool] = [
+        self._delegate_wire_tools: list[Tool] = [
             Tool(
                 name=_delegate_tool_name(cls),
                 description=_delegate_tool_description(cls),
@@ -186,6 +189,17 @@ class WorkflowRuntime:
             )
             for cls in agents
         ]
+        # MCP-discovered tools surface to the coordinator AND to every
+        # delegated agent. ``wire_mcp_tools`` (called by the factory at
+        # boot) populates these once discovery completes.
+        self._mcp_wire_tools: list[Tool] = []
+        self._mcp_by_namespaced_name: dict[str, str] = {}
+        self._mcp_registry: object | None = None
+        # ``integrations`` kwarg wins over the class attribute.
+        self._integrations: list[type[Any]] = _resolve_workflow_integrations(
+            workflow_cls,
+            kwarg=integrations,
+        )
 
         # Resolve the coordinator's provider once at construction time so
         # misconfigurations surface at decoration time, not at first call.
@@ -193,6 +207,82 @@ class WorkflowRuntime:
             self._coordinator_provider = self._instantiate_coordinator_provider(coordinator)
         else:
             self._coordinator_provider = None
+
+    @property
+    def _wire_tools(self) -> list[Tool]:
+        """The coordinator's combined tool list: delegations + MCP tools."""
+        return [*self._delegate_wire_tools, *self._mcp_wire_tools]
+
+    @property
+    def integrations(self) -> list[type[Any]]:
+        """The resolved ``@MCP`` class list — kwarg wins over class attr."""
+        return list(self._integrations)
+
+    def wire_mcp_tools(self, registry: object) -> None:
+        """Compose the coordinator's MCP tool list and propagate to agents.
+
+        Called by the factory once :meth:`MCPRegistry.connect_all_for`
+        finishes discovery. Each delegated agent's own ``wire_mcp_tools``
+        is also called so the agent runtime sees the same MCP tools the
+        coordinator does.
+        """
+        if not self._integrations:
+            return
+        from ajolopy.mcp.registry import MCPRegistry
+
+        if not isinstance(registry, MCPRegistry):
+            return
+        new_wire: list[Tool] = []
+        local_names = {tool.name for tool in self._delegate_wire_tools}
+        for mcp_cls in self._integrations:
+            for namespaced, schema in registry.tools_for(mcp_cls):
+                if namespaced in local_names:
+                    _LOGGER.warning(
+                        "MCP tool %r collides with a delegate tool on workflow "
+                        "%r — dropping the MCP one.",
+                        namespaced,
+                        self._workflow_name,
+                    )
+                    continue
+                if namespaced in self._mcp_by_namespaced_name:
+                    _LOGGER.warning(
+                        "MCP tool %r already registered on workflow %r — dropping duplicate.",
+                        namespaced,
+                        self._workflow_name,
+                    )
+                    continue
+                server_key, _, raw_name = namespaced.partition("__")
+                self._mcp_by_namespaced_name[namespaced] = namespaced
+                registry.register_dispatch(
+                    mcp_cls,
+                    namespaced_name=namespaced,
+                    server_key=server_key,
+                    raw_name=raw_name,
+                )
+                new_wire.append(
+                    Tool(
+                        name=namespaced,
+                        description=schema.description,
+                        parameters=dict(schema.input_schema),
+                    )
+                )
+        self._mcp_wire_tools = new_wire
+        self._mcp_registry = registry
+
+        # Propagate integrations to every delegated agent so they see the
+        # same MCP tool surface when the coordinator hands a task off.
+        for agent_cls in self._agents:
+            agent_runtime = getattr(agent_cls, "_agent_runtime", None)
+            if agent_runtime is None:
+                continue
+            agent_integrations: list[type[Any]] = list(
+                getattr(agent_runtime, "_integrations", []) or []
+            )
+            for integration in self._integrations:
+                if integration not in agent_integrations:
+                    agent_integrations.append(integration)
+            agent_runtime._integrations = agent_integrations
+            agent_runtime.wire_mcp_tools(registry)
 
     # ------------------------------------------------------------------
     # provider resolution
@@ -401,19 +491,25 @@ class WorkflowRuntime:
                 )
             )
             for call in tool_calls_this_turn:
+                # MCP tool dispatch — when the coordinator emits a
+                # namespaced MCP tool call we route it through the
+                # registry directly (no handoff event because the call
+                # does not delegate to a specialist).
+                if call.name in self._mcp_by_namespaced_name and self._mcp_registry is not None:
+                    mcp_message = await self._dispatch_coordinator_mcp_call(call)
+                    prompt_messages.append(mcp_message)
+                    continue
                 agent_cls = self._agents_by_tool_name.get(call.name)
                 if agent_cls is None:
                     # The coordinator emitted a tool name not in our
                     # synthetic list. Push back an error tool_result so it
                     # can recover; do not emit a handoff event because no
                     # real delegation happened.
+                    available = sorted([*self._agents_by_tool_name, *self._mcp_by_namespaced_name])
                     prompt_messages.append(
                         Message(
                             role="tool",
-                            content=(
-                                f"Unknown tool {call.name!r}. Available: "
-                                f"{sorted(self._agents_by_tool_name)}."
-                            ),
+                            content=(f"Unknown tool {call.name!r}. Available: {available}."),
                             tool_call_id=call.id,
                             is_error=True,
                         )
@@ -525,6 +621,47 @@ class WorkflowRuntime:
             text_parts = []
         return text_parts, tool_calls, finish_reason
 
+    async def _dispatch_coordinator_mcp_call(self, call: ToolCall) -> Message:
+        """Route an MCP tool call emitted by the coordinator.
+
+        Errors normalise into ``tool_result`` with ``is_error=True`` so
+        the coordinator can recover instead of the workflow blowing up.
+        """
+        from ajolopy.mcp.errors import MCPToolTimeoutError
+        from ajolopy.mcp.registry import MCPRegistry
+
+        registry = self._mcp_registry
+        if not isinstance(registry, MCPRegistry):  # pragma: no cover - guarded by caller
+            return Message(
+                role="tool",
+                content=f"MCP tool {call.name!r} requested but no registry is wired.",
+                tool_call_id=call.id,
+                is_error=True,
+            )
+        try:
+            result = await registry.call_tool(call.name, call.arguments)
+        except MCPToolTimeoutError as exc:
+            return Message(
+                role="tool",
+                content=f"Timeout: {exc}",
+                tool_call_id=call.id,
+                is_error=True,
+            )
+        except Exception as exc:
+            _LOGGER.warning(
+                "MCP tool %r on workflow %r raised: %s",
+                call.name,
+                self._workflow_name,
+                exc,
+            )
+            return Message(
+                role="tool",
+                content=f"{type(exc).__name__}: {exc}",
+                tool_call_id=call.id,
+                is_error=True,
+            )
+        return Message(role="tool", content=result, tool_call_id=call.id)
+
     async def _delegate_to_agent(
         self,
         *,
@@ -596,6 +733,37 @@ class WorkflowRuntime:
                 span.set_attribute(GEN_AI_USAGE_INPUT_TOKENS, usage.input_tokens)
             if usage.output_tokens > 0:
                 span.set_attribute(GEN_AI_USAGE_OUTPUT_TOKENS, usage.output_tokens)
+
+
+def _resolve_workflow_integrations(
+    workflow_cls: type[Any],
+    *,
+    kwarg: list[type[Any]] | None,
+) -> list[type[Any]]:
+    """Resolve ``@Workflow`` ``integrations=`` against the class attribute.
+
+    Mirrors :func:`ajolopy.agent.runtime._resolve_integrations`: kwarg
+    wins over the class attribute, an INFO log notes the shadow, and
+    a non-list class attribute raises :class:`WorkflowConfigError`.
+    """
+    class_attr = workflow_cls.__dict__.get("integrations")
+    if kwarg is not None and class_attr is not None:
+        _LOGGER.info(
+            "Workflow %r defines integrations both as a kwarg and as a class "
+            "attribute; the kwarg wins and the class attribute is ignored.",
+            workflow_cls.__name__,
+        )
+        return list(kwarg)
+    if kwarg is not None:
+        return list(kwarg)
+    if class_attr is not None:
+        if not isinstance(class_attr, list):
+            raise WorkflowConfigError(
+                f"Workflow {workflow_cls.__name__!r} integrations= must be a "
+                f"list, got {type(class_attr).__name__}."
+            )
+        return list(class_attr)  # type: ignore[arg-type]
+    return []
 
 
 def _assemble_tool_calls(accum: dict[int, dict[str, Any]]) -> list[ToolCall]:

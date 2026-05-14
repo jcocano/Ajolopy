@@ -121,6 +121,7 @@ class AgentRuntime:
         tools: list[type[Any]] | None,
         max_tool_iterations: int,
         catalog: Catalog | None = None,
+        integrations: list[type[Any]] | None = None,
     ) -> None:
         if cache == "prompt" and callable(system):
             raise AgentConfigError(
@@ -143,7 +144,22 @@ class AgentRuntime:
         self._tool_bindings: list[ToolBinding] = bindings
         self._tool_by_name: dict[str, ToolBinding] = {b.metadata.name: b for b in bindings}
         self._extra_instances: dict[type[Any], Any] = extra_instances
-        self._wire_tools: list[Tool] = [b.metadata.to_wire_tool() for b in bindings]
+        self._local_wire_tools: list[Tool] = [b.metadata.to_wire_tool() for b in bindings]
+        # MCP wire tools are appended at boot via :meth:`wire_mcp_tools`.
+        # Until then the list is empty and ``_wire_tools`` mirrors the
+        # local-tools-only state.
+        self._mcp_wire_tools: list[Tool] = []
+        # ``_mcp_by_namespaced_name`` is the dispatch lookup used by
+        # :meth:`_execute_single_tool` to route namespaced tool calls
+        # through the registry. Empty until :meth:`wire_mcp_tools` runs.
+        self._mcp_by_namespaced_name: dict[str, str] = {}
+        self._mcp_registry: object | None = None
+        # ``integrations`` kwarg wins over the class attribute; INFO log
+        # if both are present.
+        self._integrations: list[type[Any]] = _resolve_integrations(
+            agent_cls,
+            kwarg=integrations,
+        )
 
         # Resolve and instantiate every model's provider exactly once.
         fallback_models = self._normalize_fallback(fallback)
@@ -164,6 +180,77 @@ class AgentRuntime:
         # That keeps decorator-time construction independent of the factory's
         # ``pricing_overrides`` plumbing (which runs later, at bootstrap).
         self._catalog: Catalog | None = catalog
+
+    # ------------------------------------------------------------------
+    # MCP integration (AJ-7)
+    # ------------------------------------------------------------------
+
+    @property
+    def _wire_tools(self) -> list[Tool]:
+        """Combined wire tool list: local ``@Tool``s first, MCP tools after."""
+        return [*self._local_wire_tools, *self._mcp_wire_tools]
+
+    @property
+    def integrations(self) -> list[type[Any]]:
+        """The resolved ``@MCP`` class list — kwarg wins over class attr."""
+        return list(self._integrations)
+
+    def wire_mcp_tools(self, registry: object) -> None:
+        """Compose the MCP-discovered wire tool list once boot completes.
+
+        ``registry`` is the per-process :class:`MCPRegistry` instance.
+        Collisions with the agent's own ``@Tool`` methods are resolved
+        in favour of the local tool (the MCP entry is dropped with a
+        WARN log). Collisions between two MCP classes are dropped at
+        the registry level via :meth:`MCPRegistry.tools_for`.
+        """
+        if not self._integrations:
+            return
+        # Import lazily to avoid a circular import between agent and mcp
+        # packages (mcp/registry imports observability; observability has
+        # no agent dependency, but the agent module sits below mcp in the
+        # dependency graph for the public re-export).
+        from ajolopy.mcp.registry import MCPRegistry
+
+        if not isinstance(registry, MCPRegistry):
+            return
+        local_names = set(self._tool_by_name.keys())
+        new_wire: list[Tool] = []
+        for mcp_cls in self._integrations:
+            for namespaced, schema in registry.tools_for(mcp_cls):
+                if namespaced in local_names:
+                    _LOGGER.warning(
+                        "MCP tool %r collides with a local @Tool on agent %r — "
+                        "dropping the MCP one.",
+                        namespaced,
+                        self._agent_name,
+                    )
+                    continue
+                if namespaced in self._mcp_by_namespaced_name:
+                    _LOGGER.warning(
+                        "MCP tool %r already registered on agent %r — dropping duplicate.",
+                        namespaced,
+                        self._agent_name,
+                    )
+                    continue
+                # Look up the raw tool name (everything after the first __).
+                server_key, _, raw_name = namespaced.partition("__")
+                self._mcp_by_namespaced_name[namespaced] = namespaced
+                registry.register_dispatch(
+                    mcp_cls,
+                    namespaced_name=namespaced,
+                    server_key=server_key,
+                    raw_name=raw_name,
+                )
+                new_wire.append(
+                    Tool(
+                        name=namespaced,
+                        description=schema.description,
+                        parameters=dict(schema.input_schema),
+                    )
+                )
+        self._mcp_wire_tools = new_wire
+        self._mcp_registry = registry
 
     @staticmethod
     def _normalize_fallback(fallback: FallbackSpec) -> list[str]:
@@ -580,13 +667,18 @@ class AgentRuntime:
         call: ToolCall,
         iteration: int,
     ) -> Message:
+        # MCP-injected tools route through the per-process registry
+        # rather than the local binding map. They are namespaced as
+        # ``<server_key>__<tool_name>`` so collisions with local
+        # ``@Tool`` methods are impossible at this point.
+        if call.name in self._mcp_by_namespaced_name and self._mcp_registry is not None:
+            return await self._execute_mcp_tool(call=call, iteration=iteration)
         binding = self._tool_by_name.get(call.name)
         if binding is None:
+            available = sorted([*self._tool_by_name, *self._mcp_by_namespaced_name])
             return Message(
                 role="tool",
-                content=(
-                    f"Unknown tool {call.name!r}. Available tools: {sorted(self._tool_by_name)}."
-                ),
+                content=(f"Unknown tool {call.name!r}. Available tools: {available}."),
                 tool_call_id=call.id,
                 is_error=True,
             )
@@ -628,6 +720,59 @@ class AgentRuntime:
             return Message(
                 role="tool",
                 content=_stringify_tool_result(result),
+                tool_call_id=call.id,
+            )
+
+    async def _execute_mcp_tool(self, *, call: ToolCall, iteration: int) -> Message:
+        """Dispatch a namespaced MCP tool call through the registry.
+
+        Emits the agent's own ``execute_tool {namespaced_name}`` span as
+        before; the registry adds an ``mcp.call_tool`` child span. Every
+        failure (timeout, transport error, server ``isError=true``) is
+        normalised into a ``tool_result`` with ``is_error=True`` so the
+        LLM can recover instead of the loop blowing up.
+        """
+        from ajolopy.mcp.errors import MCPToolTimeoutError
+        from ajolopy.mcp.registry import MCPRegistry
+
+        registry = self._mcp_registry
+        if not isinstance(registry, MCPRegistry):  # pragma: no cover - guarded by caller
+            return Message(
+                role="tool",
+                content=f"MCP tool {call.name!r} requested but no registry is wired.",
+                tool_call_id=call.id,
+                is_error=True,
+            )
+        with self._tool_span(call.name, call_id=call.id, iteration=iteration) as span:
+            try:
+                result = await registry.call_tool(call.name, call.arguments)
+            except MCPToolTimeoutError as exc:
+                span.record_exception(exc)
+                span.set_status(Status(StatusCode.ERROR, "timeout"))
+                return Message(
+                    role="tool",
+                    content=f"Timeout: {exc}",
+                    tool_call_id=call.id,
+                    is_error=True,
+                )
+            except Exception as exc:
+                _LOGGER.warning(
+                    "MCP tool %r on agent %r raised: %s",
+                    call.name,
+                    self._agent_name,
+                    exc,
+                )
+                span.record_exception(exc)
+                span.set_status(Status(StatusCode.ERROR, str(exc)))
+                return Message(
+                    role="tool",
+                    content=f"{type(exc).__name__}: {exc}",
+                    tool_call_id=call.id,
+                    is_error=True,
+                )
+            return Message(
+                role="tool",
+                content=result,
                 tool_call_id=call.id,
             )
 
@@ -767,6 +912,44 @@ class AgentRuntime:
     @property
     def tool_names(self) -> list[str]:
         return [b.metadata.name for b in self._tool_bindings]
+
+
+def _resolve_integrations(
+    agent_cls: type[Any],
+    *,
+    kwarg: list[type[Any]] | None,
+) -> list[type[Any]]:
+    """Resolve ``@Agent`` ``integrations=`` against the class attribute.
+
+    Resolution order:
+
+    1. If both the kwarg and a class attribute are present, the kwarg
+       wins and an INFO message logs the shadowed attribute. (This
+       matches the spec's "kwarg wins + INFO log" contract.)
+    2. If only the kwarg is present, return it verbatim.
+    3. If only the class attribute is present, return it verbatim.
+    4. Otherwise return an empty list.
+
+    Empty lists and the absence of either form behave identically.
+    """
+    class_attr = agent_cls.__dict__.get("integrations")
+    if kwarg is not None and class_attr is not None:
+        _LOGGER.info(
+            "Agent %r defines integrations both as a kwarg and as a class "
+            "attribute; the kwarg wins and the class attribute is ignored.",
+            agent_cls.__name__,
+        )
+        return list(kwarg)
+    if kwarg is not None:
+        return list(kwarg)
+    if class_attr is not None:
+        if not isinstance(class_attr, list):
+            raise AgentConfigError(
+                f"Agent {agent_cls.__name__!r} integrations= must be a list, "
+                f"got {type(class_attr).__name__}."
+            )
+        return list(class_attr)  # type: ignore[arg-type]
+    return []
 
 
 def _stringify_tool_result(value: Any) -> str:

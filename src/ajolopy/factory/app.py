@@ -135,6 +135,13 @@ class AjolopyApp:
             return
         self._closed = True
         await self._lifecycle.shutdown()
+        # MCP registry shutdown — closes every live MCP client (stdio
+        # child processes, HTTP / SSE sessions). Best-effort: errors are
+        # swallowed inside :meth:`MCPRegistry.shutdown` so a stuck client
+        # cannot block the rest of teardown.
+        from ajolopy.mcp import get_mcp_registry
+
+        await get_mcp_registry().shutdown()
 
     async def __aenter__(self) -> AjolopyApp:
         """Async context manager entry — returns ``self``."""

@@ -116,6 +116,22 @@ def workflow_invoke_span_name(name: str) -> str:
     return f"workflow.invoke {name}"
 
 
+def mcp_call_tool_span_name(server_key: str, tool_name: str) -> str:
+    """Span name for an MCP tool call.
+
+    Format: ``mcp.call_tool {server_key}/{tool_name}``. The span lands
+    as a child of the agent runtime's ``execute_tool`` span so the trace
+    shows the namespaced tool dispatch alongside the underlying MCP
+    invocation.
+    """
+    return f"mcp.call_tool {server_key}/{tool_name}"
+
+
+def mcp_discover_span_name(server_key: str) -> str:
+    """Span name for the boot-time discovery roundtrip on one MCP server."""
+    return f"mcp.discover {server_key}"
+
+
 # ---------------------------------------------------------------------------
 # Ajolopy-specific attributes (root span only)
 # ---------------------------------------------------------------------------
@@ -167,6 +183,29 @@ AJOLOPY_WORKFLOW_HANDOFF_TO = "ajolopy.workflow.handoff.to"
 """The delegated agent's class name. Set on the same ``agent.invoke`` child
 as :data:`AJOLOPY_WORKFLOW_HANDOFF_FROM`."""
 
+# ---------------------------------------------------------------------------
+# MCP span attributes (AJ-7)
+# ---------------------------------------------------------------------------
+
+MCP_SERVER_KEY = "mcp.server.key"
+"""User-chosen key from ``@MCP(servers={...})`` (e.g. ``"github"``)."""
+
+MCP_TOOL_NAME = "mcp.tool.name"
+"""Raw tool name as exposed by the MCP server (no namespace prefix)."""
+
+MCP_TRANSPORT = "mcp.transport"
+"""Transport family: ``"stdio"``, ``"http"``, ``"sse"``, or ``"custom"``."""
+
+MCP_DURATION_MS = "mcp.duration_ms"
+"""Wall-clock duration (ms) of the tool call. Set on every
+``mcp.call_tool`` span, including failures, so dashboards can correlate
+latency with the ``mcp.is_error`` flag."""
+
+MCP_IS_ERROR = "mcp.is_error"
+"""``True`` when the MCP server reported ``isError=true`` for a tool
+call, or when the call timed out / raised before reaching the server.
+Set on both ``mcp.call_tool`` and ``mcp.discover`` spans."""
+
 __all__ = [
     "AJOLOPY_AGENT_NAME",
     "AJOLOPY_AGENT_OPERATION",
@@ -198,10 +237,17 @@ __all__ = [
     "GEN_AI_TOOL_NAME",
     "GEN_AI_USAGE_INPUT_TOKENS",
     "GEN_AI_USAGE_OUTPUT_TOKENS",
+    "MCP_DURATION_MS",
+    "MCP_IS_ERROR",
+    "MCP_SERVER_KEY",
+    "MCP_TOOL_NAME",
+    "MCP_TRANSPORT",
     "OPERATION_CHAT",
     "OPERATION_EMBEDDINGS",
     "agent_invoke_span_name",
     "chat_span_name",
     "execute_tool_span_name",
+    "mcp_call_tool_span_name",
+    "mcp_discover_span_name",
     "workflow_invoke_span_name",
 ]

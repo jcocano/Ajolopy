@@ -3,6 +3,7 @@
 from .agent import Agent, Tool
 from .di import Injectable
 from .factory import AjolopyApp, AjolopyFactory, run
+from .mcp import MCP
 from .modules import Module, compile_module, forwardRef
 from .observability import get_logger
 from .routes import Controller, Delete, Get, Patch, Post, Put
@@ -12,6 +13,7 @@ from .workflow import Workflow
 __version__ = "0.0.1"
 
 __all__ = [
+    "MCP",
     "Agent",
     "AjolopyApp",
     "AjolopyFactory",

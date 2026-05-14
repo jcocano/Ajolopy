@@ -15,8 +15,12 @@ The decorator's contract:
   way :class:`ajolopy.agent.decorator.Agent` resolves its own
   ``model=`` kwarg; an unknown model raises
   :class:`WorkflowConfigError`.
-- ``integrations=`` is reserved for ``@MCP`` (AJ-7) and rejected with
-  :class:`WorkflowConfigError` when non-``None``.
+- ``integrations=`` accepts a list of ``@MCP``-decorated classes whose
+  discovered tools are injected into the coordinator's synthetic tool
+  list AND into every delegated agent's wire tool list at factory boot.
+  Two forms are accepted: the kwarg here (recommended) or a class
+  attribute ``integrations = [I, ...]``; the kwarg wins and an
+  ``INFO`` log notes the shadowed attribute.
 - ``max_steps`` must be ``>= 1``.
 - When both ``coordinator=`` and ``route()`` are present, ``route()``
   wins and the decorator logs an ``INFO``-level shadow notice.
@@ -92,6 +96,7 @@ def Workflow[T](  # noqa: N802 — public surface mirrors the Brief's primitive 
             max_steps=max_steps,
             route_override=route_override,
             catalog=catalog,
+            integrations=integrations,
         )
 
         async def run(self: T, message: str, **context: Any) -> str:
@@ -121,12 +126,27 @@ def _validate_max_steps(max_steps: int) -> None:
 
 
 def _validate_integrations(integrations: list[type[Any]] | None) -> None:
+    """Validate the shape of ``integrations=`` at decoration time.
+
+    Accepts ``None`` (no MCP integrations) or a list of classes. The
+    classes are expected to be ``@MCP``-decorated but we do NOT verify
+    the decoration marker here — at decoration time the workflow may
+    be defined before its referenced ``@MCP`` class has finished
+    decoration in another module. The registry resolves real class
+    membership at boot via the global registration map.
+    """
     if integrations is None:
         return
-    raise WorkflowConfigError(
-        "@Workflow integrations= is reserved for AJ-7 (@MCP) and not "
-        "supported in v0.1. Track AJ-7 for shared-tool surface support."
-    )
+    if not isinstance(integrations, list):  # pyright: ignore[reportUnnecessaryIsInstance]
+        raise WorkflowConfigError(
+            f"@Workflow integrations= must be a list of @MCP-decorated "
+            f"classes, got {type(integrations).__name__}."
+        )
+    for entry in integrations:
+        if not isinstance(entry, type):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise WorkflowConfigError(
+                f"@Workflow integrations= entries must be classes, got {type(entry).__name__}."
+            )
 
 
 def _validate_agents(agents: list[type[Any]]) -> None:
