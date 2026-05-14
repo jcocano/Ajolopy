@@ -1,7 +1,7 @@
 """``UseGuards`` is exported from the top-level package and from ``ajolopy.guards``."""
 
 import ajolopy
-import ajolopy.guards
+from ajolopy import guards as ajolopy_guards
 from ajolopy.guards import (
     BearerTokenGuard,
     Guard,
@@ -16,9 +16,7 @@ from ajolopy.guards import (
 
 class TestPublicExports:
     def test_top_level_import(self) -> None:
-        from ajolopy import UseGuards as TopLevelUseGuards
-
-        assert TopLevelUseGuards is UseGuards
+        assert ajolopy.UseGuards is UseGuards
 
     def test_top_level_all(self) -> None:
         assert "UseGuards" in ajolopy.__all__
@@ -34,7 +32,7 @@ class TestPublicExports:
             "UseGuards",
             "UseGuardsConfigError",
         }
-        assert expected.issubset(set(ajolopy.guards.__all__))
+        assert expected.issubset(set(ajolopy_guards.__all__))
 
     def test_error_hierarchy(self) -> None:
         assert issubclass(GuardUnauthorizedError, GuardError)

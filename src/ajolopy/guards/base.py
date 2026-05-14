@@ -47,7 +47,12 @@ class Guard(abc.ABC):
         """Decide whether ``request`` may continue to the handler."""
 
 
-type GuardLike = Guard | type[Guard] | Callable[[Request], Awaitable[bool] | bool]
+# NOTE: classic alias rather than PEP 695 ``type GuardLike = ...``.
+# CodeQL's ``Explicit export is not defined`` check does not recognise
+# the new ``type`` statement, so re-exporting ``GuardLike`` from
+# ``__all__`` triggers a false-positive alert. Behaviour is identical;
+# pyright accepts both shapes.
+GuardLike = Guard | type[Guard] | Callable[[Request], Awaitable[bool] | bool]
 """Acceptable forms for each argument to ``@UseGuards``.
 
 Normalised into a :class:`Guard` instance by :func:`_normalize_guard`.

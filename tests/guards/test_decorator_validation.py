@@ -81,7 +81,8 @@ class TestStampMetadata:
 
         class Host:
             @UseGuards(instance)
-            async def handler(self) -> None: ...
+            async def handler(self) -> None:
+                return None
 
         chain = get_guard_chain(Host.handler)
         assert chain == (instance,)
