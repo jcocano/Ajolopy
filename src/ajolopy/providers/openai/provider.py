@@ -67,6 +67,8 @@ class OpenAIProvider(LLMProvider):
       tenant URL), or retry policy.
     """
 
+    GEN_AI_SYSTEM = "openai"
+
     def __init__(
         self,
         *,
@@ -146,6 +148,9 @@ class OpenAIProvider(LLMProvider):
             "model": model,
             "messages": convert_messages(messages),
             "stream": True,
+            # Ask the server to emit a final usage-only chunk so the runtime
+            # can attach gen_ai.usage.* to the surrounding `chat` span.
+            "stream_options": {"include_usage": True},
         }
         if tools:
             kwargs["tools"] = convert_tools(tools)

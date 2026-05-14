@@ -93,9 +93,27 @@ class Response:
 
 
 @dataclass(slots=True)
+class ChunkUsage:
+    """Token usage reported alongside the terminal chunk of a stream.
+
+    Providers populate this on the **last** ``Chunk`` they yield, sourcing
+    the numbers from the underlying SDK's terminal usage event (Anthropic's
+    ``message_delta``, OpenAI's ``include_usage`` chunk, Gemini's
+    ``usage_metadata``). Intermediate chunks leave ``Chunk.usage`` as
+    ``None``. When the upstream server does not include usage at all
+    (some OpenAI-compatible deployments), the terminal chunk's ``usage``
+    also stays ``None`` and consumers must tolerate that.
+    """
+
+    input_tokens: int
+    output_tokens: int
+
+
+@dataclass(slots=True)
 class Chunk:
     """A single delta emitted while streaming."""
 
     delta: str
     tool_call_delta: ToolCallDelta | None = None
     finish_reason: FinishReason | None = None
+    usage: ChunkUsage | None = None

@@ -5,7 +5,7 @@ Covers the "Function-calling loop on ``run()``", "Function-calling loop on
 """
 
 import json
-from typing import Any, override
+from typing import override
 from unittest.mock import patch
 
 import pytest
@@ -397,97 +397,6 @@ async def test_stream_cap_raises_agent_tool_loop_error() -> None:
             pass
 
 
-# ---------------------------------------------------------------------------
-# Observability — agent.tool spans
-# ---------------------------------------------------------------------------
-
-
-class _CapturingSpan:
-    def __init__(self, name: str) -> None:
-        self.name = name
-        self.attributes: dict[str, Any] = {}
-
-    def set_attribute(self, key: str, value: Any) -> None:
-        self.attributes[key] = value
-
-    def __enter__(self) -> _CapturingSpan:
-        return self
-
-    def __exit__(self, *_: object) -> bool:
-        return False
-
-
-class _CapturingTracer:
-    def __init__(self) -> None:
-        self.spans: list[_CapturingSpan] = []
-
-    def start_as_current_span(self, name: str, *_: Any, **__: Any) -> _CapturingSpan:
-        span = _CapturingSpan(name)
-        self.spans.append(span)
-        return span
-
-
-@pytest.mark.asyncio
-async def test_trace_true_emits_agent_tool_span_per_invocation(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    class Prov(_ScriptedProvider):
-        def __init__(self) -> None:
-            super().__init__()
-            self.responses = [
-                Response(
-                    text="",
-                    tool_calls=[ToolCall(id="t1", name="echo", arguments={"value": "x"})],
-                    finish_reason="tool_calls",
-                ),
-                Response(text="done", finish_reason="stop"),
-            ]
-
-    _register(Prov)
-    tracer = _CapturingTracer()
-    monkeypatch.setattr("ajolopy.agent.runtime._TRACER", tracer)
-
-    @Agent(model="claude-sonnet-4-7", system="…", trace=True)
-    class Demo:
-        @Tool
-        async def echo(self, value: str) -> str:
-            """Echo."""
-            return value
-
-    await Demo().run("hi")  # type: ignore[attr-defined]
-
-    tool_spans = [s for s in tracer.spans if s.name == "agent.tool"]
-    assert len(tool_spans) == 1
-    span = tool_spans[0]
-    assert span.attributes["tool.name"] == "echo"
-    assert span.attributes["tool.iteration"] == 1
-    assert span.attributes["tool.success"] is True
-
-
-@pytest.mark.asyncio
-async def test_trace_false_emits_no_tool_spans(monkeypatch: pytest.MonkeyPatch) -> None:
-    class Prov(_ScriptedProvider):
-        def __init__(self) -> None:
-            super().__init__()
-            self.responses = [
-                Response(
-                    text="",
-                    tool_calls=[ToolCall(id="t1", name="echo", arguments={"value": "x"})],
-                    finish_reason="tool_calls",
-                ),
-                Response(text="done", finish_reason="stop"),
-            ]
-
-    _register(Prov)
-    tracer = _CapturingTracer()
-    monkeypatch.setattr("ajolopy.agent.runtime._TRACER", tracer)
-
-    @Agent(model="claude-sonnet-4-7", system="…")
-    class Demo:
-        @Tool
-        async def echo(self, value: str) -> str:
-            """Echo."""
-            return value
-
-    await Demo().run("hi")  # type: ignore[attr-defined]
-    assert tracer.spans == []
+# Observability coverage (execute_tool spans, gen_ai.* attrs, etc.) lives in
+# tests/observability/test_tracing.py — that suite uses the OTel SDK's
+# InMemorySpanExporter to assert the full span tree.

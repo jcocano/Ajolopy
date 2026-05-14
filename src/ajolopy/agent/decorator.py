@@ -23,7 +23,6 @@ def Agent[T](  # noqa: N802 — public surface mirrors the Brief's primitive nam
     model: str,
     system: SystemPrompt,
     memory: object = None,
-    trace: bool = False,
     cache: Literal["prompt"] | None = None,
     fallback: FallbackSpec = None,
     temperature: float | None = None,
@@ -31,7 +30,15 @@ def Agent[T](  # noqa: N802 — public surface mirrors the Brief's primitive nam
     tools: list[type[Any]] | None = None,
     max_tool_iterations: int = _DEFAULT_MAX_TOOL_ITERATIONS,
 ) -> Callable[[type[T]], type[T]]:
-    """Class decorator factory — see ``specs/agent.md`` for the full surface."""
+    """Class decorator factory — see ``specs/agent.md`` for the full surface.
+
+    OpenTelemetry instrumentation is always on. Spans flow through the
+    ``opentelemetry-api`` tracer; without an SDK (``ajolopy[otel]`` extra) the
+    spans are cheap no-ops. The previous ``trace=True`` kwarg has been
+    removed: per-primitive gating broke composition with ``@Workflow`` /
+    ``@MCP``. Backend selection happens at the SDK layer via standard OTel
+    env vars (``OTEL_EXPORTER_OTLP_ENDPOINT``, ``OTEL_SERVICE_NAME``).
+    """
 
     def _decorate(cls: type[T]) -> type[T]:
         runtime = AgentRuntime(
@@ -39,7 +46,6 @@ def Agent[T](  # noqa: N802 — public surface mirrors the Brief's primitive nam
             model=model,
             system=system,
             memory=memory,
-            trace_enabled=trace,
             cache=cache,
             fallback=fallback,
             temperature=temperature,

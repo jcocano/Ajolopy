@@ -7,7 +7,7 @@ consume ``LLMProvider``; they must never import a concrete subclass directly.
 """
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -26,6 +26,24 @@ class LLMProviderError(RuntimeError):
 
 class LLMProvider(ABC):
     """Provider-agnostic contract for talking to a chat-style LLM."""
+
+    GEN_AI_SYSTEM: ClassVar[str] = "unknown"
+    """OpenTelemetry ``gen_ai.system`` value used by the observability layer to
+    tag spans emitted around this provider's calls. Concrete providers override
+    with the upstream vendor identifier (``anthropic``, ``openai``,
+    ``gcp.gemini``, ``openai_compatible``). The default is intentionally
+    ``unknown`` so test fakes and partial subclasses do not need to override —
+    spans will still be emitted, just with a placeholder system value."""
+
+    @classmethod
+    def gen_ai_system_for(cls, model: str) -> str:  # noqa: ARG003 — universal subclass uses model
+        """Return the ``gen_ai.system`` for a span tagging a call to ``model``.
+
+        Defaults to the class-level :attr:`GEN_AI_SYSTEM`. The universal
+        OpenAI-compatible adapter overrides this method to append the route
+        flavor (``openai_compatible.groq``, ``openai_compatible.ollama``, …).
+        """
+        return cls.GEN_AI_SYSTEM
 
     @abstractmethod
     async def complete(
