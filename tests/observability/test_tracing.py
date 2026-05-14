@@ -288,11 +288,6 @@ async def test_tool_exception_marks_execute_tool_span_with_error_status(
         Response(text="all done", finish_reason="stop", tokens_in=5, tokens_out=6),
     ]
 
-    class Demo:
-        @staticmethod
-        def boom() -> str:
-            raise RuntimeError("expected failure")
-
     # Patch the registry-resolved provider's responses queue before invocation.
     # The Agent decorator instantiates the provider once at decoration time;
     # we reach into the class to seed responses for both calls.
