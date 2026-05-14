@@ -482,7 +482,7 @@
       "slug": "guards",
       "type": "feature",
       "title": "@UseGuards basic auth middleware",
-      "status": "in_review",
+      "status": "done",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -502,7 +502,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-14",
-      "closed_at": null
+      "closed_at": "2026-05-14"
     },
     {
       "id": "AJ-18",
