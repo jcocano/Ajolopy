@@ -4,6 +4,7 @@ from .agent import Agent, Tool
 from .di import Injectable
 from .factory import AjolopyApp, AjolopyFactory, run
 from .modules import Module, compile_module, forwardRef
+from .observability import get_logger
 from .routes import Controller, Delete, Get, Patch, Post, Put
 from .stream import Stream
 
@@ -26,5 +27,6 @@ __all__ = [
     "__version__",
     "compile_module",
     "forwardRef",
+    "get_logger",
     "run",
 ]

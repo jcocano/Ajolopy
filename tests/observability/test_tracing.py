@@ -19,9 +19,7 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any, override
 
 import pytest
-from opentelemetry import trace
-from opentelemetry.sdk.trace import ReadableSpan, TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.trace import StatusCode
 
@@ -37,6 +35,12 @@ from ajolopy.providers import (
 )
 from tests.agent.conftest import FakeProvider
 
+# The shared session-wide TracerProvider + exporter live in
+# ``tests/observability/conftest.py`` so the AJ-29 logging-trace tests share
+# the same provider. OTel's ``trace.set_tracer_provider`` is set-once; the
+# conftest installs it eagerly to make test ordering irrelevant.
+from tests.observability.conftest import ensure_session_provider
+
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
@@ -46,30 +50,9 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 
 
-_session_exporter: InMemorySpanExporter = InMemorySpanExporter()
-_session_state: dict[str, bool] = {"installed": False}
-
-
-def _ensure_session_provider() -> InMemorySpanExporter:
-    """Install a shared SDK TracerProvider once per process.
-
-    OTel's api blocks re-installing the global ``TracerProvider`` (so a
-    per-test ``set_tracer_provider`` call after the first one is a silent
-    no-op with a warning). We work around it by installing the SDK provider
-    once for the whole test session and letting each test clear the shared
-    exporter via :meth:`InMemorySpanExporter.clear`.
-    """
-    if not _session_state["installed"]:
-        provider = TracerProvider()
-        provider.add_span_processor(SimpleSpanProcessor(_session_exporter))
-        trace.set_tracer_provider(provider)
-        _session_state["installed"] = True
-    return _session_exporter
-
-
 @pytest.fixture
 def tracer_provider() -> Iterator[InMemorySpanExporter]:
-    exporter = _ensure_session_provider()
+    exporter = ensure_session_provider()
     exporter.clear()
     try:
         yield exporter

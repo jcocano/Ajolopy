@@ -19,6 +19,7 @@ the step name; the original exception chains via ``__cause__`` so
 deploy logs and ``ajolopy doctor`` (future) can introspect both.
 """
 
+import os
 from typing import TYPE_CHECKING, cast
 
 from ajolopy.config import BaseConfig
@@ -34,7 +35,7 @@ from ajolopy.modules import (
     UnresolvedForwardRefError,
     compile_module,
 )
-from ajolopy.observability import setup_tracing_from_env
+from ajolopy.observability import configure_logging, setup_tracing_from_env
 from ajolopy.routes import mount_routes
 from ajolopy.stream import iter_stream_methods, mount_streams
 
@@ -96,7 +97,19 @@ class AjolopyFactory:
         #    before any container work runs.
         _validate_env_early(root_module)
 
-        # 1a. Tracing setup. Idempotent and side-effect free when the user
+        # 1a. Logging setup. Universal (every app emits logs), so it runs
+        #     before tracing — any log line emitted by the tracing setup
+        #     itself is rendered through the configured pipeline. Reads
+        #     `APP_ENV` directly from `os.environ` (not from `ConfigService`,
+        #     which only exists after `compile_module` runs). Idempotent; a
+        #     repeated call is a no-op so tests + library consumers do not
+        #     stack stdlib handlers.
+        try:
+            configure_logging(env=os.environ.get("APP_ENV", "development"))
+        except Exception as exc:
+            raise FactoryStartupError("configure_logging", f"{type(exc).__name__}: {exc}") from exc
+
+        # 1b. Tracing setup. Idempotent and side-effect free when the user
         #     installed their own TracerProvider, or when the `ajolopy[otel]`
         #     extra is not installed (in which case spans stay no-ops at the
         #     api layer). Running this before compile_module / lifecycle so
