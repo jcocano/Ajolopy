@@ -401,131 +401,131 @@ but with stdin/stdout piped from the test process.
 
 ### Decoration-time validation
 
-- [ ] `@MCPServer(transport="stdio")` on a class with at least one
+- [x] `@MCPServer(transport="stdio")` on a class with at least one
       `@Tool` method stamps `_ajolopy_mcp_server` metadata and
       preserves the class type for pyright.
-- [ ] `@MCPServer(transport="http", path="/mcp")` works similarly.
-- [ ] `@MCPServer(transport="sse", path="/mcp-sse")` works similarly.
-- [ ] `@MCPServer(transport="stdio", path="/x")` raises
+- [x] `@MCPServer(transport="http", path="/mcp")` works similarly.
+- [x] `@MCPServer(transport="sse", path="/mcp-sse")` works similarly.
+- [x] `@MCPServer(transport="stdio", path="/x")` raises
       `MCPServerConfigError` ("path is not applicable to stdio").
-- [ ] `@MCPServer(transport="http")` (no `path`) raises
+- [x] `@MCPServer(transport="http")` (no `path`) raises
       `MCPServerConfigError`.
-- [ ] `@MCPServer(transport="http", path="no-leading-slash")` raises
+- [x] `@MCPServer(transport="http", path="no-leading-slash")` raises
       `MCPServerConfigError`.
-- [ ] `@MCPServer(transport="bogus")` raises `MCPServerConfigError`
+- [x] `@MCPServer(transport="bogus")` raises `MCPServerConfigError`
       listing the accepted values.
-- [ ] `@MCPServer(transport="stdio")` on a class with NO `@Tool`
+- [x] `@MCPServer(transport="stdio")` on a class with NO `@Tool`
       methods raises `MCPServerConfigError`.
-- [ ] `@MCPServer(transport="stdio")` on a class whose `__init__`
+- [x] `@MCPServer(transport="stdio")` on a class whose `__init__`
       requires arguments raises `MCPServerConfigError` with a hint to
       pass a pre-built instance via the mount API or rewrite the
       class.
-- [ ] `name="..."` overrides the default kebab-case derivation.
+- [x] `name="..."` overrides the default kebab-case derivation.
       Missing → `MyToolsBundle` becomes `"my-tools-bundle"`.
-- [ ] `version="..."` overrides the default `"0.0.0"`. Default
+- [x] `version="..."` overrides the default `"0.0.0"`. Default
       remains `"0.0.0"`; the framework does NOT try to introspect the
       user's package version.
-- [ ] `instructions="..."` overrides the docstring-derived default.
+- [x] `instructions="..."` overrides the docstring-derived default.
       Empty / missing docstring + missing kwarg → `instructions=None`
       on the protocol handshake.
-- [ ] `server_factory=` accepts any zero-arg callable; non-callable →
+- [x] `server_factory=` accepts any zero-arg callable; non-callable →
       `MCPServerConfigError`.
 
 ### `@UseGuards` composition
 
-- [ ] `@UseGuards(BearerTokenGuard(...))` above
+- [x] `@UseGuards(BearerTokenGuard(...))` above
       `@MCPServer(transport="http", path="/mcp")` mounts cleanly and
       gates the route (a missing/invalid token returns 401/403 BEFORE
       MCP protocol negotiation).
-- [ ] Same for `transport="sse"`.
-- [ ] `@UseGuards(...)` on `transport="stdio"` raises
+- [x] Same for `transport="sse"`.
+- [x] `@UseGuards(...)` on `transport="stdio"` raises
       `MCPServerConfigError` at decoration time with the message
       naming stdio's trust boundary.
 
 ### CLI: `ajolopy mcp-serve`
 
-- [ ] `ajolopy --help` runs successfully and lists `mcp-serve` as the
+- [x] `ajolopy --help` runs successfully and lists `mcp-serve` as the
       single subcommand.
-- [ ] `ajolopy mcp-serve --help` prints usage referencing
+- [x] `ajolopy mcp-serve --help` prints usage referencing
       `package.module:ClassName`.
-- [ ] `ajolopy mcp-serve invalid-target-format` exits with code 2 and
+- [x] `ajolopy mcp-serve invalid-target-format` exits with code 2 and
       a usage message.
-- [ ] `ajolopy mcp-serve no_such_module:Cls` exits with code 1 and a
+- [x] `ajolopy mcp-serve no_such_module:Cls` exits with code 1 and a
       clear "module not found" error.
-- [ ] `ajolopy mcp-serve mod:no_such_class` exits with code 1 and a
+- [x] `ajolopy mcp-serve mod:no_such_class` exits with code 1 and a
       clear "attribute not found" error.
-- [ ] `ajolopy mcp-serve mod:NotAnMCPServer` exits with code 1
+- [x] `ajolopy mcp-serve mod:NotAnMCPServer` exits with code 1
       pointing at `@MCPServer(transport="stdio")`.
-- [ ] `ajolopy mcp-serve mod:HTTPOnlyServer` exits with code 1
+- [x] `ajolopy mcp-serve mod:HTTPOnlyServer` exits with code 1
       explaining that the target is `transport="http"` (not stdio).
-- [ ] `ajolopy mcp-serve mod:GoodStdioServer` against a class with a
+- [x] `ajolopy mcp-serve mod:GoodStdioServer` against a class with a
       fake stdio loop returns 0 after a clean shutdown
       (`StopAsyncIteration` from a piped stdin reader).
 
 ### HTTP / SSE mount
 
-- [ ] `create_app(mcp_servers=[Cls])` adds the expected route(s):
+- [x] `create_app(mcp_servers=[Cls])` adds the expected route(s):
       `POST <path>` for HTTP; `GET <path>` + `POST <path>/messages`
       for SSE.
-- [ ] `create_app(mcp_servers=[instance])` does NOT call `Cls()` and
+- [x] `create_app(mcp_servers=[instance])` does NOT call `Cls()` and
       binds the supplied instance.
-- [ ] `mount_mcp_servers(app, items)` is the standalone API and
+- [x] `mount_mcp_servers(app, items)` is the standalone API and
       `create_app(mcp_servers=...)` is equivalent.
-- [ ] A class with required-arg `__init__` mounted via
+- [x] A class with required-arg `__init__` mounted via
       `[Cls]` (not an instance) raises `MCPServerConfigError` at mount
       time with the "pass a pre-built instance" hint.
-- [ ] Two `@MCPServer` classes with overlapping `path` raise
+- [x] Two `@MCPServer` classes with overlapping `path` raise
       `MCPServerConfigError` listing both class names.
 
 ### Tool dispatch
 
-- [ ] An MCP `tools/list` request returns the wire tool list matching
+- [x] An MCP `tools/list` request returns the wire tool list matching
       `discover_tools(cls)`: each tool's `name`, `description`, and
       `input_schema` mirror AJ-2's `to_wire_tool()`.
-- [ ] An MCP `tools/call` for an async `@Tool` method runs the
+- [x] An MCP `tools/call` for an async `@Tool` method runs the
       coroutine and returns the result as `TextContent`.
-- [ ] An MCP `tools/call` for a sync `@Tool` method runs via
+- [x] An MCP `tools/call` for a sync `@Tool` method runs via
       `asyncio.to_thread`.
-- [ ] Tool arguments are validated through the Pydantic schema; bad
+- [x] Tool arguments are validated through the Pydantic schema; bad
       arguments return `CallToolResult(isError=True, ...)` with the
       validation message.
-- [ ] A tool method raising an exception returns
+- [x] A tool method raising an exception returns
       `CallToolResult(isError=True, ...)` with `str(exc)` as the body;
       the exception is logged at `ERROR`.
-- [ ] String results pass through verbatim.
-- [ ] Dict / Pydantic-model results are JSON-encoded (same shape as
+- [x] String results pass through verbatim.
+- [x] Dict / Pydantic-model results are JSON-encoded (same shape as
       `_stringify_tool_result`).
-- [ ] One instance is created at boot; subsequent tool calls share
+- [x] One instance is created at boot; subsequent tool calls share
       `self` (verified by mutating a counter across calls).
 
 ### Observability
 
-- [ ] `mcp_server.call_tool {server_name}/{tool_name}` span fires per
+- [x] `mcp_server.call_tool {server_name}/{tool_name}` span fires per
       dispatch with the documented attribute set.
-- [ ] `mcp_server.boot {server_name}` span fires once per server
+- [x] `mcp_server.boot {server_name}` span fires once per server
       startup (CLI stdio boot + each HTTP/SSE mount).
-- [ ] `ajolopy.mcp_server.is_error=true` set on dispatch failures.
-- [ ] Spans DO NOT contribute to `ajolopy.cost_usd.total`.
+- [x] `ajolopy.mcp_server.is_error=true` set on dispatch failures.
+- [x] Spans DO NOT contribute to `ajolopy.cost_usd.total`.
 
 ### Public re-exports
 
-- [ ] `from ajolopy import MCPServer` works.
-- [ ] `from ajolopy.mcp_server import (MCPServer, MCPServerError,
+- [x] `from ajolopy import MCPServer` works.
+- [x] `from ajolopy.mcp_server import (MCPServer, MCPServerError,
       MCPServerConfigError, MCPServerRuntimeError, mount_mcp_servers,
       ServerFactory)` works.
-- [ ] `MCPServer` is added to `src/ajolopy/__init__.py`'s `__all__`
+- [x] `MCPServer` is added to `src/ajolopy/__init__.py`'s `__all__`
       alongside other primitives.
-- [ ] `create_app(mcp_servers=...)` kwarg signature matches the new
+- [x] `create_app(mcp_servers=...)` kwarg signature matches the new
       surface; passing `None` (the default) is a no-op (the existing
       `streams` kwarg behaviour is unchanged).
 
 ### Dependency surface
 
-- [ ] `from ajolopy import MCPServer` works without the `mcp` extra
+- [x] `from ajolopy import MCPServer` works without the `mcp` extra
       installed (same lazy-import pattern as AJ-7).
-- [ ] `@MCPServer(transport=...)` at decoration time works without
+- [x] `@MCPServer(transport=...)` at decoration time works without
       the `mcp` extra.
-- [ ] Booting a server (CLI invocation or `create_app(mcp_servers=...)`)
+- [x] Booting a server (CLI invocation or `create_app(mcp_servers=...)`)
       without `mcp` installed raises `MCPDependencyError` with a
       `pip install ajolopy[mcp]` hint.
 
@@ -588,4 +588,48 @@ but with stdin/stdout piped from the test process.
 
 ## Implementation notes
 
-(Empty — populated by the implementation PR.)
+- **2026-05-14 (PR landing notes).**
+  - `@UseGuards(stdio)` is detected in two places: the decorator's
+    `_validate_no_stdio_guards` catches the "guards-below-MCPServer"
+    ordering at decoration time (the only case where Python's decorator
+    semantics let `@MCPServer` see the guard stamp). The "guards-above"
+    ordering is caught at mount time via `_read_metadata` in
+    `mount.py`, so HTTP / SSE callers still get a clear
+    `MCPServerConfigError` if they accidentally pair the stamps with a
+    stdio target. The CLI never sees guards (stdio targets reject
+    `@UseGuards` at decoration), so the CLI does not duplicate the
+    check.
+  - The `mcp` SDK's `StreamableHTTPSessionManager.run()` is documented
+    as call-once and must live inside the host app's lifespan. The
+    mount layer composes it into the Starlette router's
+    `lifespan_context` via a thin `@asynccontextmanager`-wrapped
+    helper (`_chain_lifespan`). SSE uses `SseServerTransport`
+    directly; each request opens its own connect_sse session so no
+    long-lived lifespan plumbing is required there.
+  - Sentinel `_AlreadySentResponse` (`transports/http.py` +
+    `transports/sse.py`) is a `starlette.responses.Response` subclass
+    whose `__call__` is a no-op. The MCP transports speak ASGI
+    directly via `request._send`; Starlette's `Route` will still call
+    the returned `Response` as ASGI, and the no-op `__call__` prevents
+    a second response from being written.
+  - The lowlevel SDK's `Server.run(read_stream, write_stream,
+    initialization_options)` takes positional streams plus options;
+    the SDK reference snippets in the task instructions were
+    accurate. The session manager's run() context is required even
+    for stateful mode -- not just for streaming.
+  - The `[project.scripts] ajolopy = "ajolopy.cli:main"` entry point
+    runs `uv sync` is required after first install for the binary to
+    show up in `.venv/bin`.
+  - The CLI smoke test (`test_runs_stdio_target_with_real_sdk_eof`)
+    exercises the real `mcp.server.stdio.stdio_server` with an
+    immediate-EOF `BytesIO` stdin. The reader's memory object stream
+    closes cleanly, which causes `Server.run` to return and the CLI
+    to exit 0 -- no subprocess required.
+  - The runtime emits `mcp_server.boot` once per mounted server. The
+    HTTP / SSE mount calls `runtime.emit_boot_span()` + materialises
+    `runtime.instance` at registration time so slow `__init__` /
+    env-var resolution surfaces in traces without waiting for the
+    first request.
+  - `discover_tools(cls, None)` (AJ-2) is reused verbatim; we ignore
+    its returned `extra_instances` because `@MCPServer` does not
+    expose external `tools=[...]` plumbing in v0.1.
