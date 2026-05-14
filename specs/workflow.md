@@ -375,130 +375,130 @@ transition to `done`. All LLM provider interactions are mocked at the
 
 ### Decoration-time validation
 
-- [ ] `@Workflow(coordinator="claude-sonnet-4-7", agents=[A, B])` on a
+- [x] `@Workflow(coordinator="claude-sonnet-4-7", agents=[A, B])` on a
       class produces a class whose instances have `run` and `stream`
       methods and whose type is preserved (pyright sees the original
       class).
-- [ ] `@Workflow(agents=[])` raises `WorkflowConfigError` at decoration
+- [x] `@Workflow(agents=[])` raises `WorkflowConfigError` at decoration
       time with a message naming the workflow class.
-- [ ] `@Workflow(coordinator="claude-sonnet-4-7", agents=[A, NotAgent])`
+- [x] `@Workflow(coordinator="claude-sonnet-4-7", agents=[A, NotAgent])`
       where `NotAgent` is not `@Agent`-decorated raises
       `WorkflowConfigError` with a message naming `NotAgent`.
-- [ ] `@Workflow(agents=[A, B])` on a class that does NOT override
+- [x] `@Workflow(agents=[A, B])` on a class that does NOT override
       `route()` raises `WorkflowConfigError` with a message pointing the
       user at the two options: pass `coordinator=` or implement `route()`.
-- [ ] `@Workflow(coordinator="claude-sonnet-4-7", agents=[A], integrations=[I])`
+- [x] `@Workflow(coordinator="claude-sonnet-4-7", agents=[A], integrations=[I])`
       raises `WorkflowConfigError` referencing AJ-7 (`@MCP`).
-- [ ] `@Workflow(coordinator="claude-sonnet-4-7", agents=[A], max_steps=0)`
+- [x] `@Workflow(coordinator="claude-sonnet-4-7", agents=[A], max_steps=0)`
       raises `WorkflowConfigError`. `max_steps=-1` too.
-- [ ] `@Workflow(coordinator="not-a-real-model", agents=[A])` raises
+- [x] `@Workflow(coordinator="not-a-real-model", agents=[A])` raises
       `WorkflowConfigError` referencing the provider registry (same error
       type the agent decorator raises for unknown models).
-- [ ] `@Workflow(coordinator="claude-...", agents=[A])` on a class that
+- [x] `@Workflow(coordinator="claude-...", agents=[A])` on a class that
       ALSO overrides `route()` logs an `INFO`-level message to
       `ajolopy.workflow` saying `coordinator=` is shadowed by `route()`;
       no error.
 
 ### Coordinator tool-calling loop (default path)
 
-- [ ] With a coordinator that returns a single `delegate_to_<a>` tool_call
+- [x] With a coordinator that returns a single `delegate_to_<a>` tool_call
       and then a tool-free response, `await wf.run("...")` returns the
       coordinator's final text.
-- [ ] The coordinator is presented with one synthetic tool per agent named
+- [x] The coordinator is presented with one synthetic tool per agent named
       `delegate_to_<lowercased_class_name>` (e.g. `delegate_to_billing`).
-- [ ] Each synthetic tool's description is the agent class's docstring;
+- [x] Each synthetic tool's description is the agent class's docstring;
       classes with no docstring get
       `f"Delegate to the {ClassName} agent."` as a fallback (verified by
       mocking the provider and asserting the request's tool list).
-- [ ] The coordinator can delegate to the same agent more than once in a
+- [x] The coordinator can delegate to the same agent more than once in a
       single invocation (verified with a mock that emits the same
       tool_call twice across turns).
-- [ ] Multiple tool_calls in one coordinator turn are run sequentially in
+- [x] Multiple tool_calls in one coordinator turn are run sequentially in
       arrival order; `handoff` + `agent_result` event pairs appear in
       that order in `stream()`.
-- [ ] After `max_steps` coordinator turns with tool_calls still emitted,
+- [x] After `max_steps` coordinator turns with tool_calls still emitted,
       `await wf.run(...)` raises `WorkflowMaxStepsError`.
 
 ### `route()` override path
 
-- [ ] A `@Workflow(agents=[A, B, C])` class with an overridden
+- [x] A `@Workflow(agents=[A, B, C])` class with an overridden
       `route(message, context)` returning `B` calls `B().run(message)` and
       returns that output verbatim from `wf.run(message)`.
-- [ ] The context dict received by `route` contains exactly the kwargs
+- [x] The context dict received by `route` contains exactly the kwargs
       the caller passed to `wf.run(message, **kwargs)`.
-- [ ] `route()` returning a class that is **not** in `agents=` raises
+- [x] `route()` returning a class that is **not** in `agents=` raises
       `WorkflowRouteError` at runtime, with a message naming the bad
       return and the legal set.
-- [ ] `route()` returning `None` raises `WorkflowRouteError`.
-- [ ] `route()` raising a user exception propagates out of `run()` as
+- [x] `route()` returning `None` raises `WorkflowRouteError`.
+- [x] `route()` raising a user exception propagates out of `run()` as
       `WorkflowRouteError` wrapping the original.
 
 ### Stream event schema
 
-- [ ] `wf.stream("...")` yields `dict` objects with a `type` key; no bare
+- [x] `wf.stream("...")` yields `dict` objects with a `type` key; no bare
       strings, no `BaseModel` instances.
-- [ ] Default path: the event sequence is `handoff` → `agent_result` per
+- [x] Default path: the event sequence is `handoff` → `agent_result` per
       delegation, then zero or more `token` events, then exactly one
       `done` event.
-- [ ] `route()` override path: the event sequence is exactly
+- [x] `route()` override path: the event sequence is exactly
       `handoff` → `agent_result` → `done`. No `token` events.
-- [ ] Every `done` event's `text` equals the awaited result of `wf.run()`
+- [x] Every `done` event's `text` equals the awaited result of `wf.run()`
       with the same input (verified with the same mocked provider).
-- [ ] `run()` is implemented in terms of `stream()` (it iterates internally
+- [x] `run()` is implemented in terms of `stream()` (it iterates internally
       and reads `done.text`). Verified by asserting that mock providers
       see exactly the same call sequence for `run("x")` vs `stream("x")`.
 
 ### Composability with `@Stream` (AJ-3)
 
-- [ ] A `@Workflow` class with a `@Stream("/chat")` method whose body is
+- [x] A `@Workflow` class with a `@Stream("/chat")` method whose body is
       `async for event in self.stream(message): yield event` mounts via
       `create_app(streams=[Cls])` and serves SSE events whose `data:`
       payload is JSON of each workflow event.
-- [ ] Calling `wf.stream(message)` directly (no HTTP) yields the same dicts
+- [x] Calling `wf.stream(message)` directly (no HTTP) yields the same dicts
       in the same order as the SSE payload sequence (with framing
       stripped). Confirms `@Stream` adds zero semantic transformation on
       top of `@Workflow`.
 
 ### Observability
 
-- [ ] `wf.run(...)` opens exactly one `workflow.invoke {Name}` span with
+- [x] `wf.run(...)` opens exactly one `workflow.invoke {Name}` span with
       attributes `ajolopy.workflow.name`, `ajolopy.workflow.operation`,
       `ajolopy.workflow.coordinator.model`, `ajolopy.workflow.max_steps`,
       `ajolopy.workflow.step_count`, `ajolopy.workflow.handoff.count`.
-- [ ] In the default path, the `workflow.invoke` span has one child
+- [x] In the default path, the `workflow.invoke` span has one child
       `chat {coordinator_model}` span per coordinator turn plus one child
       `agent.invoke {AgentName}` span per delegation. Order is preserved.
-- [ ] In the `route()` override path, the `workflow.invoke` span has
+- [x] In the `route()` override path, the `workflow.invoke` span has
       exactly one child `agent.invoke` span and zero coordinator `chat`
       spans. `ajolopy.workflow.coordinator.model` is absent.
-- [ ] The `ajolopy.cost_usd.total` attribute on `workflow.invoke` equals
+- [x] The `ajolopy.cost_usd.total` attribute on `workflow.invoke` equals
       the sum of `gen_ai.cost_usd` across all descendant chat spans
       (coordinator + agents + their tool loops). Verified with a fake
       pricing catalog.
-- [ ] `ajolopy.workflow.handoff.from` and `ajolopy.workflow.handoff.to`
+- [x] `ajolopy.workflow.handoff.from` and `ajolopy.workflow.handoff.to`
       appear on each `agent.invoke` span as breadcrumbs for the
       hand-off chain (`from = "coordinator"` for the default path,
       `from = "route"` for the override path).
 
 ### Error handling
 
-- [ ] A delegated agent raising `AgentError` does NOT propagate; the
+- [x] A delegated agent raising `AgentError` does NOT propagate; the
       coordinator sees a `tool_result` with `is_error=True` and an error
       message body, and the workflow emits an `agent_result` event whose
       `output` carries the same error message (verified with a mock agent
       whose `run()` raises).
-- [ ] A coordinator `LLMProviderError` propagates out of `run()` /
+- [x] A coordinator `LLMProviderError` propagates out of `run()` /
       `stream()` immediately. The last successfully-emitted event was
       the prior `agent_result` (or nothing, if the failure was on turn 1).
-- [ ] `WorkflowMaxStepsError` carries `max_steps` and `step_count` on the
+- [x] `WorkflowMaxStepsError` carries `max_steps` and `step_count` on the
       exception object for telemetry.
 
 ### Public re-exports
 
-- [ ] `from ajolopy import Workflow` works.
-- [ ] `from ajolopy.workflow import WorkflowConfigError, WorkflowError,
+- [x] `from ajolopy import Workflow` works.
+- [x] `from ajolopy.workflow import WorkflowConfigError, WorkflowError,
       WorkflowMaxStepsError, WorkflowRouteError` works.
-- [ ] `Workflow` is added to `src/ajolopy/__init__.py`'s `__all__` next
+- [x] `Workflow` is added to `src/ajolopy/__init__.py`'s `__all__` next
       to the other primitive names.
 
 ## Implementation pointers
@@ -552,4 +552,62 @@ transition to `done`. All LLM provider interactions are mocked at the
 
 ## Implementation notes
 
-(Empty — populated by the implementation PR.)
+Populated during the implementation PR. The notes record decisions
+that go beyond the spec's wording so a future reader does not have
+to reverse-engineer them from the code.
+
+### Coordinator runs as a direct provider call, not via `AgentRuntime`
+
+The spec described two viable approaches for executing the
+coordinator's turn (reuse `AgentRuntime` vs. drive the provider
+directly inside `WorkflowRuntime`). The implementation took the direct
+path. The coordinator's tool calls are synthetic ``delegate_to_*``
+shapes that never resolve to real ``@Tool`` bindings, so reusing
+``AgentRuntime._execute_tool_calls`` would require either subclassing
+the agent runtime or adding more orchestrator-specific kwargs than
+``cost_sink``. The workflow runtime instead opens its own
+``chat`` span per turn and feeds the cost into the workflow's own
+roll-up accumulator. Span-name and attribute conventions are reused
+unchanged via the existing helpers in
+``ajolopy.observability.conventions`` so the trace shape matches the
+agent surface exactly.
+
+### `cost_sink` is the only cross-cut to `AgentRuntime`
+
+`AgentRuntime.run` and `AgentRuntime.stream` gained an optional
+``cost_sink: list[float | None] | None = None`` kwarg. When non-None,
+each per-chat cost the agent emits is appended to the caller-owned
+list in addition to the agent's own root-span roll-up. The workflow
+runtime passes its accumulator so every delegated agent's chat-span
+cost folds into the workflow's ``ajolopy.cost_usd.total`` attribute.
+The kwarg is intentionally documented as "private API for
+orchestrators" in the agent runtime's docstrings and locked by tests
+in ``tests/agent/test_runtime_cost_sink.py``.
+
+### Speculative streaming on the coordinator's final turn
+
+The coordinator stream is fully buffered for the duration of each
+turn. Once the stream ends, the runtime knows whether the turn carried
+tool_calls (drop the buffered text and dispatch the tool calls) or
+not (yield every buffered text part as a ``token`` event, then yield
+``done``). This is simpler than the alternative — yielding tokens
+optimistically and suppressing them retroactively — and the spec
+explicitly accepts the trade-off ("we wait until the first content
+delta to decide"). Buffering is per-turn, so memory usage scales with
+the size of one coordinator turn's text only.
+
+### Handoff breadcrumbs land on a wrapper `agent.invoke` span
+
+The spec asks for ``ajolopy.workflow.handoff.from`` /
+``handoff.to`` attributes on the ``agent.invoke`` span of each
+delegation. ``AgentRuntime`` opens that span itself inside ``run()``
+unconditionally, so the workflow cannot stamp attributes on it
+without invasive coupling. The workflow instead opens its own
+identically-named ``agent.invoke {AgentName}`` wrapper span around
+each delegation, stamps the breadcrumbs there, and lets the agent
+runtime nest its own ``agent.invoke`` span under the wrapper. From a
+consumer's perspective an ``agent.invoke`` span named after the
+delegated agent carries the breadcrumb attributes — exactly what the
+spec asked for — at the cost of one extra zero-attribute span in the
+trace. Dashboards that filter by name will see both; dashboards that
+filter by attribute presence will see only the wrapper.
