@@ -1627,7 +1627,7 @@
       "slug": "mcp-server",
       "type": "feature",
       "title": "@MCPServer decorator (publish @Tools via MCP transport)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1636,7 +1636,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/mcp-server",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/56",
       "spec": "specs/mcp-server.md",
       "blocks": [
         "AJ-61"
