@@ -57,12 +57,17 @@ entirely internal to `AgentRuntime`.
    `_instantiate_provider(primary_key)` and stores the instance in
    the cache before returning. A failing primary `__init__` still
    raises `AgentConfigError` at decoration time.
-2. **Fallback key resolution eager.** For each fallback entry, the
-   provider key is resolved via `_resolve_provider_key` at
-   construction time. An unknown prefix in a fallback (e.g.
-   `fallback="totally-fake-model"`) still raises `AgentConfigError`
-   at decoration time. This preserves the "fail fast on
-   typos / unregistered providers" contract.
+2. **Fallback key + class registration eager.** For each fallback
+   entry, the provider key is resolved via `_resolve_provider_key`
+   AND the bound `LLMProvider` class is looked up via
+   `get_provider_class` at construction time. An unknown prefix
+   (e.g. `fallback="totally-fake-model"`) or a key whose provider
+   class has never been imported (e.g. `fallback="gpt-4o-mini"`
+   with `ajolopy.providers.openai` never imported) still raises
+   `AgentConfigError` at decoration time. This preserves the
+   "fail fast on typos / unregistered providers" contract. What
+   stays deferred is only the `cls()` constructor call — i.e.
+   the step where `__init__` reads env vars and validates them.
 3. **Fallback instance lazy.** Fallback entries are stored without an
    instance attached. The first time the runtime advances past the
    primary, it builds the missing instance (and caches it for the

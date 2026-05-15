@@ -165,9 +165,19 @@ class AgentRuntime:
 
     Construction (which happens inside ``Agent(...)`` at decoration time)
     resolves every model in the primary + fallback chain to a registered
-    provider, instantiates each provider exactly once, and short-circuits
-    with ``AgentConfigError`` on any failure. That keeps misconfigurations
-    visible at bootstrap rather than at first request.
+    provider and instantiates the **primary** provider eagerly — so a
+    typo or a missing primary env var still fails at decoration time,
+    preserving the framework's "fail fast on bootstrap" contract.
+
+    Fallback providers, on the other hand, are instantiated **lazily**
+    (AJ-69): their provider key is resolved at construction (so an
+    unknown prefix in a fallback list still raises ``AgentConfigError``
+    at decoration time), but the concrete ``LLMProvider`` instance is
+    only built the first time the runtime advances past the primary
+    and actually needs that fallback. Once instantiated, the instance
+    is cached on ``self._provider_cache`` for the rest of the runtime's
+    lifetime — same dedup contract as the previous eager cache, just
+    lazy-populated.
     """
 
     def __init__(
@@ -224,21 +234,40 @@ class AgentRuntime:
             kwarg=integrations,
         )
 
-        # Resolve and instantiate every model's provider exactly once.
+        # Resolve every model's provider key eagerly so unknown prefixes
+        # fail at decoration time. Instantiate ONLY the primary provider
+        # eagerly — fallback instances are built lazily via
+        # :meth:`_ensure_provider` the first time the chain advances past
+        # the primary. See AJ-69 for the design rationale.
         fallback_models = self._normalize_fallback(fallback)
         self._fallback_callable = fallback if callable(fallback) else None
-        # ``_models`` holds (model_str, provider_instance, provider_key) so the
-        # fallback observability layer (AJ-23) can label each transition with
-        # the provider key without re-resolving it at run time.
-        self._models: list[tuple[str, LLMProvider, str]] = []
-        provider_cache: dict[str, LLMProvider] = {}
-        for model_str in [model, *fallback_models]:
-            provider_key = self._resolve_provider_key(model_str)
-            if provider_key not in provider_cache:
-                provider_cache[provider_key] = self._instantiate_provider(provider_key)
-            self._models.append((model_str, provider_cache[provider_key], provider_key))
+        # ``_provider_cache`` is the per-runtime, provider-key-keyed cache
+        # populated by :meth:`_ensure_provider`. Pre-seeded with the
+        # primary instance so the previous "two models on the same
+        # provider key share one instance" contract holds.
+        self._provider_cache: dict[str, LLMProvider] = {}
+        # ``_models`` holds (model_str, provider_instance | None, provider_key).
+        # Primary (index 0) is never ``None``; fallback entries start as
+        # ``None`` and get filled in by :meth:`_ensure_provider`.
+        self._models: list[tuple[str, LLMProvider | None, str]] = []
 
-        self._primary_provider_key = self._resolve_provider_key(model)
+        primary_key = self._resolve_provider_key(model)
+        primary_provider = self._instantiate_provider(primary_key)
+        self._provider_cache[primary_key] = primary_provider
+        self._models.append((model, primary_provider, primary_key))
+
+        for fallback_model in fallback_models:
+            # Resolve the provider key AND verify the provider class is
+            # registered eagerly — unknown prefix or missing import →
+            # ``AgentConfigError`` at decoration time. The provider
+            # *instance* (the ``cls()`` call where env vars get validated)
+            # is what stays deferred. See AJ-69.
+            fallback_key = self._resolve_provider_key(fallback_model)
+            self._assert_provider_class_registered(fallback_key)
+            cached = self._provider_cache.get(fallback_key)
+            self._models.append((fallback_model, cached, fallback_key))
+
+        self._primary_provider_key = primary_key
         self._memory: Memory | None = resolve_memory(memory)
 
         # ``catalog`` defaults to None — pricing emission resolves the active
@@ -337,6 +366,24 @@ class AgentRuntime:
             ) from exc
 
     @staticmethod
+    def _assert_provider_class_registered(provider_key: str) -> None:
+        """Verify a concrete ``LLMProvider`` class is bound under ``provider_key``.
+
+        Called eagerly for primary AND fallback entries at decoration
+        time so a missing ``import`` of a provider package still fails
+        fast — matching the pre-AJ-69 contract for the "provider
+        registered as routing target but never imported" case.
+        """
+        try:
+            get_provider_class(provider_key)
+        except ProviderNotRegisteredError as exc:
+            raise AgentConfigError(
+                f"Provider {provider_key!r} is registered as a routing "
+                f"target but no concrete LLMProvider class is bound. Import "
+                f"the corresponding ajolopy.providers.* package."
+            ) from exc
+
+    @staticmethod
     def _instantiate_provider(provider_key: str) -> LLMProvider:
         try:
             cls = get_provider_class(provider_key)
@@ -352,6 +399,39 @@ class AgentRuntime:
             raise AgentConfigError(
                 f"Failed to instantiate provider {provider_key!r}: {exc}"
             ) from exc
+
+    def _ensure_provider(self, index: int) -> LLMProvider:
+        """Return the provider for ``_models[index]``, instantiating lazily.
+
+        Used by :meth:`run` and :meth:`stream` before invoking each
+        entry in the fallback chain. The primary (index 0) is always
+        already populated by ``__init__``, so this only does work for
+        index >= 1.
+
+        Caches the instance on the per-runtime ``_provider_cache`` so
+        two fallback entries routed to the same provider key share
+        one instance — same dedup contract as the previous eager
+        cache, just lazy-populated.
+
+        Raises whatever :meth:`_instantiate_provider` raises
+        (``AgentConfigError``). Callers catch that and treat it as a
+        fallback-instantiation failure: log a warning, record the
+        failure for the eventual exhausted-chain error message, and
+        advance to the next entry.
+        """
+        model_str, provider, provider_key = self._models[index]
+        if provider is not None:
+            return provider
+        cached = self._provider_cache.get(provider_key)
+        if cached is not None:
+            self._models[index] = (model_str, cached, provider_key)
+            return cached
+        # First time we need this provider key at run time. Building the
+        # instance can raise; the caller handles the recovery path.
+        built = self._instantiate_provider(provider_key)
+        self._provider_cache[provider_key] = built
+        self._models[index] = (model_str, built, provider_key)
+        return built
 
     # ------------------------------------------------------------------
     # public methods called by the decorator-injected instance methods
@@ -395,8 +475,31 @@ class AgentRuntime:
         # therefore flush both transitions on the chat span that eventually
         # responds (per AJ-23 spec).
         pending_fallbacks: list[FallbackTransition] = []
+        # Per-attempt failures captured for the exhausted-chain error
+        # message (AJ-69). Each entry is "(model_str, reason)" — both
+        # LLMProviderError and lazy-instantiation failures land here.
+        attempt_failures: list[tuple[str, str]] = []
         with self._invoke_span(operation="run", streaming=False) as invoke_span:
-            for index, (model_str, provider, provider_key) in enumerate(self._models):
+            for index, (model_str, _eager_provider, provider_key) in enumerate(self._models):
+                try:
+                    provider = self._ensure_provider(index)
+                except AgentConfigError as exc:
+                    # Lazy fallback instantiation failed (e.g. missing env
+                    # var). Log + record + advance to the next entry. The
+                    # primary (index 0) is eagerly instantiated by
+                    # ``__init__``, so this branch only fires for fallbacks.
+                    _LOGGER.warning(
+                        "Agent %r could not instantiate fallback provider "
+                        "%r for model %r: %s — advancing to the next entry.",
+                        self._agent_name,
+                        provider_key,
+                        model_str,
+                        exc,
+                    )
+                    last_error = exc
+                    attempt_failures.append((model_str, f"instantiation: {exc}"))
+                    prompt_messages = self._build_messages(history, message)
+                    continue
                 try:
                     final_text = await self._run_tool_loop(
                         agent_instance=agent_instance,
@@ -411,6 +514,7 @@ class AgentRuntime:
                     )
                 except LLMProviderError as exc:
                     last_error = exc
+                    attempt_failures.append((model_str, str(exc)))
                     # Record the transition that just failed → next model.
                     next_idx = index + 1
                     if next_idx < len(self._models):
@@ -437,8 +541,7 @@ class AgentRuntime:
                 return await self._run_callable_fallback(message)
 
             raise AgentProviderError(
-                f"Agent {self._agent_name!r} exhausted all providers"
-                f"{f' (last error: {last_error})' if last_error is not None else ''}."
+                _exhausted_chain_message(self._agent_name, attempt_failures, last_error)
             ) from last_error
 
     def stream(
@@ -466,10 +569,27 @@ class AgentRuntime:
             last_error: BaseException | None = None
             child_costs: list[float | None] = []
             pending_fallbacks: list[FallbackTransition] = []
+            attempt_failures: list[tuple[str, str]] = []
 
             with self._invoke_span(operation="stream", streaming=True) as invoke_span:
-                for index, (model_str, provider, provider_key) in enumerate(self._models):
+                for index, (model_str, _eager_provider, provider_key) in enumerate(self._models):
                     prompt_messages = self._build_messages(history, message)
+                    try:
+                        provider = self._ensure_provider(index)
+                    except AgentConfigError as exc:
+                        # Lazy fallback instantiation failed (AJ-69). Skip
+                        # this entry and try the next one in the chain.
+                        _LOGGER.warning(
+                            "Agent %r could not instantiate fallback provider "
+                            "%r for model %r: %s — advancing to the next entry.",
+                            self._agent_name,
+                            provider_key,
+                            model_str,
+                            exc,
+                        )
+                        last_error = exc
+                        attempt_failures.append((model_str, f"instantiation: {exc}"))
+                        continue
                     try:
                         collected: list[str] = []
                         async for delta in self._stream_tool_loop(
@@ -487,6 +607,7 @@ class AgentRuntime:
                             yield delta
                     except LLMProviderError as exc:
                         last_error = exc
+                        attempt_failures.append((model_str, str(exc)))
                         next_idx = index + 1
                         if next_idx < len(self._models):
                             next_model, _, next_provider_key = self._models[next_idx]
@@ -511,8 +632,7 @@ class AgentRuntime:
                     return
 
                 raise AgentProviderError(
-                    f"Agent {self._agent_name!r} exhausted all providers"
-                    f"{f' (last error: {last_error})' if last_error is not None else ''}."
+                    _exhausted_chain_message(self._agent_name, attempt_failures, last_error)
                 ) from last_error
 
         return _iterator()
@@ -1103,6 +1223,27 @@ def _resolve_integrations(
             )
         return list(class_attr)  # type: ignore[arg-type]
     return []
+
+
+def _exhausted_chain_message(
+    agent_name: str,
+    attempts: list[tuple[str, str]],
+    last_error: BaseException | None,
+) -> str:
+    """Build the ``AgentProviderError`` body for an exhausted fallback chain.
+
+    Lists every (model, reason) pair the runtime tried so the user can
+    see at a glance which env vars were missing and which providers
+    refused the request. Falls back to the single ``last_error`` rendition
+    when no per-attempt context is available (defensive — should not
+    happen in the normal flow).
+    """
+    if not attempts:
+        if last_error is None:
+            return f"Agent {agent_name!r} exhausted all providers."
+        return f"Agent {agent_name!r} exhausted all providers (last error: {last_error})."
+    rendered_attempts = "; ".join(f"{model} → {reason}" for model, reason in attempts)
+    return f"Agent {agent_name!r} exhausted all providers. Attempts: {rendered_attempts}."
 
 
 def _stringify_tool_result(value: Any) -> str:
