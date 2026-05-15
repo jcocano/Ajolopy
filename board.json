@@ -729,7 +729,7 @@
       "slug": "eval-metrics-builtin",
       "type": "feature",
       "title": "Built-in metrics (exact_match, json_match, llm_judge, contains, not_contains, intent_match, tool_called)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p2",
       "milestone": "v0.1",
       "labels": [
@@ -738,7 +738,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/eval-metrics-builtin",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/62",
       "spec": "specs/eval-metrics-builtin.md",
       "blocks": [
         "AJ-55"
