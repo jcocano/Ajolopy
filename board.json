@@ -1337,15 +1337,15 @@
       "slug": "docs-reference",
       "type": "docs",
       "title": "Reference docs for each of the 10 primitives",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "docs",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "docs/docs-reference",
       "pr": null,
       "spec": "specs/docs-reference.md",
       "blocks": [
