@@ -1337,7 +1337,7 @@
       "slug": "docs-reference",
       "type": "docs",
       "title": "Reference docs for each of the 10 primitives",
-      "status": "backlog",
+      "status": "ready",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -1347,7 +1347,7 @@
       "owner": null,
       "branch": null,
       "pr": null,
-      "spec": null,
+      "spec": "specs/docs-reference.md",
       "blocks": [
         "AJ-57"
       ],
@@ -1356,7 +1356,7 @@
       ],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-12",
+      "updated_at": "2026-05-14",
       "closed_at": null
     },
     {
