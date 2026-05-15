@@ -940,15 +940,15 @@
       "slug": "cli-generate",
       "type": "feature",
       "title": "ajolopy generate <kind> <name> scaffolders (agent/tool/workflow/eval/controller/module/service)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "cli",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/cli-generate",
       "pr": null,
       "spec": "specs/cli-generate.md",
       "blocks": [],
