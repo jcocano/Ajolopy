@@ -1,0 +1,5 @@
+{"input": "What does the first day at Tlaltipac look like?", "expected": {"topic": "onboarding day one", "expected_sections": ["handbook/onboarding.md#day-one", "handbook/welcome.md#what-this-handbook-covers"]}}
+{"input": "How do I get my local development environment running?", "expected": {"topic": "dev environment bootstrap", "expected_sections": ["handbook/dev-environment.md#getting-set-up", "handbook/dev-environment.md#local-services"]}}
+{"input": "What is the rule for opening pull requests?", "expected": {"topic": "code review pull request", "expected_sections": ["handbook/code-review.md#opening-a-pull-request", "handbook/code-review.md#reviewer-expectations"]}}
+{"input": "What happens if I accidentally leak a secret?", "expected": {"topic": "secrets handling and rotation", "expected_sections": ["handbook/security.md#secrets-handling", "handbook/security.md#incident-response"]}}
+{"input": "How many vacation days am I expected to take per year?", "expected": {"topic": "time off annual minimum", "expected_sections": ["handbook/time-off.md#annual-minimum", "handbook/time-off.md#requesting-time-off"]}}

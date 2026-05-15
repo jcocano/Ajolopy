@@ -182,6 +182,14 @@ that would require an eleventh decorator goes to v0.2+.
   Exercises `@Agent` + `@Tool` + `@Stream` + `@Eval` end-to-end and ships
   pre-generated `Dockerfile.prod` + `fly.toml` so it can be deployed in
   one `fly deploy`.
+- **[`examples/contextual-rag/`](./examples/contextual-rag/)** —
+  production-grade RAG agent with contextual chunking, hybrid
+  retrieval, and citation-enforcing evals over a synthetic handbook.
+  Builds on `dogfood/docsbot` with header-based chunks, a 0.4 keyword
+  + 0.6 semantic-hash hybrid scorer, and three eval metrics (one
+  LLM-as-judge, two deterministic) that fail when citations are
+  missing or point at the wrong section. Documents the upgrade path to
+  `QdrantRetriever` / `PgvectorRetriever` for real embeddings.
 
 ## Where to go next
 

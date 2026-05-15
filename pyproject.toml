@@ -239,6 +239,11 @@ executionEnvironments = [
     # smoke test.
     { root = "examples/local-ollama", extraPaths = ["examples/local-ollama/src"] },
     { root = "examples/local-ollama/tests", extraPaths = ["examples/local-ollama/src"], reportMissingParameterType = "none", reportUnknownParameterType = "none", reportPrivateUsage = "none", reportUnusedClass = "none", reportUnknownMemberType = "none", reportUnknownVariableType = "none", reportUnknownArgumentType = "none" },
+    # AJ-67 — the contextual RAG launch example follows the same pattern.
+    # `extraPaths` adds the project's `src/` so `contextual_rag.*` modules
+    # resolve from the eval suite, the smoke test, and the build script.
+    { root = "examples/contextual-rag", extraPaths = ["examples/contextual-rag/src"] },
+    { root = "examples/contextual-rag/tests", extraPaths = ["examples/contextual-rag/src"], reportMissingParameterType = "none", reportUnknownParameterType = "none", reportPrivateUsage = "none", reportUnusedClass = "none", reportUnknownMemberType = "none", reportUnknownVariableType = "none", reportUnknownArgumentType = "none" },
 ]
 
 # ---------------------------------------------------------------------------
