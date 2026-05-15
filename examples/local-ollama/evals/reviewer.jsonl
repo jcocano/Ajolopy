@@ -1,0 +1,5 @@
+{"input": "import os\nimport math\n\n\ndef add(a, b):\n    return a + b\n", "expected": {"issue": "unused import", "id": "unused-import"}}
+{"input": "def square(n):\n    return n * n\n", "expected": {"issue": "missing return type annotation", "id": "missing-return-type"}}
+{"input": "def first_three(items):\n    out = []\n    for i in range(len(items) + 1):\n        out.append(items[i])\n    return out\n", "expected": {"issue": "off-by-one indexing error", "id": "off-by-one"}}
+{"input": "def append_item(item, bucket=[]):\n    bucket.append(item)\n    return bucket\n", "expected": {"issue": "mutable default argument", "id": "mutable-default-arg"}}
+{"input": "def greet(name):\n    return f\"Hello, {name}\n", "expected": {"issue": "syntax error", "id": "syntax-error"}}
