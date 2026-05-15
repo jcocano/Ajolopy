@@ -108,18 +108,18 @@ warnings. `✗` for failures (causes exit 1).
 
 ## Acceptance criteria
 
-- [ ] Each of the 12 checks runs in order and reports
+- [x] Each of the 12 checks runs in order and reports
       `passed/failed/warning/skipped`.
-- [ ] All-pass → exit 0.
-- [ ] Any fail → exit 1.
-- [ ] Warnings don't trigger exit 1.
-- [ ] `--ci` JSON matches schema.
-- [ ] `--skip python_version` skips that check (still appears as
+- [x] All-pass → exit 0.
+- [x] Any fail → exit 1.
+- [x] Warnings don't trigger exit 1.
+- [x] `--ci` JSON matches schema.
+- [x] `--skip python_version` skips that check (still appears as
       `skipped`).
-- [ ] Provider health checks gracefully degrade when network is
+- [x] Provider health checks gracefully degrade when network is
       unavailable (treat as warning, not failure).
-- [ ] MCP server check uses a 5s timeout per server.
-- [ ] Total run completes in <30s even with all checks engaged.
+- [x] MCP server check uses a 5s timeout per server.
+- [x] Total run completes in <30s even with all checks engaged.
 
 ## Implementation pointers
 
@@ -133,4 +133,34 @@ warnings. `✗` for failures (causes exit 1).
 
 ## Implementation notes
 
-(Empty — populated by the implementation PR.)
+- Single-file implementation in `src/ajolopy/cli/commands/doctor.py`.
+  Each check is a small class with `name: str` + `async def run() ->
+  tuple[bool | None, str]`. Tri-state outcome: `True` = pass, `False`
+  = fail, `None` = warn or skip (the runner reads the message prefix
+  to disambiguate — messages starting with `"skipped"` are skips,
+  every other `None` outcome is a warning).
+- `LLMProvider.health_check()` lives on the ABC with a default that
+  raises `NotImplementedError`. Each concrete provider (Anthropic,
+  OpenAI, Gemini) overrides it with the cheapest network call
+  (`models.list(limit=1)` for Anthropic, `models.list()` for OpenAI,
+  one-page iteration over `client.aio.models.list()` for Gemini), and
+  wraps SDK exceptions in the provider's own `*ProviderError` so the
+  doctor never sees raw `httpx` internals. The universal-OpenAI
+  adapter inherits the default since its multi-prefix shape doesn't
+  map to a single endpoint.
+- Provider check downgrade rule: missing env var → `skip`, constructor
+  raises → `fail`, network/timeout error from `health_check()` → `warn`.
+  This keeps CI green when an upstream is degraded but still catches
+  structural problems (wrong key shape, missing SDK).
+- OTel check is a short TCP `socket.create_connection`; no exporter SDK
+  required so the check stays installable even without the `otel` extra.
+- MCP check walks the process-wide `MCPRegistry.registered_classes()`
+  and calls `connect_all_for(cls)` with a 5s timeout per class.
+- Renderer split: `_render_tty` (emoji on real TTYs, ASCII `[OK]` /
+  `[FAIL]` / `[WARN]` / `[SKIP]` brackets when `_is_tty` returns False)
+  vs `_render_ci` (deterministic JSON with `schema_version: 1`).
+- Tests: `tests/cli/doctor/` with 64 cases across
+  `test_individual_checks.py`, `test_runner.py`, `test_output.py`. All
+  network calls are mocked (`AsyncMock`/`MagicMock` against the SDK
+  clients + monkeypatched `socket.create_connection`); pytest is
+  hermetic — no live HTTP, no real SDK calls.

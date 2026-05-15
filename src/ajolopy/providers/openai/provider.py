@@ -233,6 +233,20 @@ class OpenAIProvider(LLMProvider):
     def supports_tool_calling(self) -> bool:
         return True
 
+    @override
+    async def health_check(self) -> None:
+        """Reach the OpenAI API with the cheapest call available.
+
+        Uses ``models.list()`` because it requires only a valid API key
+        and does not bill tokens. Translates SDK exceptions to
+        :class:`OpenAIProviderError` so the doctor renderer never sees
+        raw ``httpx`` / SDK internals.
+        """
+        try:
+            await self._client.models.list()
+        except RETRIABLE_SDK_EXCEPTIONS as exc:
+            raise OpenAIProviderError(f"OpenAI SDK error during health_check(): {exc}") from exc
+
     # ------------------------------------------------------------------
     # internal helpers
     # ------------------------------------------------------------------
