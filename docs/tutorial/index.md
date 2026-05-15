@@ -12,7 +12,7 @@ specialist inside a larger team.
 
 | Step                                          | Lines    | What it adds                                                                                                            |
 | --------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
-| [1. Hello to prod](step-1-hello.md)           | ~12      | One agent, one tool, one streaming endpoint — with `fallback=`, `trace=True`, env validation and SSE wired in.          |
+| [1. Hello to prod](step-1-hello.md)           | ~12      | One agent, one tool, one streaming endpoint — with `fallback=`, always-on OpenTelemetry, env validation and SSE wired in.          |
 | [2. Evals — block regressions](step-2-evals.md) | +12      | An `@Eval` suite with `@Metric` methods that blocks PRs the moment your scores drop. Regression detection on every run. |
 | [3. Equipo — multi-agent + MCP](step-3-team.md) | +30      | Three specialists routed by an LLM coordinator, with an `@MCP` integration block and a workflow-level `@Eval`.          |
 
@@ -71,6 +71,6 @@ When you finish Step 3 the tutorial closes the loop with pointers to:
 - The standalone
   [`examples/support-agent`](https://github.com/jcocano/Ajolopy/tree/main/examples/support-agent)
   example — the same arc as an installable repo you can fork (`AJ-50`).
-- The [observability recipes](../next-steps.md#put-it-in-production)
+- The [observability recipes](../recipes/observability/index.md)
   (Langfuse / Sentry / Grafana / Honeycomb / Datadog) once you want the
-  `trace=True` data to land somewhere.
+  always-on OTel spans to land somewhere.
