@@ -196,7 +196,12 @@ async def test_openai_to_gemini_cross_provider_fallback(
 
 @pytest.mark.asyncio
 async def test_two_models_same_provider_share_one_instance() -> None:
-    """``_models[i]`` reuses the cached LLMProvider per resolved key."""
+    """``_ensure_provider(i)`` reuses the cached LLMProvider per resolved key.
+
+    AJ-69 made fallback instantiation lazy, so we materialise the two
+    OpenAI fallback entries via ``_ensure_provider`` before asserting
+    the dedup contract still holds.
+    """
 
     _OpenAIOk.instance_count = 0
     register_provider("openai", _OpenAIOk, overwrite=True)
@@ -211,6 +216,10 @@ async def test_two_models_same_provider_share_one_instance() -> None:
         pass
 
     runtime = Demo._agent_runtime  # type: ignore[attr-defined]
+    # Materialise the two fallback entries so the dedup check sees real
+    # instances (post-AJ-69 they start as ``None``).
+    runtime._ensure_provider(1)
+    runtime._ensure_provider(2)
     providers = [entry[1] for entry in runtime._models]
     # Three models, two providers (anthropic + openai). The two openai
     # models must share the same instance.
