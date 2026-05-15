@@ -169,6 +169,13 @@ that would require an eleventh decorator goes to v0.2+.
   OpenAI-compatible provider. **No API key required** — install Ollama,
   `ollama pull llama3.3`, `uv sync && ajolopy dev`, and the streaming
   code reviewer answers `POST /chat` entirely on your laptop.
+- **[`examples/memory-assistant/`](./examples/memory-assistant/)** —
+  persistent task tracker showing `@Agent(memory="redis://...")`
+  end-to-end. A `Memory` escape-hatch wrapper partitions chat history
+  by a request-scoped `session_id`, so two users hitting the same
+  `/chat` endpoint see independent transcripts in Redis. Ships with a
+  `docker-compose.yml` (app + Redis) and a 5-row eval suite whose
+  `memory_isolation` metric catches cross-session leaks.
 - **[`dogfood/docsbot/`](./dogfood/docsbot/)** — Ajolopy's own docs bot,
   the first dogfood app. Answers questions about the framework using an
   in-memory `Retriever` subclass over the project's own `docs/` tree.

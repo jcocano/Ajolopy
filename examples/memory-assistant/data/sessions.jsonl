@@ -1,0 +1,5 @@
+{"session_id": "alice", "turn": 1, "user": "Add 'call mom' to my list", "assistant": "Added 'call mom'. You now have 1 open task."}
+{"session_id": "alice", "turn": 2, "user": "Add 'submit expenses'", "assistant": "Added 'submit expenses'. You now have 2 open tasks."}
+{"session_id": "alice", "turn": 3, "user": "How many tasks do I have open?", "assistant": "You have 2 open tasks."}
+{"session_id": "bob", "turn": 1, "user": "Add 'review pull request'", "assistant": "Added 'review pull request'. You now have 1 open task."}
+{"session_id": "bob", "turn": 2, "user": "How many tasks do I have open?", "assistant": "You have 1 open task."}

@@ -1,0 +1,36 @@
+# docker-compose.yml — local development with a real Redis.
+#
+# The ``app`` service builds the production stage of ``Dockerfile.prod``
+# (which itself is rendered by ``ajolopy deploy docker`` — regenerate it
+# from the framework root with ``cd examples/memory-assistant &&
+# ajolopy deploy docker``).
+#
+# To run only Redis (and start the app via ``ajolopy dev`` outside
+# Docker), use:
+#
+#     docker compose up redis -d
+#
+# That is the recommended flow during development — the dev server gets
+# hot reload from ``ajolopy dev`` while still talking to a real Redis.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+      target: production
+    ports:
+      - "3000:3000"
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
