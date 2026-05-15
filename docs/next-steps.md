@@ -22,6 +22,14 @@ running locally. Here is where to go from here.
   [3-step killer demo tutorial](tutorial/index.md). Fork it, set
   `ANTHROPIC_API_KEY`, and run `uv sync && ajolopy dev` to see every
   primitive in action against a real provider.
+- **[`examples/web-research`](https://github.com/jcocano/Ajolopy/tree/main/examples/web-research)**
+  is the canonical "wire an external HTTP API as a `@Tool`" reference
+  ([`AJ-65`](https://github.com/jcocano/Ajolopy/blob/main/board.json)).
+  A `Researcher` agent that calls the [Tavily](https://tavily.com)
+  search API through one `@Tool` and folds the results into a
+  Markdown-cited answer through a second pure-Python `@Tool`. Ships
+  with an `@Eval` regression suite plus pre-built `Dockerfile.prod` +
+  `fly.toml`.
 - **[`dogfood/docsbot`](https://github.com/jcocano/Ajolopy/tree/main/dogfood/docsbot)**
   is Ajolopy's own docs bot — the first dogfood app
   ([`AJ-54`](https://github.com/jcocano/Ajolopy/blob/main/board.json)).
