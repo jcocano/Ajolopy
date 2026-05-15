@@ -120,35 +120,35 @@ an opt-in API-key env var:
 
 Ollama runs locally and accepts any non-empty placeholder for the key,
 so Ajolopy passes the literal string `"ollama"` to the SDK. The
-framework reads no environment variable for the `ollama:` prefix.
+universal provider reads `OLLAMA_BASE_URL` (and the equivalent
+`${PREFIX}_BASE_URL` for every other supported prefix) at first request
+time and falls back to the baked-in default when unset (AJ-68).
 
-### Remote Ollama (the escape hatch)
+### Remote Ollama / LM Studio / vLLM (the escape hatch)
 
 If you run Ollama on a different machine — a workstation with a GPU, a
-homelab box, a remote VPS — construct
-:class:`~ajolopy.providers.universal_openai.UniversalOpenAIProvider`
-with the `base_urls=` kwarg and register it manually:
+homelab box, a remote VPS — or you swap it for **LM Studio**, **vLLM**,
+or any other OpenAI-compatible local server, set `OLLAMA_BASE_URL` in
+your `.env` (or the shell) and Ajolopy routes there automatically:
 
-```python
-import openai
-
-from ajolopy.providers.universal_openai import UniversalOpenAIProvider
-from ajolopy.providers.registry import register_provider
-
-register_provider(
-    "universal-openai",
-    UniversalOpenAIProvider,
-    overwrite=True,
-)
-# Or pass a pre-built AsyncOpenAI client per prefix:
-provider = UniversalOpenAIProvider(
-    base_urls={"ollama": "http://my-ollama.lan:11434/v1"},
-    # clients={"ollama": openai.AsyncOpenAI(base_url="...", api_key="ollama")},
-)
+```bash
+# In .env or your shell:
+OLLAMA_BASE_URL=http://my-ollama.lan:11434/v1
+# or for LM Studio defaults:
+OLLAMA_BASE_URL=http://127.0.0.1:1234/v1
 ```
 
-The `.env.example` documents `OLLAMA_BASE_URL` as a convention; the
-framework itself does NOT read it.
+No code change required; the env var wins over the baked-in default.
+If you want a programmatic override (e.g. a test that patches the URL
+without touching the environment), the constructor kwarg
+`UniversalOpenAIProvider(base_urls={"ollama": "..."})` still wins over
+the env var.
+
+The `ollama:` prefix is also silenced by default in the pricing
+catalog (AJ-70) — no "Unknown model" warning fires when you run a
+locally-hosted model that has no per-token cost. To silence additional
+custom prefixes (e.g. `vllm:`), pass `pricing_silence={"vllm"}` to
+`AjolopyFactory.create(...)`.
 
 ---
 

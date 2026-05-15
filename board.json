@@ -2,7 +2,7 @@
   "$schema": "./.board-schema.json",
   "version": 1,
   "updated_at": "2026-05-15",
-  "next_id": 71,
+  "next_id": 72,
   "items": [
     {
       "id": "AJ-1",
@@ -1880,6 +1880,29 @@
       "branch": "feature/pricing-catalog-silence-local-models",
       "pr": "https://github.com/jcocano/Ajolopy/pull/117",
       "spec": "specs/pricing-catalog-silence-local-models.md",
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-15",
+      "updated_at": "2026-05-15",
+      "closed_at": "2026-05-15"
+    },
+    {
+      "id": "AJ-71",
+      "slug": "example-ollama-aj68-migration",
+      "type": "docs",
+      "title": "Migrate local-ollama README to use AJ-68 OLLAMA_BASE_URL env var",
+      "status": "done",
+      "priority": "p2",
+      "milestone": "v0.1.x",
+      "labels": [
+        "docs",
+        "examples"
+      ],
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "docs/example-ollama-aj68-migration",
+      "pr": null,
+      "spec": "specs/example-ollama-aj68-migration.md",
       "blocks": [],
       "blocked_by": [],
       "estimate": null,
