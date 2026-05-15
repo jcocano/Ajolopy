@@ -1751,7 +1751,7 @@
       "slug": "example-web-research",
       "type": "docs",
       "title": "Example: web research agent (Tavily @Tool integration)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1761,7 +1761,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "docs/example-web-research",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/108",
       "spec": "specs/example-web-research.md",
       "blocks": [],
       "blocked_by": [],
