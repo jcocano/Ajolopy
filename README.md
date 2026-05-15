@@ -36,6 +36,14 @@ uv run pre-commit install
 uv run pytest
 ```
 
+## Examples
+
+- **[`examples/support-agent/`](./examples/support-agent/)** — the runnable
+  companion to the [3-step killer demo tutorial](https://jcocano.github.io/Ajolopy/tutorial/).
+  Fork it, set `ANTHROPIC_API_KEY`, run `uv sync && ajolopy dev`, and watch
+  every primitive from `@Agent` through `@Workflow` and `@MCP` answer real
+  HTTP requests.
+
 ## Contributing
 
 Work is tracked on a PM-style board in [`board.json`](./board.json), validated

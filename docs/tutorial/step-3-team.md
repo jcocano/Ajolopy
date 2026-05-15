@@ -300,8 +300,8 @@ end to end. From here:
   pattern. Search the page for any kwarg you saw in the tutorial that
   you want to dig into.
 - **Standalone example app (`AJ-50`)** — the same arc as a runnable
-  repo you can fork and deploy. Tracked at
-  [`board.json`](https://github.com/jcocano/ajolopy/blob/main/board.json).
+  repo you can fork and deploy. Live at
+  [`examples/support-agent`](https://github.com/jcocano/Ajolopy/tree/main/examples/support-agent).
 - **[Observability recipes](../next-steps.md#put-it-in-production)** —
   now that `trace=True` is emitting spans, plug Langfuse / Sentry /
   Grafana / Honeycomb / Datadog into the standard OTel exporter.
