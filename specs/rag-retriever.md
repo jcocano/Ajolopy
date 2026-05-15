@@ -158,37 +158,37 @@ Created idempotently on first use.
 ## Acceptance criteria
 
 ### `Retriever` ABC + dataclasses
-- [ ] `Document` and `RetrievalHit` are frozen + slotted dataclasses.
-- [ ] `Retriever` cannot be instantiated directly.
-- [ ] Subclass missing one method still abstract.
+- [x] `Document` and `RetrievalHit` are frozen + slotted dataclasses.
+- [x] `Retriever` cannot be instantiated directly.
+- [x] Subclass missing one method still abstract.
 
 ### `QdrantRetriever`
-- [ ] Roundtrip: `index([doc1, doc2])` → `query("q")` returns hits
+- [x] Roundtrip: `index([doc1, doc2])` → `query("q")` returns hits
       with scores. Verified against `fakeredis`-style mock — actually
       use Qdrant in-memory mode (`qdrant_client.QdrantClient(location=":memory:")`) for tests.
-- [ ] Missing `ajolopy[qdrant]` extra → `RetrieverDependencyError`
+- [x] Missing `ajolopy[qdrant]` extra → `RetrieverDependencyError`
       at construction.
-- [ ] Collection created on first index call with correct dim.
-- [ ] `clear()` deletes the collection.
-- [ ] `k` parameter limits hits.
-- [ ] Multiple `index` calls accumulate (upsert).
+- [x] Collection created on first index call with correct dim.
+- [x] `clear()` deletes the collection.
+- [x] `k` parameter limits hits.
+- [x] Multiple `index` calls accumulate (upsert).
 
 ### `PgvectorRetriever`
-- [ ] Roundtrip (gated on `AJOLOPY_TEST_PGVECTOR_URL` env var; skipped
+- [x] Roundtrip (gated on `AJOLOPY_TEST_PGVECTOR_URL` env var; skipped
       in CI; covered by class-instantiation + connection-error tests).
-- [ ] Missing `ajolopy[pgvector]` extra → `RetrieverDependencyError`.
-- [ ] Schema created idempotently.
+- [x] Missing `ajolopy[pgvector]` extra → `RetrieverDependencyError`.
+- [x] Schema created idempotently.
 
 ### `resolve_retriever`
-- [ ] All URL schemes resolve correctly.
-- [ ] `None` → `None`.
-- [ ] Instance → verbatim.
-- [ ] Bad scheme → `RetrieverConfigError`.
+- [x] All URL schemes resolve correctly.
+- [x] `None` → `None`.
+- [x] Instance → verbatim.
+- [x] Bad scheme → `RetrieverConfigError`.
 
 ### Public re-exports
-- [ ] `from ajolopy.rag import (...)` works.
-- [ ] `ajolopy.rag.__all__` matches.
-- [ ] No top-level re-exports.
+- [x] `from ajolopy.rag import (...)` works.
+- [x] `ajolopy.rag.__all__` matches.
+- [x] No top-level re-exports.
 
 ## Implementation pointers
 
@@ -204,4 +204,58 @@ Created idempotently on first use.
 
 ## Implementation notes
 
-(Empty — populated by the implementation PR.)
+- **Provider resolution.** Embedding-model strings route through the
+  existing `resolve_provider` registry (`text-embedding-3-*` already
+  resolves to the `openai` provider via the default routing table).
+  `resolve_embedding_provider` (in `src/ajolopy/rag/_embeddings.py`)
+  wraps the registry lookup + instantiation so retriever callers see
+  uniform `RetrieverConfigError` / `RetrieverRuntimeError` instead of
+  registry-specific exception types. The provider is cached on the
+  retriever instance and resolved lazily on first `index` / `query`
+  so test fakes can register *after* construction.
+
+- **Embedding-dim defaults.** Hard-coded for the three v0.1 OpenAI
+  embedding models (`text-embedding-3-small=1536`,
+  `text-embedding-3-large=3072`, `text-embedding-ada-002=1536`). Any
+  other model forces the caller to pass `embedding_dim=<int>`
+  explicitly — fail-fast at construction time, since collection /
+  table creation needs the dim before the first embedding round-trip.
+
+- **Qdrant point ids.** Qdrant only accepts UUID or unsigned-int point
+  ids; the caller's `Document.id` is mapped through `uuid.uuid5` with a
+  module-level namespace UUID so the mapping stays deterministic across
+  processes. The original `Document.id` is preserved verbatim inside the
+  point's payload (`payload["doc_id"]`) and returned on every hit.
+
+- **Qdrant URL grammar.** `qdrant://host:port` → `AsyncQdrantClient(host, port)`;
+  `:memory:` / `qdrant://:memory:` → in-process `location=":memory:"`
+  mode; raw `http(s)://` URLs pass through unchanged. Tests use the
+  in-process mode so no Qdrant container is required.
+
+- **pgvector URL grammar.** `pgvector://...?table=<name>` is rewritten
+  to `postgresql://...` (without the `table=` query string) before
+  asyncpg sees it; the `?table=` value overrides the constructor's
+  `table=` kwarg so the resolver can encode the destination table in a
+  single URL.
+
+- **pgvector schema lifecycle.** `CREATE EXTENSION IF NOT EXISTS vector`
+  + `CREATE TABLE IF NOT EXISTS` + `CREATE INDEX IF NOT EXISTS` run
+  idempotently behind an asyncio lock on first use. The vector codec is
+  registered per pooled connection through asyncpg's `init=` callback so
+  every borrowed connection encodes / decodes `vector(N)` natively.
+  Cosine similarity is computed as `1 - (embedding <=> $1)` so the
+  hit score has "higher is more similar" semantics consistent with
+  `QdrantRetriever`.
+
+- **Resolver scope.** `resolve_retriever` accepts `None` / instance /
+  subclass / `qdrant://` / `pgvector://`. The signature already takes
+  an `embedding_model` kwarg so wiring `@Agent(retriever=...)` in v0.2
+  is a no-op on the resolver side.
+
+- **Public surface re-exports.** Only the 10 names in
+  `ajolopy.rag.__all__` (`Document`, `PgvectorRetriever`,
+  `QdrantRetriever`, `RetrievalHit`, `Retriever`,
+  `RetrieverConfigError`, `RetrieverDependencyError`,
+  `RetrieverError`, `RetrieverRuntimeError`, `resolve_retriever`).
+  Nothing leaks into `ajolopy` directly — RAG stays a sub-package in
+  v0.1, mirroring `ajolopy.memory`.

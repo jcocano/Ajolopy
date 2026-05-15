@@ -74,6 +74,17 @@ memory-all = [
     "asyncpg>=0.30",
     "motor>=3.6",
 ]
+# RAG retrievers (AJ-62): each backend's SDK is opt-in so importing
+# `ajolopy.rag` stays dependency-free. Without the matching extra,
+# `QdrantRetriever` / `PgvectorRetriever` raise
+# `RetrieverDependencyError` at construction with a `pip install` hint.
+qdrant = [
+    "qdrant-client>=1.10",
+]
+pgvector = [
+    "asyncpg>=0.30",
+    "pgvector>=0.3",
+]
 
 [project.urls]
 Homepage = "https://github.com/jcocano/ajolopy"
