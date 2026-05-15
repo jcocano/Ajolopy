@@ -1279,7 +1279,7 @@
       "slug": "docs-quickstart",
       "type": "docs",
       "title": "Quickstart (5 min to hello world)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -1288,7 +1288,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "docs/docs-quickstart",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/74",
       "spec": "specs/docs-quickstart.md",
       "blocks": [],
       "blocked_by": [
