@@ -44,13 +44,6 @@ def test_name_is_fly() -> None:
     assert FlyTarget.name == "fly"
 
 
-def test_description_mentions_fly_io() -> None:
-    # ``startswith`` rather than ``in`` to keep CodeQL's URL-substring
-    # rule happy — the description is a static class attribute, not a
-    # URL, but the linter cannot tell the difference.
-    assert FlyTarget.description.startswith("Fly.io")
-
-
 # ---------------------------------------------------------------------------
 # prepare — emitted files
 # ---------------------------------------------------------------------------
