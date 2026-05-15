@@ -87,12 +87,15 @@ BRANCH_PREFIX: Mapping[ItemType, str] = {
 }
 
 # FSM Protocol — allowed status transitions.
-# Any other transition is rejected by `cmd_status`. Items always reach `done`
-# through `in_progress` → `in_review` so the workflow is enforced uniformly.
+# Any other transition is rejected by `cmd_status`. The canonical workflow
+# is `in_progress → done` directly (the feature PR includes the `done`
+# transition as its last commit per AGENTS.md). `in_review` is kept as a
+# valid intermediate state for items that need the explicit "PR is open"
+# signal (e.g. multi-week stories).
 ALLOWED_TRANSITIONS: Mapping[ItemStatus, frozenset[ItemStatus]] = {
     "backlog": frozenset({"ready", "cancelled"}),
     "ready": frozenset({"in_progress", "backlog", "cancelled"}),
-    "in_progress": frozenset({"blocked", "in_review", "cancelled"}),
+    "in_progress": frozenset({"blocked", "in_review", "done", "cancelled"}),
     "blocked": frozenset({"in_progress", "cancelled"}),
     "in_review": frozenset({"in_progress", "done", "cancelled"}),
     "done": frozenset(),
