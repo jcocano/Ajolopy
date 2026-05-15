@@ -940,7 +940,7 @@
       "slug": "cli-generate",
       "type": "feature",
       "title": "ajolopy generate <kind> <name> scaffolders (agent/tool/workflow/eval/controller/module/service)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -957,8 +957,8 @@
       ],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-14",
-      "closed_at": null
+      "updated_at": "2026-05-15",
+      "closed_at": "2026-05-15"
     },
     {
       "id": "AJ-35",
