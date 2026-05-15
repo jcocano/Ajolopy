@@ -651,15 +651,15 @@
       "slug": "fallback-router",
       "type": "feature",
       "title": "Cross-provider fallback observability + @Workflow.coordinator_fallback",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "provider",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/fallback-router",
       "pr": null,
       "spec": "specs/fallback-router.md",
       "blocks": [],
