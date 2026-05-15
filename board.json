@@ -1364,15 +1364,15 @@
       "slug": "docs-example-support",
       "type": "docs",
       "title": "Full support-agent example (the 3-step arc end-to-end)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "docs",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "docs/docs-example-support",
       "pr": null,
       "spec": "specs/docs-example-support.md",
       "blocks": [
