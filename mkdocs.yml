@@ -76,6 +76,8 @@ nav:
           - Grafana stack: recipes/observability/grafana.md
           - Honeycomb: recipes/observability/honeycomb.md
           - Datadog: recipes/observability/datadog.md
+  - Contributing:
+      - "Releasing to PyPI": contributing/release.md
   - Next steps: next-steps.md
 
 markdown_extensions:
