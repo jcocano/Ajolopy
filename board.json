@@ -1391,7 +1391,7 @@
       "slug": "docs-observability-recipes",
       "type": "docs",
       "title": "Observability recipes (Langfuse, Sentry, Grafana, Honeycomb, Datadog)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1400,7 +1400,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "docs/docs-observability-recipes",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/85",
       "spec": "specs/docs-observability-recipes.md",
       "blocks": [],
       "blocked_by": [
