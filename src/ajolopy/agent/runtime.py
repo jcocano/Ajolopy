@@ -297,6 +297,7 @@ class AgentRuntime:
         message: str,
         *,
         cost_sink: list[float | None] | None = None,
+        tool_calls_sink: list[str] | None = None,
     ) -> str:
         """Run the agent to completion and return the final assistant text.
 
@@ -304,6 +305,12 @@ class AgentRuntime:
         chat-span cost (including ``None`` for unknown models) is appended
         to the list in addition to the agent's own root-span roll-up.
         Public consumers leave it as ``None``.
+
+        ``tool_calls_sink`` is the analogous hook for tool-dispatch
+        capture: when supplied, every SUCCESSFULLY dispatched tool's
+        name is appended in call order. Validation errors and tool
+        exceptions do NOT append — :func:`tool_called` semantically
+        asks "did the agent USE the tool", not "did it try".
         """
         history = await self._load_history()
         prompt_messages = self._build_messages(history, message)
@@ -326,6 +333,7 @@ class AgentRuntime:
                         wire_tools=wire_tools,
                         child_costs=child_costs,
                         cost_sink=cost_sink,
+                        tool_calls_sink=tool_calls_sink,
                     )
                 except LLMProviderError as exc:
                     last_error = exc
@@ -352,11 +360,17 @@ class AgentRuntime:
         message: str,
         *,
         cost_sink: list[float | None] | None = None,
+        tool_calls_sink: list[str] | None = None,
     ) -> AsyncIterator[str]:
         """Stream the agent's response one delta at a time.
 
         ``cost_sink`` mirrors :meth:`run`: a private orchestrator hook for
         collecting per-chat costs into a caller-owned accumulator.
+
+        ``tool_calls_sink`` mirrors :meth:`run`: a private orchestrator
+        hook that captures every successfully-dispatched tool's name in
+        call order. Validation errors and tool exceptions are NOT
+        appended.
         """
 
         async def _iterator() -> AsyncIterator[str]:
@@ -378,6 +392,7 @@ class AgentRuntime:
                             wire_tools=wire_tools,
                             child_costs=child_costs,
                             cost_sink=cost_sink,
+                            tool_calls_sink=tool_calls_sink,
                         ):
                             collected.append(delta)
                             yield delta
@@ -415,6 +430,7 @@ class AgentRuntime:
         wire_tools: list[Tool] | None,
         child_costs: list[float | None],
         cost_sink: list[float | None] | None = None,
+        tool_calls_sink: list[str] | None = None,
     ) -> str:
         """Drive the function-calling loop until a tool-free response.
 
@@ -449,6 +465,7 @@ class AgentRuntime:
                 agent_instance=agent_instance,
                 tool_calls=response.tool_calls,
                 iteration=iteration + 1,
+                tool_calls_sink=tool_calls_sink,
             )
             prompt_messages.extend(tool_results)
         # Unreachable — the loop returns or raises in every iteration.
@@ -464,6 +481,7 @@ class AgentRuntime:
         wire_tools: list[Tool] | None,
         child_costs: list[float | None],
         cost_sink: list[float | None] | None = None,
+        tool_calls_sink: list[str] | None = None,
     ) -> AsyncIterator[str]:
         """Stream text deltas, transparently handling tool-call rounds."""
         for iteration in range(self._max_tool_iterations + 1):
@@ -555,6 +573,7 @@ class AgentRuntime:
                 agent_instance=agent_instance,
                 tool_calls=tool_calls,
                 iteration=iteration + 1,
+                tool_calls_sink=tool_calls_sink,
             )
             prompt_messages.extend(tool_results)
         raise AgentToolLoopError(
@@ -648,8 +667,23 @@ class AgentRuntime:
         agent_instance: Any,
         tool_calls: list[ToolCall],
         iteration: int,
+        tool_calls_sink: list[str] | None = None,
     ) -> list[Message]:
-        """Dispatch each ``ToolCall`` and return one ``tool_result`` per call."""
+        """Dispatch each ``ToolCall`` and return one ``tool_result`` per call.
+
+        ``tool_calls_sink`` is appended with each SUCCESSFULLY dispatched
+        tool's name in call order. Validation errors and tool exceptions
+        do NOT append — :func:`tool_called` asks "did the agent USE the
+        tool", not "did it try".
+
+        Concurrent dispatch keeps the per-call order deterministic by
+        running the gather and then collecting names from the matching
+        binding state on each non-error result.
+        """
+        # ``asyncio.gather`` runs the dispatches concurrently; the
+        # returned list preserves the input order, so iterating in
+        # ``tool_calls`` order gives us a stable append sequence even
+        # when individual tool methods finish out of order.
         tasks = [
             self._execute_single_tool(
                 agent_instance=agent_instance,
@@ -658,7 +692,12 @@ class AgentRuntime:
             )
             for call in tool_calls
         ]
-        return await asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks)
+        if tool_calls_sink is not None:
+            for call, result in zip(tool_calls, results, strict=True):
+                if not result.is_error:
+                    tool_calls_sink.append(call.name)
+        return results
 
     async def _execute_single_tool(
         self,

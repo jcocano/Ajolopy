@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from ajolopy import Agent, Eval, Metric
+from ajolopy import Agent, Eval, Metric, Tool
 from ajolopy.eval import EvalRun, EvalRunner
-from ajolopy.providers import Response
+from ajolopy.providers import Response, ToolCall
 
 
 @pytest.mark.asyncio
@@ -227,3 +227,61 @@ async def test_target_invoked_with_case_input(scripted_fake: type, fixtures_dir:
     assert "where is my order?" in seen_messages
     assert "cancel my order" in seen_messages
     assert "hello" in seen_messages
+
+
+@pytest.mark.asyncio
+async def test_tool_calls_captured_into_eval_output(
+    scripted_fake: type, fixtures_dir: Path
+) -> None:
+    """Agent-target cases stamp dispatched tool names onto ``EvalOutput.tool_calls``.
+
+    Locks the cross-cut wired in AJ-26: the runner allocates a fresh
+    ``tool_calls_sink=[]`` per case, threads it through
+    ``AgentRuntime.run``, and exposes the captured tuple via
+    :attr:`EvalOutput.tool_calls`.
+
+    Uses ``concurrency=1`` so the response queue is consumed
+    deterministically across the three cases (each case calls the
+    provider twice — tool_call round, then final-text round).
+    """
+    _ = scripted_fake
+
+    @Agent(model="claude-sonnet-4-7", system="…")
+    class Support:
+        @Tool(description="Look up an order")
+        def lookup_order(self) -> str:
+            return "shipped"
+
+    provider = Support._agent_runtime._models[0][1]  # type: ignore[attr-defined]
+    # Six entries: three (tool_call, final) pairs.
+    provider.responses = []
+    for i in range(3):
+        provider.responses.append(
+            Response(
+                text="",
+                tool_calls=[ToolCall(id=f"c{i}", name="lookup_order", arguments={})],
+                tokens_in=1,
+                tokens_out=1,
+                finish_reason="tool_calls",
+            )
+        )
+        provider.responses.append(
+            Response(text=f"done {i}", tokens_in=1, tokens_out=1, finish_reason="stop")
+        )
+
+    @Eval(
+        agent=Support,
+        dataset=str(fixtures_dir / "support.jsonl"),
+        threshold=0.0,
+        concurrency=1,
+    )
+    class _Suite:
+        @Metric
+        def passthrough(self, output, expected) -> float:
+            _ = (output, expected)
+            return 1.0
+
+    run = await EvalRunner().run(_Suite)
+    for case in run.cases:
+        assert case.output is not None
+        assert case.output.tool_calls == ("lookup_order",)
