@@ -1869,7 +1869,7 @@
       "slug": "pricing-catalog-silence-local-models",
       "type": "feature",
       "title": "Silence pricing-catalog warning or accept overrides for local/custom models",
-      "status": "backlog",
+      "status": "ready",
       "priority": "p2",
       "milestone": "v0.1.x",
       "labels": [
@@ -1879,7 +1879,7 @@
       "owner": null,
       "branch": null,
       "pr": null,
-      "spec": null,
+      "spec": "specs/pricing-catalog-silence-local-models.md",
       "blocks": [],
       "blocked_by": [],
       "estimate": null,
