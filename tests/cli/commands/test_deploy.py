@@ -188,25 +188,6 @@ def test_yes_flag_is_accepted_without_error(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Stub targets — no files written
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    ("target", "board_id"),
-    [
-        ("vercel", "AJ-45"),
-    ],
-)
-def test_stub_target_writes_nothing(tmp_path: Path, target: str, board_id: str) -> None:
-    code, stdout, _stderr = _run(_namespace(target, out_dir=tmp_path), cwd=tmp_path)
-    assert code == EXIT_OK
-    assert board_id in stdout
-    # Nothing on disk.
-    assert list(tmp_path.iterdir()) == []
-
-
-# ---------------------------------------------------------------------------
 # Fly target — real implementation (AJ-42)
 # ---------------------------------------------------------------------------
 
@@ -267,6 +248,78 @@ def test_render_writes_render_yaml(tmp_path: Path) -> None:
     # Both next-step strings reach stdout.
     assert "Commit and push the generated render.yaml to your repo." in stdout
     assert "Visit https://dashboard.render.com/blueprints to apply the blueprint." in stdout
+
+
+# ---------------------------------------------------------------------------
+# Vercel target — warning-gate CLI integration (AJ-45)
+# ---------------------------------------------------------------------------
+
+
+def test_vercel_with_yes_writes_vercel_json(tmp_path: Path) -> None:
+    code, stdout, stderr = _run(
+        _namespace("vercel", out_dir=tmp_path, yes=True),
+        cwd=tmp_path,
+    )
+    assert code == EXIT_OK, stderr
+    manifest = tmp_path / "vercel.json"
+    assert manifest.is_file()
+    assert "vercel.json" in stdout
+    # Sanity check on the payload — the unit tests assert the full shape.
+    assert '"@vercel/python"' in manifest.read_text(encoding="utf-8")
+
+
+def test_vercel_with_yes_prints_next_steps(tmp_path: Path) -> None:
+    _, stdout, _ = _run(
+        _namespace("vercel", out_dir=tmp_path, yes=True),
+        cwd=tmp_path,
+    )
+    assert "vercel login" in stdout
+    assert "vercel link" in stdout
+    assert "vercel deploy --prod" in stdout
+
+
+def test_vercel_user_declines_exits_user_abort(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When the user declines the warning gate, the CLI exits 1 and writes nothing."""
+    _install_vercel_target_with_stdin(monkeypatch, "n\n")
+    code, _stdout, stderr = _run(_namespace("vercel", out_dir=tmp_path), cwd=tmp_path)
+    assert code == EXIT_USER_ABORT
+    assert "vercel" in stderr.lower()
+    assert not (tmp_path / "vercel.json").exists()
+
+
+def test_vercel_user_accepts_via_injected_stdin_writes_manifest(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Accepting the gate via injected stdin yields the same result as ``--yes``."""
+    _install_vercel_target_with_stdin(monkeypatch, "y\n")
+    code, stdout, stderr = _run(_namespace("vercel", out_dir=tmp_path), cwd=tmp_path)
+    assert code == EXIT_OK, stderr
+    assert (tmp_path / "vercel.json").is_file()
+    assert "vercel.json" in stdout
+
+
+def _install_vercel_target_with_stdin(
+    monkeypatch: pytest.MonkeyPatch,
+    stdin_text: str,
+) -> None:
+    """Swap the registered ``vercel`` target for one with an injected stdin.
+
+    The new registry is a snapshot of the live one, so every other
+    target (``docker`` / ``fly`` / ``railway`` / ``render``) keeps its
+    real registration — only the slot under test gets swapped.
+    """
+    from ajolopy.cli.deploy.registry import _REGISTRY
+    from ajolopy.cli.deploy.vercel import VercelTarget
+
+    target = VercelTarget(stdin=io.StringIO(stdin_text), stdout=io.StringIO())
+    monkeypatch.setattr(
+        "ajolopy.cli.deploy.registry._REGISTRY",
+        {**_REGISTRY, "vercel": target},
+    )
 
 
 # ---------------------------------------------------------------------------
