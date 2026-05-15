@@ -109,24 +109,24 @@ under `Contributing:` — pick the cleaner option, document why).
 
 ## Acceptance criteria
 
-- [ ] `README.md` reflects v0.1-shipping state (not pre-alpha).
-- [ ] `README.md` ships an install command in the first 30 lines.
-- [ ] `README.md` ships the 12-line killer-demo snippet (Step 1 from
+- [x] `README.md` reflects v0.1-shipping state (not pre-alpha).
+- [x] `README.md` ships an install command in the first 30 lines.
+- [x] `README.md` ships the 12-line killer-demo snippet (Step 1 from
       the AJ-48 tutorial) verbatim.
-- [ ] `README.md` links to: Quickstart, Tutorial, Reference,
+- [x] `README.md` links to: Quickstart, Tutorial, Reference,
       Observability recipes, Contributing, examples directory.
-- [ ] `README.md` drops `@Metric` from the 10-primitives table or
+- [x] `README.md` drops `@Metric` from the 10-primitives table or
       footnotes that it's bundled with `@Eval` (AJ-5 was cancelled
       and rolled into AJ-4).
-- [ ] `docs/launch/index.md` overview page.
-- [ ] `docs/launch/hn-post.md` — title + body draft ready to paste.
-- [ ] `docs/launch/x-thread.md` — 10–15 numbered posts.
-- [ ] `docs/launch/demo-video-script.md` — shot list + dialogue +
+- [x] `docs/launch/index.md` overview page.
+- [x] `docs/launch/hn-post.md` — title + body draft ready to paste.
+- [x] `docs/launch/x-thread.md` — 10–15 numbered posts.
+- [x] `docs/launch/demo-video-script.md` — shot list + dialogue +
       timing.
-- [ ] `mkdocs.yml` nav extended to surface the launch section.
-- [ ] `uv run --group docs mkdocs build --strict` passes.
-- [ ] Every internal link in the new docs resolves.
-- [ ] No mention of "pre-alpha" or "10–16 months" anywhere in
+- [x] `mkdocs.yml` nav extended to surface the launch section.
+- [x] `uv run --group docs mkdocs build --strict` passes.
+- [x] Every internal link in the new docs resolves.
+- [x] No mention of "pre-alpha" or "10–16 months" anywhere in
       README / docs / launch comms (v0.1 is here).
 
 ## Implementation notes

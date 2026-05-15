@@ -78,6 +78,11 @@ nav:
           - Datadog: recipes/observability/datadog.md
   - Contributing:
       - "Releasing to PyPI": contributing/release.md
+  - Launch:
+      - Overview: launch/index.md
+      - "Show HN draft": launch/hn-post.md
+      - "X / Bluesky thread": launch/x-thread.md
+      - "Demo video script": launch/demo-video-script.md
   - Next steps: next-steps.md
 
 markdown_extensions:

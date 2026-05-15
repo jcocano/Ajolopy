@@ -11,11 +11,11 @@ Ajolopy does not compete with FastAPI or LangChain. It competes for the
 *complete AI-native application framework* category, which is currently empty
 in Python.
 
-!!! note "Status: pre-alpha"
-    The development harness is in place; the first primitives are landing
-    under [`board.json`](https://github.com/jcocano/Ajolopy/blob/main/board.json).
-    APIs are not stable yet — pin exact versions if you depend on the
-    framework today.
+!!! note "Status: v0.1 — first public release"
+    APIs are stable for the ten primitives; expect additive changes in
+    v0.1.x. Pin exact versions if you depend on the framework today.
+    Active roadmap and current work live in
+    [`board.json`](https://github.com/jcocano/Ajolopy/blob/main/board.json).
 
 ---
 
