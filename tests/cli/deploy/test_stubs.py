@@ -5,13 +5,9 @@ from pathlib import Path
 import pytest
 
 from ajolopy.cli.deploy import DeployContext
-from ajolopy.cli.deploy.stubs import (
-    RenderStub,
-    VercelStub,
-)
+from ajolopy.cli.deploy.stubs import VercelStub
 
 _STUBS = [
-    (RenderStub, "render", "AJ-44", "Render"),
     (VercelStub, "vercel", "AJ-45", "Vercel"),
 ]
 

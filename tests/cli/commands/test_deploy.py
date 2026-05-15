@@ -195,7 +195,6 @@ def test_yes_flag_is_accepted_without_error(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("target", "board_id"),
     [
-        ("render", "AJ-44"),
         ("vercel", "AJ-45"),
     ],
 )
@@ -251,6 +250,23 @@ def test_railway_prints_next_steps(tmp_path: Path) -> None:
     assert "railway login" in stdout
     assert "railway link" in stdout
     assert "railway up" in stdout
+
+
+# ---------------------------------------------------------------------------
+# Render target — real manifest writer (AJ-44)
+# ---------------------------------------------------------------------------
+
+
+def test_render_writes_render_yaml(tmp_path: Path) -> None:
+    code, stdout, stderr = _run(_namespace("render", out_dir=tmp_path), cwd=tmp_path)
+    assert code == EXIT_OK, stderr
+    # Exactly one file on disk: render.yaml.
+    written = sorted(p.name for p in tmp_path.iterdir())
+    assert written == ["render.yaml"]
+    assert (tmp_path / "render.yaml").is_file()
+    # Both next-step strings reach stdout.
+    assert "Commit and push the generated render.yaml to your repo." in stdout
+    assert "Visit https://dashboard.render.com/blueprints to apply the blueprint." in stdout
 
 
 # ---------------------------------------------------------------------------

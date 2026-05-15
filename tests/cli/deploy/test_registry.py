@@ -11,7 +11,7 @@ from ajolopy.cli.deploy import (
     DockerTarget,
     FlyTarget,
     RailwayTarget,
-    RenderStub,
+    RenderTarget,
     VercelStub,
 )
 from ajolopy.cli.deploy.errors import DeployTargetNotFoundError
@@ -57,7 +57,7 @@ def isolated_registry() -> Iterable[None]:
     register_target(DockerTarget())
     register_target(FlyTarget())
     register_target(RailwayTarget())
-    register_target(RenderStub())
+    register_target(RenderTarget())
     register_target(VercelStub())
 
 
