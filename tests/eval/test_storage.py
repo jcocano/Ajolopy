@@ -134,3 +134,82 @@ def test_schema_version_mismatch_raises(tmp_path: Path) -> None:
     out.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(EvalRunError, match="unsupported eval-run schema version"):
         EvalRun.load(out)
+
+
+@pytest.mark.asyncio
+async def test_tool_calls_round_trip(
+    scripted_fake: type, fixtures_dir: Path, tmp_path: Path
+) -> None:
+    """``tool_calls`` round-trips through save/load.
+
+    The fake agent emits no tool dispatches, so every case's
+    ``tool_calls`` is ``()`` — what we lock here is the JSON shape and
+    the default-empty restoration. The agent-side tool capture is
+    covered in :mod:`tests.agent.test_runtime_tool_calls_sink`.
+    """
+    run = await _run_simple(scripted_fake, fixtures_dir)
+    out = tmp_path / "run.json"
+    run.save(out)
+
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    for case in payload["cases"]:
+        assert case["output"] is not None
+        assert "tool_calls" in case["output"]
+        assert case["output"]["tool_calls"] == []
+
+    loaded = EvalRun.load(out)
+    for case in loaded.cases:
+        assert case.output is not None
+        assert case.output.tool_calls == ()
+
+
+def test_old_schema_loads_without_tool_calls(tmp_path: Path) -> None:
+    """A snapshot written before AJ-26 loads cleanly with ``tool_calls=()``.
+
+    Schema version stays at 1 — the field is OPTIONAL on the read path.
+    """
+    out = tmp_path / "legacy.json"
+    payload = {
+        "schema_version": 1,
+        "suite": "Legacy",
+        "timestamp": "2026-05-14T00:00:00Z",
+        "target": {"kind": "agent", "name": "OldAgent"},
+        "dataset": {"path": None, "sha256": None},
+        "threshold": 0.5,
+        "concurrency": 5,
+        "metrics": {
+            "m": {
+                "aggregator": "mean",
+                "weight": 1.0,
+                "pass_threshold": 0.0,
+                "values": [1.0],
+                "aggregate": 1.0,
+                "passed": True,
+            }
+        },
+        "cases": [
+            {
+                "case_index": 0,
+                "input": {},
+                "expected": {},
+                # ``output`` block lacks ``tool_calls`` — the legacy shape.
+                "output": {
+                    "text": "ok",
+                    "latency_ms": 1.0,
+                    "cost_usd": None,
+                    "trace_id": None,
+                    "raw_repr": "'ok'",
+                },
+                "metric_scores": {"m": 1.0},
+                "error": None,
+                "passed": True,
+            }
+        ],
+        "aggregate_score": 1.0,
+        "passed": True,
+    }
+    out.write_text(json.dumps(payload), encoding="utf-8")
+
+    loaded = EvalRun.load(out)
+    assert loaded.cases[0].output is not None
+    assert loaded.cases[0].output.tool_calls == ()
