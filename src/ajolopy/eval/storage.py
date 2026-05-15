@@ -144,12 +144,18 @@ def _case_to_dict(case: EvalCaseResult) -> dict[str, Any]:
     if case.output is None:
         output = None
     else:
+        # ``tool_calls`` was added in AJ-26 alongside the new
+        # :class:`EvalOutput.tool_calls` field. Run files written
+        # before AJ-26 do not carry the key; the load path defaults
+        # to ``()`` so old snapshots load without complaint (see
+        # :func:`_dict_to_run`).
         output = {
             "text": case.output.text,
             "latency_ms": case.output.latency_ms,
             "cost_usd": case.output.cost_usd,
             "trace_id": case.output.trace_id,
             "raw_repr": repr(case.output.raw),
+            "tool_calls": list(case.output.tool_calls),
         }
     return {
         "case_index": case.case_index,
@@ -191,12 +197,24 @@ def _dict_to_run(payload: dict[str, Any]) -> EvalRun:
             output_dict = cast("dict[str, Any]", output_payload)
             cost_usd = output_dict.get("cost_usd")
             trace_id = output_dict.get("trace_id")
+            # AJ-26 added ``tool_calls`` to the per-case ``output``
+            # block. Older snapshots (schema_version=1, pre-AJ-26)
+            # do not carry the key — default to ``()`` so they load
+            # cleanly. The schema version stays at 1 because the
+            # field is optional on the read path.
+            tool_calls_payload = cast("list[Any] | None", output_dict.get("tool_calls"))
+            tool_calls: tuple[str, ...] = (
+                tuple(str(name) for name in tool_calls_payload)
+                if tool_calls_payload is not None
+                else ()
+            )
             output = EvalOutput(
                 text=cast("str", output_dict["text"]),
                 latency_ms=float(output_dict["latency_ms"]),
                 cost_usd=float(cost_usd) if cost_usd is not None else None,
                 trace_id=cast("str | None", trace_id),
                 raw=cast("str", output_dict.get("raw_repr", "")),
+                tool_calls=tool_calls,
             )
         cases.append(
             EvalCaseResult(
