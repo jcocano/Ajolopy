@@ -55,6 +55,25 @@ otel = [
 mcp = [
     "mcp>=1.0.0",
 ]
+# Memory backends (AJ-24): each backend's SDK is opt-in so importing
+# `ajolopy.memory` stays dependency-free. Without the matching extra,
+# `RedisMemory` / `PostgresMemory` / `MongoDBMemory` raise
+# `MemoryDependencyError` at construction with a `pip install` hint.
+redis = [
+    "redis>=5.0",
+]
+postgres = [
+    "asyncpg>=0.30",
+]
+mongo = [
+    "motor>=3.6",
+]
+# Convenience meta-extra: install every memory backend SDK at once.
+memory-all = [
+    "redis>=5.0",
+    "asyncpg>=0.30",
+    "motor>=3.6",
+]
 
 [project.urls]
 Homepage = "https://github.com/jcocano/ajolopy"
@@ -89,6 +108,10 @@ dev = [
     "jsonschema>=4.23.0",
     "httpx>=0.28.1",
     "pyyaml>=6.0.3",
+    # AJ-24 — deterministic fakes for memory-backend tests so the suite
+    # never depends on a running Redis / MongoDB server.
+    "fakeredis>=2.0",
+    "mongomock-motor>=0.0.30",
 ]
 
 # ---------------------------------------------------------------------------

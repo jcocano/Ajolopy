@@ -239,7 +239,7 @@ class AgentRuntime:
             self._models.append((model_str, provider_cache[provider_key], provider_key))
 
         self._primary_provider_key = self._resolve_provider_key(model)
-        self._memory: Memory | None = resolve_memory(memory)  # type: ignore[arg-type]
+        self._memory: Memory | None = resolve_memory(memory)
 
         # ``catalog`` defaults to None — pricing emission resolves the active
         # catalog lazily on first chat-span emission via :func:`get_active_catalog`.
