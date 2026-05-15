@@ -13,7 +13,7 @@ command:
 | Target    | Manifest(s) emitted                                    |
 | --------- | ------------------------------------------------------ |
 | `docker`  | `Dockerfile.prod` + `.dockerignore`. Works on k8s / VPS / ECS / on-prem / any container runtime. **Reference implementation.** |
-| `fly`     | `fly.toml`. Ships in `AJ-42`; today the target prints a pointer at the board item. |
+| `fly`     | `fly.toml`. Generates the manifest and prints the `fly launch` / `fly deploy` flow (`AJ-42`). |
 | `railway` | `railway.json`. Generates the manifest and prints the `railway login` / `railway link` / `railway up` flow for you to run. |
 | `render`  | `render.yaml`. Ships in `AJ-44`. |
 | `vercel`  | `vercel.json` + interactive warning gate. Ships in `AJ-45`. |
@@ -88,15 +88,15 @@ To overwrite an existing file:
 $ ajolopy deploy docker --force
 ```
 
-The four cloud targets are registered today but not yet implemented;
-running them prints the tracking item:
+The remaining cloud targets are registered today but not yet
+implemented; running them prints the tracking item:
 
 ```bash
-$ ajolopy deploy fly
-Fly.io deploy target lands via AJ-42. See board.json for status.
+$ ajolopy deploy railway
+Railway deploy target lands via AJ-43. See board.json for status.
 
 Next steps:
-  Tracking item: AJ-42. For now, follow the Fly.io docs manually.
+  Tracking item: AJ-43. For now, follow the Railway docs manually.
 ```
 
 ## Escape hatches
@@ -132,10 +132,11 @@ Next steps:
   project to a different version is a follow-up (no `--python-version`
   flag in v0.1 — call `render_dockerfile(python_version=...)` directly
   from your own script if you need it).
-- The stub targets print pointers at the relevant board items rather
-  than failing. That is deliberate so `--help` lists every v0.1
-  target from day one; the placeholder messages disappear when
-  `AJ-42` / `AJ-43` / `AJ-44` / `AJ-45` land their real adapters.
+- The remaining stub targets print pointers at the relevant board
+  items rather than failing. That is deliberate so `--help` lists
+  every v0.1 target from day one; the placeholder messages disappear
+  when `AJ-43` / `AJ-44` / `AJ-45` land their real adapters
+  (`AJ-42` already shipped Fly.io).
 
 ## See also
 
