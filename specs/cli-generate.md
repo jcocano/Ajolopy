@@ -82,32 +82,32 @@ Loaded via `importlib.resources`. Same substitution layer as AJ-32:
 
 ## Acceptance criteria
 
-- [ ] `ajolopy generate agent support` produces
+- [x] `ajolopy generate agent support` produces
       `src/<pkg>/agents/support.py` with a `class Support(Agent)`-like
       shell using `@Agent` + one `@Tool` method.
-- [ ] `ajolopy generate workflow team` produces
+- [x] `ajolopy generate workflow team` produces
       `src/<pkg>/workflows/team.py` with `@Workflow(...)` + two
       placeholder `@Agent` references.
-- [ ] `ajolopy generate eval support` produces TWO files:
+- [x] `ajolopy generate eval support` produces TWO files:
       `evals/support_eval.py` + `evals/datasets/support.jsonl` (with
       one placeholder case).
-- [ ] `ajolopy generate controller users` →
+- [x] `ajolopy generate controller users` →
       `src/<pkg>/controllers/users_controller.py` with `@Controller`
       + `@Get`/`@Post` stubs.
-- [ ] `ajolopy generate module billing` →
+- [x] `ajolopy generate module billing` →
       `src/<pkg>/billing_module.py` with `@Module(...)` skeleton.
-- [ ] `ajolopy generate service notifier` →
+- [x] `ajolopy generate service notifier` →
       `src/<pkg>/services/notifier_service.py` with `@Injectable`
       skeleton.
-- [ ] `ajolopy generate tool foo` → standalone tool stub.
-- [ ] `ajolopy generate bogus name` → `EXIT_USAGE` listing valid kinds.
-- [ ] `ajolopy generate agent BadName` (PascalCase) → `EXIT_USAGE`
+- [x] `ajolopy generate tool foo` → standalone tool stub.
+- [x] `ajolopy generate bogus name` → `EXIT_USAGE` listing valid kinds.
+- [x] `ajolopy generate agent BadName` (PascalCase) → `EXIT_USAGE`
       with snake_case hint.
-- [ ] Existing target file without `--force` → `EXIT_EXISTS`.
-- [ ] `--force` overwrites.
-- [ ] `--path /tmp/x` writes to that path.
-- [ ] No `src/<pkg>/` and no `--path` → `EXIT_NO_PROJECT`.
-- [ ] Two packages under `src/` → `EXIT_NO_PROJECT` with hint to
+- [x] Existing target file without `--force` → `EXIT_EXISTS`.
+- [x] `--force` overwrites.
+- [x] `--path /tmp/x` writes to that path.
+- [x] No `src/<pkg>/` and no `--path` → `EXIT_NO_PROJECT`.
+- [x] Two packages under `src/` → `EXIT_NO_PROJECT` with hint to
       pass `--path`.
 
 ## Implementation pointers
@@ -121,4 +121,17 @@ Loaded via `importlib.resources`. Same substitution layer as AJ-32:
 
 ## Implementation notes
 
-(Empty — populated by the implementation PR.)
+- Shared template helpers extracted into
+  `src/ajolopy/cli/commands/_template_engine.py` (`render_path`,
+  `strip_template_suffix`, `read_template`, plus the
+  `__package__` -> `package_name` sentinel mapping). Both `new` and
+  `generate` can use it; `new` keeps its richer tree-walking helpers
+  inline since they are not yet shared.
+- The collision check runs as a pre-flight pass over every file in
+  the kind's spec before any write happens, so the two-file `eval`
+  kind never produces a half-scaffolded pair.
+- `--path` doubles as both "destination root" and "where to look for
+  a package": when the target happens to be a real Ajolopy project the
+  detected package name is used for template imports; otherwise the
+  directory's leaf name is used so templates never emit a literal
+  `__package__` token.
