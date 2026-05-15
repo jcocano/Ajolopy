@@ -1149,15 +1149,15 @@
       "slug": "fly-deploy",
       "type": "feature",
       "title": "Fly.io deploy target (fly.toml generator + flow)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "deploy",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/fly-deploy",
       "pr": null,
       "spec": "specs/fly-deploy.md",
       "blocks": [],
