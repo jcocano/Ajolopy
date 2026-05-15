@@ -81,12 +81,12 @@ class TestSmoke:
         # toggling ``server.should_exit``.
         server.install_signal_handlers = lambda: None  # type: ignore[method-assign]
 
-        exception: list[BaseException] = []
+        exception: list[Exception] = []
 
         def _serve() -> None:
             try:
                 asyncio.run(server.serve())
-            except BaseException as exc:  # pragma: no cover - defensive
+            except Exception as exc:  # pragma: no cover - defensive
                 exception.append(exc)
 
         thread = threading.Thread(target=_serve, daemon=True)
