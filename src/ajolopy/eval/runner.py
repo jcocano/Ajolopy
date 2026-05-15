@@ -193,26 +193,33 @@ class EvalRunner:
         metadata: EvalMetadata,
         case: Case,
         cost_sink: list[float | None],
+        tool_calls_sink: list[str] | None = None,
     ) -> tuple[object, float, str | None]:
         """Invoke the target for one case; return ``(raw, latency_ms, trace_id)``.
 
         Default behaviour:
 
         - For agent targets, drives the runtime's :meth:`run` directly
-          so we can pass ``cost_sink``. The agent's decorator-injected
-          ``run(self, message)`` does not forward the kwarg, but the
-          underlying ``AgentRuntime.run(instance, message, cost_sink=...)``
-          does (AJ-6).
+          so we can pass ``cost_sink`` and ``tool_calls_sink``. The
+          agent's decorator-injected ``run(self, message)`` does not
+          forward the kwargs, but the underlying
+          ``AgentRuntime.run(instance, message, cost_sink=..., tool_calls_sink=...)``
+          does (AJ-6, AJ-26).
         - For workflow targets, uses the decorator-injected
-          ``instance.run(**case.input)`` and leaves ``cost_sink``
-          untouched (workflow-side cost rollup is AJ-31's concern).
+          ``instance.run(**case.input)`` and leaves both sinks
+          untouched. Workflow-target tool capture is deferred to AJ-31;
+          the per-case ``tool_calls`` field defaults to ``()`` for
+          workflow targets in v0.1.
         """
         target_cls = metadata.target_cls
         instance = target_cls()
         start = time.perf_counter()
         if metadata.target_kind == "agent":
             agent_runtime = target_cls._agent_runtime
-            raw = await agent_runtime.run(instance, **case.input, cost_sink=cost_sink)
+            extra: dict[str, Any] = {"cost_sink": cost_sink}
+            if tool_calls_sink is not None:
+                extra["tool_calls_sink"] = tool_calls_sink
+            raw = await agent_runtime.run(instance, **case.input, **extra)
         else:
             # workflow target — the decorator-injected ``run`` handles
             # the cost rollup on its own span; we don't double-count.
@@ -358,6 +365,10 @@ class EvalRunner:
         case_span: Span,
     ) -> EvalCaseResult:
         cost_sink: list[float | None] = []
+        # Only allocate a tool-calls sink for agent targets; workflow
+        # targets do not accept the kwarg in v0.1 and the resulting
+        # ``EvalOutput.tool_calls`` defaults to ``()`` for them.
+        tool_calls_sink: list[str] | None = [] if metadata.target_kind == "agent" else None
         output: EvalOutput | None = None
         error: str | None = None
         try:
@@ -365,6 +376,7 @@ class EvalRunner:
                 metadata=metadata,
                 case=case,
                 cost_sink=cost_sink,
+                tool_calls_sink=tool_calls_sink,
             )
             output = EvalOutput(
                 text=raw if isinstance(raw, str) else str(raw),
@@ -372,6 +384,7 @@ class EvalRunner:
                 cost_usd=_sum_costs(cost_sink),
                 trace_id=trace_id,
                 raw=raw,
+                tool_calls=tuple(tool_calls_sink) if tool_calls_sink is not None else (),
             )
         except Exception as exc:
             error = f"{type(exc).__name__}: {exc}"
