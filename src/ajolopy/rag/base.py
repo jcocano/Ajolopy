@@ -35,7 +35,7 @@ class Document:
 
     id: str
     text: str
-    metadata: Mapping[str, Any] = field(default_factory=lambda: dict[str, Any]())
+    metadata: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)

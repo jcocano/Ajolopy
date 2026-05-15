@@ -6,7 +6,7 @@ top-level leaks are caught at CI time.
 """
 
 import ajolopy
-from ajolopy import rag
+import ajolopy.rag as rag
 
 
 def test_all_exported_names_match_spec() -> None:
