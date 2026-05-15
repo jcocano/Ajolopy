@@ -336,17 +336,16 @@ def _is_required(info: FieldInfo) -> bool:
 
 
 def _mask_value(value: str) -> str:
-    """Mask ``value`` keeping only the first 3 + last 4 chars + length.
+    """Mask ``value`` returning only its length signature.
 
-    Short values (<= 7 chars) collapse to ``Nchars`` only so we never
-    accidentally print the full secret.
+    Zero bytes of ``value`` reach the returned string — only the
+    integer length does. CodeQL's clear-text-logging-sensitive-data
+    rule treats any substring of an env-var read as a leak, so even
+    a first-3/last-4 sketch like ``sk-…abcd`` propagates the taint.
+    Stripping every byte of content is the only form that satisfies
+    the rule across every callable that prints the masked output.
     """
-    length = len(value)
-    if length <= 7:
-        return f"({length} chars)"
-    head = value[:3]
-    tail = value[-4:]
-    return f"{head}…{tail} ({length} chars)"
+    return f"({len(value)} chars)"
 
 
 def _render_show_text(rows: list[dict[str, Any]], *, stdout: IO[str]) -> None:
@@ -369,7 +368,13 @@ def _render_show_text(rows: list[dict[str, Any]], *, stdout: IO[str]) -> None:
 
 
 def _render_show_ci(rows: list[dict[str, Any]], *, stdout: IO[str]) -> None:
-    """Render the ``--ci`` JSON payload for ``env:show``."""
+    """Render the ``--ci`` JSON payload for ``env:show``.
+
+    The payload deliberately omits any byte of the raw value. Length
+    + presence + secret/required hints are enough for CI tooling to
+    catch misconfiguration without flowing env-var contents to
+    stdout (which CodeQL flags as a clear-text leak).
+    """
     payload = {
         "schema_version": SCHEMA_VERSION,
         "subcommand": "env:show",
@@ -378,7 +383,6 @@ def _render_show_ci(rows: list[dict[str, Any]], *, stdout: IO[str]) -> None:
                 "name": row["name"],
                 "set": row["set"],
                 "length": row["length"],
-                "masked_value": row["masked_value"],
                 "secret": row["secret"],
                 "required": row["required"],
             }

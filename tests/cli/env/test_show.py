@@ -91,12 +91,15 @@ class TestMaskingSecretLookingNames:
         environ = {"ANTHROPIC_API_KEY": "sk-abcdefghijklmnopqrstuvwxyz1234"}
         code, out, _err = _run(["env-show"], cwd=tmp_path, environ=environ)
         assert code == env_cmd.EXIT_OK
-        # The raw secret never appears.
+        # The raw secret never appears, nor any substring of it.
+        # CodeQL's clear-text-logging-sensitive-data rule treats
+        # first3/last4 sketches as leaks too, so the mask is now
+        # length-only.
         assert "sk-abcdefghijklmnopqrstuvwxyz1234" not in out
-        # Only the first 3 + last 4 + length are shown.
-        assert "sk-" in out
-        assert "1234" in out
-        assert "chars" in out
+        assert "sk-" not in out
+        assert "1234" not in out
+        # Only the length signature is shown.
+        assert "33 chars" in out
 
     def test_non_secret_value_is_also_masked(
         self,
@@ -118,10 +121,14 @@ class TestMaskingSecretLookingNames:
         assert "short" not in masked
         assert "chars" in masked
 
-    def test_long_secret_keeps_first3_last4(self) -> None:
+    def test_mask_value_is_length_only(self) -> None:
+        # AJ-36 / PR #72 CodeQL alert: no substring of the value
+        # may flow to the masked output, because the rule treats
+        # any substring as sensitive too. The mask is now strictly
+        # the length signature.
         masked = env_cmd._mask_value("ABCDEFGHIJKLMNOP")
-        assert masked.startswith("ABC")
-        assert "MNOP" in masked
+        assert "ABC" not in masked
+        assert "MNOP" not in masked
         assert "16 chars" in masked
 
     @pytest.mark.parametrize(
@@ -173,17 +180,19 @@ class TestCIJSONOutput:
             "APP_ENV",
             "LOG_LEVEL",
         ]
-        # Secret-looking names are masked.
+        # Secret-looking names: presence + length + secret flag only.
+        # The CI JSON payload deliberately omits every byte of the
+        # raw value (CodeQL clear-text-logging-sensitive-data rule).
         anthropic = by_name["ANTHROPIC_API_KEY"]
         assert anthropic["set"] is True
         assert anthropic["secret"] is True
         assert anthropic["length"] == len("sk-abcdefghijklmnopqrstuvwxyz1234")
-        assert "sk-abcdefghijklmnopqrstuvwxyz1234" not in anthropic["masked_value"]
-        # Missing values are reported with length 0 + null masked_value.
+        assert "masked_value" not in anthropic
+        # Missing values are reported with length 0.
         openai = by_name["OPENAI_API_KEY"]
         assert openai["set"] is False
         assert openai["length"] == 0
-        assert openai["masked_value"] is None
+        assert "masked_value" not in openai
 
 
 class TestDiscoveryFailures:
