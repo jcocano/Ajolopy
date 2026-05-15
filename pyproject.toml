@@ -226,6 +226,12 @@ executionEnvironments = [
     # smoke test.
     { root = "examples/web-research", extraPaths = ["examples/web-research/src"] },
     { root = "examples/web-research/tests", extraPaths = ["examples/web-research/src"], reportMissingParameterType = "none", reportUnknownParameterType = "none", reportPrivateUsage = "none", reportUnusedClass = "none", reportUnknownMemberType = "none", reportUnknownVariableType = "none", reportUnknownArgumentType = "none" },
+    # AJ-66 — the local-ollama example is type-checked the same way as
+    # AJ-50 / AJ-54. `extraPaths` adds the project's `src/` so
+    # `local_ollama.*` modules resolve from the eval scripts and the
+    # smoke test.
+    { root = "examples/local-ollama", extraPaths = ["examples/local-ollama/src"] },
+    { root = "examples/local-ollama/tests", extraPaths = ["examples/local-ollama/src"], reportMissingParameterType = "none", reportUnknownParameterType = "none", reportPrivateUsage = "none", reportUnusedClass = "none", reportUnknownMemberType = "none", reportUnknownVariableType = "none", reportUnknownArgumentType = "none" },
 ]
 
 # ---------------------------------------------------------------------------

@@ -163,6 +163,12 @@ that would require an eleventh decorator goes to v0.2+.
   over stdio so the on-call agent can search issues, PRs, and commits
   while triaging incidents. Pairs a local `@Tool` with the MCP tools
   to show how Ajolopy resolves name collisions in favour of local code.
+- **[`examples/local-ollama/`](./examples/local-ollama/)** — the same
+  `@Agent` + `@Tool` + `@Stream` shape running on a local
+  [Ollama](https://ollama.com) server through Ajolopy's universal
+  OpenAI-compatible provider. **No API key required** — install Ollama,
+  `ollama pull llama3.3`, `uv sync && ajolopy dev`, and the streaming
+  code reviewer answers `POST /chat` entirely on your laptop.
 - **[`dogfood/docsbot/`](./dogfood/docsbot/)** — Ajolopy's own docs bot,
   the first dogfood app. Answers questions about the framework using an
   in-memory `Retriever` subclass over the project's own `docs/` tree.

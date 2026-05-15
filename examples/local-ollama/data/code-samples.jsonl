@@ -1,0 +1,5 @@
+{"id": "unused-import", "code": "import os\nimport math\n\n\ndef add(a, b):\n    return a + b\n", "issue": "unused import"}
+{"id": "missing-return-type", "code": "def square(n):\n    return n * n\n", "issue": "missing return type annotation"}
+{"id": "off-by-one", "code": "def first_three(items):\n    out = []\n    for i in range(len(items) + 1):\n        out.append(items[i])\n    return out\n", "issue": "off-by-one indexing error"}
+{"id": "mutable-default-arg", "code": "def append_item(item, bucket=[]):\n    bucket.append(item)\n    return bucket\n", "issue": "mutable default argument"}
+{"id": "syntax-error", "code": "def greet(name):\n    return f\"Hello, {name}\n", "issue": "syntax error (unterminated string)"}

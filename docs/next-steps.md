@@ -37,6 +37,14 @@ running locally. Here is where to go from here.
   the model can search issues / PRs / commits while triaging
   incidents. Boots cleanly without a `GITHUB_TOKEN` — the agent's
   local `@Tool` keeps answering when the MCP server is unhealthy.
+- **[`examples/local-ollama`](https://github.com/jcocano/Ajolopy/tree/main/examples/local-ollama)**
+  is the **no-API-key** runnable example
+  ([`AJ-66`](https://github.com/jcocano/Ajolopy/blob/main/board.json)).
+  It runs `@Agent` + `@Tool` + `@Stream` against a local
+  [Ollama](https://ollama.com) server through Ajolopy's universal
+  OpenAI-compatible provider — install Ollama,
+  `ollama pull llama3.3`, `uv sync && ajolopy dev`, and the streaming
+  code reviewer answers `POST /chat` entirely on your laptop.
 - **[`dogfood/docsbot`](https://github.com/jcocano/Ajolopy/tree/main/dogfood/docsbot)**
   is Ajolopy's own docs bot — the first dogfood app
   ([`AJ-54`](https://github.com/jcocano/Ajolopy/blob/main/board.json)).
