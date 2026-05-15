@@ -1304,7 +1304,7 @@
       "id": "AJ-48",
       "slug": "docs-tutorial-3-steps",
       "type": "docs",
-      "title": "Tutorial — killer demo arc (3 steps: hello, evals, team)",
+      "title": "Tutorial \u2014 killer demo arc (3 steps: hello, evals, team)",
       "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
@@ -1550,7 +1550,7 @@
       "slug": "launch-comms",
       "type": "story",
       "title": "Public v0.1 launch (HN/X posts, README final, demo video)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -1559,7 +1559,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "story/launch-comms",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/104",
       "spec": "specs/launch-comms.md",
       "blocks": [],
       "blocked_by": [
