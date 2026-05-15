@@ -1751,7 +1751,7 @@
       "slug": "example-web-research",
       "type": "docs",
       "title": "Example: web research agent (Tavily @Tool integration)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1759,8 +1759,8 @@
         "v0.1",
         "examples"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "docs/example-web-research",
       "pr": null,
       "spec": "specs/example-web-research.md",
       "blocks": [],
