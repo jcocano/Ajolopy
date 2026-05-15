@@ -965,7 +965,7 @@
       "slug": "cli-eval",
       "type": "feature",
       "title": "ajolopy eval CLI (filter/ci/compare-with/threshold-override/dry-run)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -982,8 +982,8 @@
       ],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-14",
-      "closed_at": null
+      "updated_at": "2026-05-15",
+      "closed_at": "2026-05-15"
     },
     {
       "id": "AJ-36",
