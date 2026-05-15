@@ -9,7 +9,7 @@ from ajolopy.cli.deploy import (
     DeployContext,
     DeployResult,
     DockerTarget,
-    FlyStub,
+    FlyTarget,
     RailwayTarget,
     RenderStub,
     VercelStub,
@@ -55,7 +55,7 @@ def isolated_registry() -> Iterable[None]:
     # Re-register the default surface so unrelated tests that import
     # ``ajolopy.cli.deploy`` later still see the v0.1 targets.
     register_target(DockerTarget())
-    register_target(FlyStub())
+    register_target(FlyTarget())
     register_target(RailwayTarget())
     register_target(RenderStub())
     register_target(VercelStub())

@@ -195,7 +195,6 @@ def test_yes_flag_is_accepted_without_error(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("target", "board_id"),
     [
-        ("fly", "AJ-42"),
         ("render", "AJ-44"),
         ("vercel", "AJ-45"),
     ],
@@ -206,6 +205,32 @@ def test_stub_target_writes_nothing(tmp_path: Path, target: str, board_id: str) 
     assert board_id in stdout
     # Nothing on disk.
     assert list(tmp_path.iterdir()) == []
+
+
+# ---------------------------------------------------------------------------
+# Fly target — real implementation (AJ-42)
+# ---------------------------------------------------------------------------
+
+
+def test_fly_writes_fly_toml(tmp_path: Path) -> None:
+    code, stdout, stderr = _run(_namespace("fly", out_dir=tmp_path), cwd=tmp_path)
+    assert code == EXIT_OK, stderr
+    assert (tmp_path / "fly.toml").is_file()
+    assert list(tmp_path.iterdir()) == [tmp_path / "fly.toml"]
+    assert "fly.toml" in stdout
+
+
+def test_fly_prints_next_steps(tmp_path: Path) -> None:
+    _, stdout, _ = _run(_namespace("fly", out_dir=tmp_path), cwd=tmp_path)
+    assert "Next steps:" in stdout
+    for expected in (
+        "fly auth login",
+        "fly secrets set ANTHROPIC_API_KEY=",
+        "fly secrets set DATABASE_URL=",
+        "fly launch",
+        "fly deploy",
+    ):
+        assert expected in stdout
 
 
 # ---------------------------------------------------------------------------

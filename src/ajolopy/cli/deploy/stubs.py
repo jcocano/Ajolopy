@@ -5,14 +5,15 @@ lists every v0.1 target from day one. The stubs emit no files and
 print a single line pointing at the board item that ships the real
 implementation:
 
-- :class:`FlyStub` → ``AJ-42`` (Fly.io)
 - :class:`RenderStub` → ``AJ-44``
 - :class:`VercelStub` → ``AJ-45``
 
-Railway's real implementation already landed (``AJ-43``) and lives in
-:mod:`ajolopy.cli.deploy.railway`.
+The Fly.io adapter shipped with ``AJ-42`` — see
+:mod:`ajolopy.cli.deploy.fly` — and the Railway adapter shipped with
+``AJ-43`` — see :mod:`ajolopy.cli.deploy.railway`. Neither has a stub
+representation here any longer.
 
-When the owning item lands its real adapter, the new module calls
+When an owning item lands its real adapter, the new module calls
 ``register_target(<RealTarget>())`` at import time and the registry's
 last-write-wins semantics promote it without touching this file.
 """
@@ -49,13 +50,6 @@ class _Stub:
         )
 
 
-class FlyStub(_Stub):
-    name: ClassVar[str] = "fly"
-    description: ClassVar[str] = "Fly.io — manifest generation (ships in AJ-42)."
-    _board_item: ClassVar[str] = "AJ-42"
-    _platform_label: ClassVar[str] = "Fly.io"
-
-
 class RenderStub(_Stub):
     name: ClassVar[str] = "render"
     description: ClassVar[str] = "Render — manifest generation (ships in AJ-44)."
@@ -70,4 +64,4 @@ class VercelStub(_Stub):
     _platform_label: ClassVar[str] = "Vercel"
 
 
-__all__ = ["FlyStub", "RenderStub", "VercelStub"]
+__all__ = ["RenderStub", "VercelStub"]
