@@ -98,6 +98,13 @@ class EvalOutput:
     trace id, formatted from
     :meth:`opentelemetry.trace.SpanContext.trace_id`. ``None`` when
     the active span has no valid context (e.g. no SDK installed).
+
+    ``tool_calls`` carries the names of tools the agent dispatched
+    during the case in call order. Populated by the runner via the
+    ``AgentRuntime.run(tool_calls_sink=...)`` orchestrator hook
+    (AJ-26). Defaults to ``()`` for workflow targets, custom datasets,
+    and any code path that pre-dates the field — the default keeps
+    every existing call site working.
     """
 
     text: str
@@ -105,6 +112,7 @@ class EvalOutput:
     cost_usd: float | None
     trace_id: str | None
     raw: object
+    tool_calls: tuple[str, ...] = ()
 
 
 @dataclass(slots=True, frozen=True)
