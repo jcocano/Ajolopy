@@ -9,6 +9,7 @@ dispatcher unaware of any particular subcommand's implementation.
 
 from typing import TYPE_CHECKING
 
+from . import eval as eval_cmd
 from . import mcp_serve
 
 if TYPE_CHECKING:
@@ -26,6 +27,7 @@ def register_subcommands(
     annotation in :mod:`ajolopy.cli.commands.mcp_serve`.
     """
     mcp_serve.register(sub)
+    eval_cmd.register(sub)
 
 
 __all__ = ["register_subcommands"]
