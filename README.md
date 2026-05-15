@@ -2,6 +2,8 @@
 
 > The Python framework for building AI-native applications in production.
 
+**[Documentation](https://jcocano.github.io/Ajolopy/) · [Quickstart](https://jcocano.github.io/Ajolopy/quickstart/) · [Install](https://jcocano.github.io/Ajolopy/install/)**
+
 What Rails was for database-backed web apps and what NestJS is for enterprise Node services: the default choice when what you're building has **LLMs, agents, tools, prompts, evals, streaming, and MCP** as core ingredients — not as an addon.
 
 It doesn't compete with FastAPI or LangChain. It competes for the *complete AI-native application framework* category, which is currently empty in Python.

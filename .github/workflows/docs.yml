@@ -1,0 +1,88 @@
+# AJ-47 — build and deploy the mkdocs-material site to GitHub Pages.
+#
+# `build` runs on every push to main and every PR — `mkdocs build --strict`
+# acts as the smoke test for the docs change (catches broken cross-refs,
+# missing nav entries, and malformed YAML).
+#
+# `deploy` runs only on push to main, gated behind the build job. It uses
+# the official actions/configure-pages + upload-pages-artifact +
+# deploy-pages flow so we never need a personal token or branch-based
+# push for Pages. All third-party actions are SHA-pinned per
+# SECURITY.md.
+
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  # Allow at most one in-flight deploy per ref; cancelling an older PR
+  # build when a newer push lands keeps CI cheap.
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build site (mkdocs --strict)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
+        with:
+          enable-cache: true
+
+      - name: Install Python
+        run: uv python install 3.14
+
+      # Pull the `docs` dependency group so mkdocs + mkdocs-material are
+      # available. The runtime extras stay out of the docs build — the
+      # site is pure Markdown and does not import the framework.
+      - name: Install docs dependencies
+        run: uv sync --frozen --group docs
+
+      # Strict mode fails on broken links, missing nav entries, and any
+      # other warning mkdocs would otherwise tolerate. This is the docs
+      # smoke test — if it fails, the deploy job never runs.
+      - name: Build site
+        run: uv run mkdocs build --strict
+
+      - name: Upload Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
+        with:
+          path: site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      # `pages: write` + `id-token: write` are required by the official
+      # deploy-pages action. Scoped to this job only — the workflow
+      # default is still `contents: read`.
+      pages: write
+      id-token: write
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6.0.0
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128  # v5.0.0
