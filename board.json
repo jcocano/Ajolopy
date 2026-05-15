@@ -965,7 +965,7 @@
       "slug": "cli-eval",
       "type": "feature",
       "title": "ajolopy eval CLI (filter/ci/compare-with/threshold-override/dry-run)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -974,7 +974,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/cli-eval",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/64",
       "spec": "specs/cli-eval.md",
       "blocks": [],
       "blocked_by": [
