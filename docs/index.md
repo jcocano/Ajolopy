@@ -53,13 +53,17 @@ with zero ceremony, and an **escape hatch** (subclass or override) for the
   Five minutes from `uv pip install ajolopy` to a working agent answering
   `curl` requests.
 
+- :material-school: **[Tutorial](tutorial/index.md)**
+  The three-step killer demo arc — agent, evals, multi-agent + MCP —
+  in roughly 55 lines.
+
 - :material-package-variant: **[Install](install.md)**
   Core install plus the full optional-extras matrix (observability, MCP,
   memory backends).
 
 - :material-map-marker-path: **[Next steps](next-steps.md)**
-  Tutorial arc, per-primitive reference, example projects, and how to
-  contribute.
+  Per-primitive reference, example projects, observability and deploy
+  recipes, and how to contribute.
 
 </div>
 

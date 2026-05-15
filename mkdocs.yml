@@ -4,9 +4,9 @@
 # Local dev:   `uv run mkdocs serve`
 # Deploys via `.github/workflows/docs.yml` to GitHub Pages on push to main.
 #
-# Future items (AJ-48 tutorial, AJ-51/52 recipes) will extend
-# the `nav:` tree additively — keep the existing entries ordered for the
-# happy-path reader (Home -> Quickstart -> Install -> Reference -> Next steps).
+# Future items (AJ-51/52 recipes) will extend the `nav:` tree additively —
+# keep the existing entries ordered for the happy-path reader
+# (Home -> Quickstart -> Install -> Tutorial -> Reference -> Next steps).
 
 site_name: Ajolopy
 site_description: AI-native production framework for Python.
@@ -49,6 +49,11 @@ nav:
   - Home: index.md
   - Quickstart: quickstart.md
   - Install: install.md
+  - Tutorial:
+      - Overview: tutorial/index.md
+      - "Step 1 — Hello to prod": tutorial/step-1-hello.md
+      - "Step 2 — Evals": tutorial/step-2-evals.md
+      - "Step 3 — Equipo": tutorial/step-3-team.md
   - Reference:
       - Overview: reference/index.md
       - "@Agent": reference/agent.md

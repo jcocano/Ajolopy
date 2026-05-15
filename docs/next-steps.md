@@ -5,20 +5,15 @@ running locally. Here is where to go from here.
 
 ## Learn the primitives in depth
 
-!!! note "Coming soon"
-    The full tutorial and reference are being authored alongside the
-    primitives themselves. Links below point at the tracking items in
-    [`board.json`](https://github.com/jcocano/Ajolopy/blob/main/board.json)
-    until the pages ship.
-
-- **Tutorial — the three-step killer demo arc.** A guided build of a
-  non-trivial agent that exercises `@Agent` + `@Tool` + `@Stream` +
-  `@Workflow` + `@MCP` end to end. Tracked as
-  [`AJ-48`](https://github.com/jcocano/Ajolopy/blob/main/specs/docs-tutorial.md).
-- **Reference — per-primitive documentation.** One page per primitive
-  with the full signature, every option, the default-magical form, and
-  the escape-hatch subclass pattern. Tracked as
-  [`AJ-49`](https://github.com/jcocano/Ajolopy/blob/main/specs/docs-reference.md).
+- **[Tutorial — the three-step killer demo arc](tutorial/index.md).** A
+  guided build of a non-trivial agent that exercises `@Agent` + `@Tool` +
+  `@Stream` + `@Eval` + `@Workflow` + `@MCP` end to end. Read it in order:
+    - [Step 1 — Hello to prod](tutorial/step-1-hello.md)
+    - [Step 2 — Evals](tutorial/step-2-evals.md)
+    - [Step 3 — Equipo](tutorial/step-3-team.md)
+- **[Reference — per-primitive documentation](reference/index.md).** One
+  page per primitive with the full signature, every option, the
+  default-magical form, and the escape-hatch subclass pattern.
 
 ## Read real projects
 

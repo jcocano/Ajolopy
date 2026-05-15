@@ -61,31 +61,31 @@ for syntax. Known reconciliations the tutorial must honour:
 
 ## Acceptance criteria
 
-- [ ] `docs/tutorial/index.md` — overview page covering the arc table, the
+- [x] `docs/tutorial/index.md` — overview page covering the arc table, the
       "55 lines vs 800" framing from the Brief, and links to Steps 1–3.
-- [ ] `docs/tutorial/step-1-hello.md` — Step 1 "Hello to prod" with a
+- [x] `docs/tutorial/step-1-hello.md` — Step 1 "Hello to prod" with a
       runnable `Support` agent (`@Agent` + `@Tool` + `@Stream`), the
       `fallback=` and `trace=True` knobs, and the env-validation reveal.
-- [ ] `docs/tutorial/step-2-evals.md` — Step 2 "Evals" with `@Eval`,
+- [x] `docs/tutorial/step-2-evals.md` — Step 2 "Evals" with `@Eval`,
       two `@Metric` methods (an LLM-judge style scorer and a deterministic
       safety scorer), the JSONL dataset shape, and the
       `ajolopy eval --ci` regression detection demo.
-- [ ] `docs/tutorial/step-3-team.md` — Step 3 "Equipo" with `Triage`,
+- [x] `docs/tutorial/step-3-team.md` — Step 3 "Equipo" with `Triage`,
       `Billing`, `Technical`, a real `@MCP` integration block,
       `@Workflow(coordinator=..., agents=..., integrations=...)`, and a
       workflow-level `@Eval`.
-- [ ] `mkdocs.yml` — `nav:` extended with a `Tutorial:` section between
+- [x] `mkdocs.yml` — `nav:` extended with a `Tutorial:` section between
       `Quickstart` and `Reference`, ordered Overview → Step 1 → Step 2 →
       Step 3.
-- [ ] `docs/next-steps.md` — remove the `Coming soon` placeholder for the
+- [x] `docs/next-steps.md` — remove the `Coming soon` placeholder for the
       tutorial; link the four new pages directly.
-- [ ] `docs/index.md` — the homepage "Where to go next" grid gains a
+- [x] `docs/index.md` — the homepage "Where to go next" grid gains a
       `Tutorial` card alongside `Quickstart` / `Install` / `Next steps`.
-- [ ] Every code snippet validated against the current signatures of
+- [x] Every code snippet validated against the current signatures of
       `@Agent`, `@Tool`, `@Stream`, `@Eval`, `@Metric`, `@Workflow`,
       `@MCP` (cross-checked against the corresponding reference pages).
-- [ ] `uv run mkdocs build --strict` passes locally.
-- [ ] CI green: `Docs / Build site (mkdocs --strict)` workflow.
+- [x] `uv run mkdocs build --strict` passes locally.
+- [x] CI green: `Docs / Build site (mkdocs --strict)` workflow.
 
 ## Out of scope
 
