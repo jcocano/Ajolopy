@@ -1,4 +1,4 @@
-"""Placeholder targets for the four cloud platforms.
+"""Placeholder targets for the cloud platforms still pending v0.1.
 
 Each stub registers under its public name so ``ajolopy deploy --help``
 lists every v0.1 target from day one. The stubs emit no files and
@@ -6,9 +6,11 @@ print a single line pointing at the board item that ships the real
 implementation:
 
 - :class:`FlyStub` → ``AJ-42`` (Fly.io)
-- :class:`RailwayStub` → ``AJ-43``
 - :class:`RenderStub` → ``AJ-44``
 - :class:`VercelStub` → ``AJ-45``
+
+Railway's real implementation already landed (``AJ-43``) and lives in
+:mod:`ajolopy.cli.deploy.railway`.
 
 When the owning item lands its real adapter, the new module calls
 ``register_target(<RealTarget>())`` at import time and the registry's
@@ -54,13 +56,6 @@ class FlyStub(_Stub):
     _platform_label: ClassVar[str] = "Fly.io"
 
 
-class RailwayStub(_Stub):
-    name: ClassVar[str] = "railway"
-    description: ClassVar[str] = "Railway — manifest generation (ships in AJ-43)."
-    _board_item: ClassVar[str] = "AJ-43"
-    _platform_label: ClassVar[str] = "Railway"
-
-
 class RenderStub(_Stub):
     name: ClassVar[str] = "render"
     description: ClassVar[str] = "Render — manifest generation (ships in AJ-44)."
@@ -75,4 +70,4 @@ class VercelStub(_Stub):
     _platform_label: ClassVar[str] = "Vercel"
 
 
-__all__ = ["FlyStub", "RailwayStub", "RenderStub", "VercelStub"]
+__all__ = ["FlyStub", "RenderStub", "VercelStub"]

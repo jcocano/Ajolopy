@@ -7,14 +7,12 @@ import pytest
 from ajolopy.cli.deploy import DeployContext
 from ajolopy.cli.deploy.stubs import (
     FlyStub,
-    RailwayStub,
     RenderStub,
     VercelStub,
 )
 
 _STUBS = [
     (FlyStub, "fly", "AJ-42", "Fly.io"),
-    (RailwayStub, "railway", "AJ-43", "Railway"),
     (RenderStub, "render", "AJ-44", "Render"),
     (VercelStub, "vercel", "AJ-45", "Vercel"),
 ]
