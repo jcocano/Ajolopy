@@ -1279,7 +1279,7 @@
       "slug": "docs-quickstart",
       "type": "docs",
       "title": "Quickstart (5 min to hello world)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -1297,8 +1297,8 @@
       ],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-14",
-      "closed_at": null
+      "updated_at": "2026-05-15",
+      "closed_at": "2026-05-15"
     },
     {
       "id": "AJ-48",
