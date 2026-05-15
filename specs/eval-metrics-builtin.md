@@ -342,133 +342,133 @@ existing `tests/agent/test_runtime_cost_sink.py` pattern.
 
 ### `EvalOutput.tool_calls` cross-cut
 
-- [ ] `EvalOutput` has a new `tool_calls: tuple[str, ...]` field with
+- [x] `EvalOutput` has a new `tool_calls: tuple[str, ...]` field with
       a tuple default. Existing call sites that build `EvalOutput`
       without the new field continue to work via dataclass default.
-- [ ] `EvalRun` JSON round-trips `tool_calls` (test_storage extension).
-- [ ] Loading a run file written WITHOUT `tool_calls` (old schema)
+- [x] `EvalRun` JSON round-trips `tool_calls` (test_storage extension).
+- [x] Loading a run file written WITHOUT `tool_calls` (old schema)
       yields `tool_calls=()` and no error — verified with a fixture.
-- [ ] `AgentRuntime.run(cost_sink=..., tool_calls_sink=[])`
+- [x] `AgentRuntime.run(cost_sink=..., tool_calls_sink=[])`
       populates the sink with every dispatched tool's name in call
       order; sync + async tool methods both contribute.
-- [ ] Failed tool dispatch (validation error, tool method raise) does
+- [x] Failed tool dispatch (validation error, tool method raise) does
       NOT append to `tool_calls_sink` — only successful invocations.
-- [ ] `EvalRunner` passes a fresh `tool_calls_sink=[]` per case and
+- [x] `EvalRunner` passes a fresh `tool_calls_sink=[]` per case and
       stamps the captured tuple onto `EvalOutput.tool_calls`.
-- [ ] Workflow-target cases yield `EvalOutput.tool_calls == ()`
+- [x] Workflow-target cases yield `EvalOutput.tool_calls == ()`
       (v0.1 limitation documented in spec).
 
 ### `exact_match`
 
-- [ ] `exact_match("hello", "hello") == 1.0`.
-- [ ] `exact_match("hello", "world") == 0.0`.
-- [ ] `exact_match("  hello  ", "hello") == 1.0` (whitespace stripped
+- [x] `exact_match("hello", "hello") == 1.0`.
+- [x] `exact_match("hello", "world") == 0.0`.
+- [x] `exact_match("  hello  ", "hello") == 1.0` (whitespace stripped
       both sides).
-- [ ] `exact_match("Hello", "hello") == 0.0` (case-sensitive default).
-- [ ] `exact_match("Hello", "hello", case_insensitive=True) == 1.0`.
-- [ ] `exact_match(EvalOutput(text="hello", ...), "hello") == 1.0`
+- [x] `exact_match("Hello", "hello") == 0.0` (case-sensitive default).
+- [x] `exact_match("Hello", "hello", case_insensitive=True) == 1.0`.
+- [x] `exact_match(EvalOutput(text="hello", ...), "hello") == 1.0`
       (EvalOutput input accepted).
-- [ ] `exact_match("42", 42) == 1.0` (expected coerced via `str`).
+- [x] `exact_match("42", 42) == 1.0` (expected coerced via `str`).
 
 ### `json_match`
 
-- [ ] `json_match('{"a": 1}', {"a": 1}) == 1.0`.
-- [ ] `json_match('{"a": 1}', {"a": 2}) == 0.0`.
-- [ ] `json_match('[1, 2, 3]', [1, 2, 3]) == 1.0` (arrays).
-- [ ] `json_match('not json', {"a": 1}) == 0.0` (parse failure →
+- [x] `json_match('{"a": 1}', {"a": 1}) == 1.0`.
+- [x] `json_match('{"a": 1}', {"a": 2}) == 0.0`.
+- [x] `json_match('[1, 2, 3]', [1, 2, 3]) == 1.0` (arrays).
+- [x] `json_match('not json', {"a": 1}) == 0.0` (parse failure →
       mismatch, NOT raise).
-- [ ] `json_match(EvalOutput(text='{"a": 1}', ...), {"a": 1}) == 1.0`.
-- [ ] `json_match('{"a": 1}', {"a": 1}, partial=True)` raises
+- [x] `json_match(EvalOutput(text='{"a": 1}', ...), {"a": 1}) == 1.0`.
+- [x] `json_match('{"a": 1}', {"a": 1}, partial=True)` raises
       `MetricsConfigError` ("partial=True is reserved for v0.2").
 
 ### `contains` / `not_contains`
 
-- [ ] `contains("hello world", "hello") == 1.0`.
-- [ ] `contains("hello world", "missing") == 0.0`.
-- [ ] `contains("Hello World", "hello") == 1.0` (case-insensitive
+- [x] `contains("hello world", "hello") == 1.0`.
+- [x] `contains("hello world", "missing") == 0.0`.
+- [x] `contains("Hello World", "hello") == 1.0` (case-insensitive
       default).
-- [ ] `contains("Hello World", "hello", case_sensitive=True) == 0.0`.
-- [ ] `contains("a b c", ["x", "b"], mode="any") == 1.0`.
-- [ ] `contains("a b c", ["x", "y"], mode="any") == 0.0`.
-- [ ] `contains("a b c", ["a", "b"], mode="all") == 1.0`.
-- [ ] `contains("a b c", ["a", "x"], mode="all") == 0.0`.
-- [ ] `contains("text", []) ` raises `MetricsConfigError`.
-- [ ] `not_contains("hello", "world") == 1.0`.
-- [ ] `not_contains("hello world", "hello") == 0.0`.
-- [ ] `not_contains("text", ["api_key", "password"]) == 1.0`.
-- [ ] `not_contains` accepts an `EvalOutput` input.
+- [x] `contains("Hello World", "hello", case_sensitive=True) == 0.0`.
+- [x] `contains("a b c", ["x", "b"], mode="any") == 1.0`.
+- [x] `contains("a b c", ["x", "y"], mode="any") == 0.0`.
+- [x] `contains("a b c", ["a", "b"], mode="all") == 1.0`.
+- [x] `contains("a b c", ["a", "x"], mode="all") == 0.0`.
+- [x] `contains("text", []) ` raises `MetricsConfigError`.
+- [x] `not_contains("hello", "world") == 1.0`.
+- [x] `not_contains("hello world", "hello") == 0.0`.
+- [x] `not_contains("text", ["api_key", "password"]) == 1.0`.
+- [x] `not_contains` accepts an `EvalOutput` input.
 
 ### `intent_match`
 
-- [ ] `intent_match(EvalOutput(text="this is an order_status check"),
+- [x] `intent_match(EvalOutput(text="this is an order_status check"),
       "order_status") == 1.0`.
-- [ ] `intent_match(EvalOutput(text="hello"), "order_status") == 0.0`.
-- [ ] Case-insensitive by default.
-- [ ] List intent: any-of match.
-- [ ] `mode="exact"`: `intent_match(EvalOutput(text="ORDER_STATUS"),
+- [x] `intent_match(EvalOutput(text="hello"), "order_status") == 0.0`.
+- [x] Case-insensitive by default.
+- [x] List intent: any-of match.
+- [x] `mode="exact"`: `intent_match(EvalOutput(text="ORDER_STATUS"),
       "order_status", mode="exact") == 1.0`.
 
 ### `tool_called`
 
-- [ ] `tool_called(EvalOutput(..., tool_calls=("lookup_order",)),
+- [x] `tool_called(EvalOutput(..., tool_calls=("lookup_order",)),
       "lookup_order") == 1.0`.
-- [ ] `tool_called(EvalOutput(..., tool_calls=("other",)),
+- [x] `tool_called(EvalOutput(..., tool_calls=("other",)),
       "lookup_order") == 0.0`.
-- [ ] `tool_called(EvalOutput(..., tool_calls=()), None) == 1.0` (no
+- [x] `tool_called(EvalOutput(..., tool_calls=()), None) == 1.0` (no
       tool was the expectation).
-- [ ] `tool_called(EvalOutput(..., tool_calls=("any",)), None) == 0.0`
+- [x] `tool_called(EvalOutput(..., tool_calls=("any",)), None) == 0.0`
       (a tool was called but expected NONE).
-- [ ] `tool_called(EvalOutput(..., tool_calls=("a", "b")),
+- [x] `tool_called(EvalOutput(..., tool_calls=("a", "b")),
       ["a", "b"], mode="all") == 1.0`.
-- [ ] `tool_called(EvalOutput(..., tool_calls=("a",)), ["a", "b"],
+- [x] `tool_called(EvalOutput(..., tool_calls=("a",)), ["a", "b"],
       mode="all") == 0.0`.
-- [ ] `tool_called("plain string", "lookup_order")` raises
+- [x] `tool_called("plain string", "lookup_order")` raises
       `MetricsConfigError`.
 
 ### `llm_judge`
 
-- [ ] With a `FakeLLMProvider` returning `"0.85"`, `llm_judge(...)`
+- [x] With a `FakeLLMProvider` returning `"0.85"`, `llm_judge(...)`
       returns `0.85`.
-- [ ] With a `FakeLLMProvider` returning `"   The score is 4 out of
+- [x] With a `FakeLLMProvider` returning `"   The score is 4 out of
       5."` and `scale="1-5"`, returns `0.75` (rescaled from 4 via
       `(4-1)/4`).
-- [ ] Out-of-range `"0-1"` response is clamped: `"1.5"` → `1.0`,
+- [x] Out-of-range `"0-1"` response is clamped: `"1.5"` → `1.0`,
       `"-0.5"` → `0.0`.
-- [ ] No numeric content in response → `MetricsRuntimeError`.
-- [ ] `expected=None` omits the "ideal response" block from the
+- [x] No numeric content in response → `MetricsRuntimeError`.
+- [x] `expected=None` omits the "ideal response" block from the
       prompt (verified by capturing the constructed prompt and
       asserting no "Expected" substring).
-- [ ] `expected="ideal"` includes the block.
-- [ ] `cache=True` makes a second call with identical args return
+- [x] `expected="ideal"` includes the block.
+- [x] `cache=True` makes a second call with identical args return
       from cache without invoking the provider (verified with a
       `call_count` on the fake).
-- [ ] `cache=False` (default) calls the provider every time.
-- [ ] Shared `JudgeCache` instance survives across `llm_judge` calls
+- [x] `cache=False` (default) calls the provider every time.
+- [x] Shared `JudgeCache` instance survives across `llm_judge` calls
       in the same process.
-- [ ] `JudgeCache.clear()` empties the cache.
-- [ ] An `LLMProviderError` from the provider bubbles UP, not wrapped.
-- [ ] An `EvalOutput` input is reduced to its `.text` field for the
+- [x] `JudgeCache.clear()` empties the cache.
+- [x] An `LLMProviderError` from the provider bubbles UP, not wrapped.
+- [x] An `EvalOutput` input is reduced to its `.text` field for the
       judge prompt.
-- [ ] Plain `str` input is used verbatim.
-- [ ] Cache key includes `model` — different models with same inputs
+- [x] Plain `str` input is used verbatim.
+- [x] Cache key includes `model` — different models with same inputs
       do NOT collide.
 
 ### Composition with `@Eval` (smoke test)
 
-- [ ] An `@Eval` class with `@Metric` methods using each of the seven
+- [x] An `@Eval` class with `@Metric` methods using each of the seven
       helpers runs end-to-end via `EvalRunner` against a mocked agent
       target. Aggregate score is computed correctly.
-- [ ] `tool_called` reads from the captured `tool_calls_sink`
+- [x] `tool_called` reads from the captured `tool_calls_sink`
       correctly when the mocked agent dispatches tools.
 
 ### Public re-exports
 
-- [ ] `from ajolopy.eval.metrics import (exact_match, json_match,
+- [x] `from ajolopy.eval.metrics import (exact_match, json_match,
       contains, not_contains, intent_match, tool_called, llm_judge,
       JudgeCache, MetricsError, MetricsConfigError,
       MetricsRuntimeError)` works.
-- [ ] `ajolopy.eval.metrics.__all__` lists exactly those names.
-- [ ] No top-level `ajolopy` re-export added — these are helper
+- [x] `ajolopy.eval.metrics.__all__` lists exactly those names.
+- [x] No top-level `ajolopy` re-export added — these are helper
       functions, not primitives.
 
 ## Implementation pointers
@@ -541,4 +541,65 @@ existing `tests/agent/test_runtime_cost_sink.py` pattern.
 
 ## Implementation notes
 
-(Empty — populated by the implementation PR.)
+### Layout shipped
+
+```
+src/ajolopy/eval/metrics/
+  __init__.py        # public re-exports
+  errors.py          # MetricsError / MetricsConfigError / MetricsRuntimeError
+  _resolve.py        # coerce_to_text + require_eval_output (shared internals)
+  text.py            # exact_match, contains, not_contains, intent_match
+  structured.py      # json_match
+  tools.py           # tool_called
+  judge.py           # llm_judge + JudgeCache + module-level _DEFAULT_JUDGE_CACHE
+```
+
+### Cross-cut delta
+
+- `EvalOutput` gained `tool_calls: tuple[str, ...] = ()`. The default
+  value keeps every pre-existing call site working; the field is
+  populated by the runner for agent targets and stays `()` for
+  workflow targets and any callers that build the dataclass manually.
+- `AgentRuntime.run(...)` and `.stream(...)` gained a private
+  `tool_calls_sink: list[str] | None = None` kwarg mirroring
+  `cost_sink`. The orchestrator hook appends each
+  SUCCESSFULLY-dispatched tool's name in call order; validation
+  errors and tool exceptions DO NOT append. Implementation lives in
+  `_execute_tool_calls` (post-gather inspection of `Message.is_error`)
+  so both sync and async tool methods route through one append site.
+- `EvalRunner` allocates a fresh `tool_calls_sink=[]` per agent-target
+  case and passes it to `AgentRuntime.run(...)` alongside the existing
+  `cost_sink`. Workflow targets skip the kwarg entirely (the
+  decorator-injected `run` does not accept it in v0.1).
+- `save_eval_run` serialises `tool_calls` as a JSON list under each
+  case's `output` block. `load_eval_run` reads it back as a tuple,
+  defaulting to `()` when the field is absent (old run files from
+  pre-AJ-26 load cleanly). Schema version stays at `1`.
+
+### `llm_judge` details
+
+- `cache=True` shares a single module-level `_DEFAULT_JUDGE_CACHE`
+  across every call in the process. For isolation, callers pass a
+  fresh `JudgeCache()` instance (escape hatch — documented in the
+  Brief).
+- Cache key: sha256 of NUL-joined
+  `(criterion, output_text, expected_text_or_empty, model, scale)`.
+  NUL is reserved as the join byte so distinct `(a, b)` pairs cannot
+  collide with one `(a + delimiter + b)` value.
+- Response parsing: first `r"-?\d+(?:\.\d+)?"` match. No match raises
+  `MetricsRuntimeError` (NOT silent 0.0). `scale="1-5"` rescales via
+  `(value - 1) / 4`, then clamps. `scale="0-1"` clamps without
+  rescaling.
+- `temperature=0.0`, `max_tokens=50`, `tools=None`, `cache=False` on
+  every provider call — short numeric responses only.
+
+### Testing seam
+
+- `tests/eval/metrics/test_llm_judge.py` defines a `FakeLLMProvider`
+  whose `complete` returns scripted strings and records `call_count`
+  / `last_prompt` / `last_kwargs`. Every `llm_judge` test passes the
+  fake via the `provider=` kwarg — no registry roundtrip, no network.
+- `tests/agent/test_runtime_tool_calls_sink.py` mirrors the
+  pre-existing `cost_sink` test file, covering successful dispatch,
+  validation-error rejection, tool-exception rejection, multiple-call
+  ordering, async-tool dispatch, and unknown-name rejection.
