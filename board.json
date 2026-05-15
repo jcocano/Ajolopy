@@ -1364,7 +1364,7 @@
       "slug": "docs-example-support",
       "type": "docs",
       "title": "Full support-agent example (the 3-step arc end-to-end)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1373,7 +1373,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "docs/docs-example-support",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/87",
       "spec": "specs/docs-example-support.md",
       "blocks": [
         "AJ-57"
