@@ -30,6 +30,13 @@ running locally. Here is where to go from here.
   Markdown-cited answer through a second pure-Python `@Tool`. Ships
   with an `@Eval` regression suite plus pre-built `Dockerfile.prod` +
   `fly.toml`.
+- **[`examples/oncall-agent`](https://github.com/jcocano/Ajolopy/tree/main/examples/oncall-agent)**
+  is the focused [`@MCP`](reference/mcp.md) demo
+  ([`AJ-63`](https://github.com/jcocano/Ajolopy/blob/main/board.json)).
+  Wires the canonical GitHub MCP server into a small on-call agent so
+  the model can search issues / PRs / commits while triaging
+  incidents. Boots cleanly without a `GITHUB_TOKEN` — the agent's
+  local `@Tool` keeps answering when the MCP server is unhealthy.
 - **[`dogfood/docsbot`](https://github.com/jcocano/Ajolopy/tree/main/dogfood/docsbot)**
   is Ajolopy's own docs bot — the first dogfood app
   ([`AJ-54`](https://github.com/jcocano/Ajolopy/blob/main/board.json)).

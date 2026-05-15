@@ -156,6 +156,13 @@ that would require an eleventh decorator goes to v0.2+.
   through a second pure-Python `@Tool`, and streams the result over
   SSE. Ships with `@Eval` + LLM-judge regression suite and pre-built
   `Dockerfile.prod` + `fly.toml`.
+- **[`examples/oncall-agent/`](./examples/oncall-agent/)** — focused
+  demo of the `@MCP` primitive against a real external server.
+  Spawns the canonical
+  [`@modelcontextprotocol/server-github`](https://github.com/modelcontextprotocol/servers/tree/main/src/github)
+  over stdio so the on-call agent can search issues, PRs, and commits
+  while triaging incidents. Pairs a local `@Tool` with the MCP tools
+  to show how Ajolopy resolves name collisions in favour of local code.
 - **[`dogfood/docsbot/`](./dogfood/docsbot/)** — Ajolopy's own docs bot,
   the first dogfood app. Answers questions about the framework using an
   in-memory `Retriever` subclass over the project's own `docs/` tree.

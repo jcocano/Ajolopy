@@ -1,0 +1,5 @@
+{"input": "We are seeing a sustained spike of 502s on /events for the last 10 minutes. Anything related in the repo?", "expected": {"severity": "high", "must_contain_any": ["502", "events", "outage", "incident"]}}
+{"input": "Latency on /api/checkout doubled after the last deploy. Was there a recent PR touching that path?", "expected": {"severity": "medium", "must_contain_any": ["checkout", "latency", "regression", "pull request", "pr"]}}
+{"input": "A customer reports that GitHub Actions cannot push to our container registry — has anyone changed the workflow lately?", "expected": {"severity": "medium", "must_contain_any": ["github", "workflow", "actions", "registry"]}}
+{"input": "Quick question: where do we document the on-call rotation in the team's repo?", "expected": {"severity": "low", "must_contain_any": ["docs", "rotation", "readme", "repo"]}}
+{"input": "Auth service is hard down, customers cannot log in, paging everyone now.", "expected": {"severity": "high", "must_contain_any": ["auth", "outage", "down", "incident"]}}
