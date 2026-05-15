@@ -43,6 +43,11 @@ uv run pytest
   Fork it, set `ANTHROPIC_API_KEY`, run `uv sync && ajolopy dev`, and watch
   every primitive from `@Agent` through `@Workflow` and `@MCP` answer real
   HTTP requests.
+- **[`dogfood/docsbot/`](./dogfood/docsbot/)** — Ajolopy's own docs bot, the
+  first dogfood app. Answers questions about the framework using an in-memory
+  `Retriever` subclass over the project's own `docs/` tree. Exercises
+  `@Agent` + `@Tool` + `@Stream` + `@Eval` end-to-end and ships pre-generated
+  `Dockerfile.prod` + `fly.toml` so it can be deployed in one `fly deploy`.
 
 ## Contributing
 
