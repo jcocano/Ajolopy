@@ -1915,15 +1915,15 @@
       "slug": "example-ollama-cross-provider-fallback",
       "type": "docs",
       "title": "Add cross-provider fallback to local-ollama (showcase AJ-69 lazy fallback)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p2",
       "milestone": "v0.1.x",
       "labels": [
         "docs",
         "examples"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "docs/example-ollama-cross-provider-fallback",
       "pr": null,
       "spec": "specs/example-ollama-cross-provider-fallback.md",
       "blocks": [],
