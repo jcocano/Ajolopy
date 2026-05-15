@@ -149,6 +149,13 @@ that would require an eleventh decorator goes to v0.2+.
   Fork it, set `ANTHROPIC_API_KEY`, run `uv sync && ajolopy dev`, and
   watch every primitive from `@Agent` through `@Workflow` and `@MCP`
   answer real HTTP requests.
+- **[`examples/web-research/`](./examples/web-research/)** — the
+  canonical "wire an external HTTP API as a `@Tool`" reference. A
+  `Researcher` agent that calls the [Tavily](https://tavily.com)
+  search API through one `@Tool`, composes a Markdown-cited answer
+  through a second pure-Python `@Tool`, and streams the result over
+  SSE. Ships with `@Eval` + LLM-judge regression suite and pre-built
+  `Dockerfile.prod` + `fly.toml`.
 - **[`dogfood/docsbot/`](./dogfood/docsbot/)** — Ajolopy's own docs bot,
   the first dogfood app. Answers questions about the framework using an
   in-memory `Retriever` subclass over the project's own `docs/` tree.

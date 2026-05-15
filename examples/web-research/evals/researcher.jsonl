@@ -1,0 +1,5 @@
+{"input": "What are the new features in Python 3.14?", "expected": {"topic": "python 3.14"}}
+{"input": "Which Python web frameworks released a 1.0 in the last year?", "expected": {"topic": "python web frameworks"}}
+{"input": "What is the current OpenTelemetry semantic convention for GenAI spans?", "expected": {"topic": "opentelemetry gen_ai spans"}}
+{"input": "Who released the latest open-weights LLM and when?", "expected": {"topic": "open weights llm release"}}
+{"input": "What is the Tavily API rate limit on the free tier?", "expected": {"topic": "tavily api rate limit"}}
