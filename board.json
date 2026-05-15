@@ -1279,15 +1279,15 @@
       "slug": "docs-quickstart",
       "type": "docs",
       "title": "Quickstart (5 min to hello world)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "docs",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "docs/docs-quickstart",
       "pr": null,
       "spec": "specs/docs-quickstart.md",
       "blocks": [],
