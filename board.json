@@ -1680,7 +1680,7 @@
       "slug": "rag-retriever",
       "type": "feature",
       "title": "RAG retriever abstraction + Qdrant + pgvector backends",
-      "status": "backlog",
+      "status": "ready",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1690,7 +1690,7 @@
       "owner": null,
       "branch": null,
       "pr": null,
-      "spec": null,
+      "spec": "specs/rag-retriever.md",
       "blocks": [],
       "blocked_by": [],
       "estimate": null,
