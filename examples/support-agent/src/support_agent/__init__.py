@@ -14,13 +14,9 @@ The package mirrors the tutorial layout one-to-one:
 # Side-effect import — registers ``AnthropicProvider`` under the
 # ``"anthropic"`` routing key so ``@Agent(model="claude-...")`` can
 # resolve at decoration time without raising
-# ``ProviderNotRegisteredError``. Mirrors the pattern documented in the
-# framework's own provider-package docstrings. The class is bound to a
-# name (rather than left as a bare side-effect import) so static
-# analysers see it as a used symbol.
-from ajolopy.providers.anthropic import AnthropicProvider as _AnthropicProvider
-
-_PROVIDER_BOUND: type[_AnthropicProvider] = _AnthropicProvider
+# ``ProviderNotRegisteredError``. See
+# ``ajolopy/providers/anthropic/__init__.py``.
+import ajolopy.providers.anthropic  # noqa: F401  # pyright: ignore[reportUnusedImport]
 
 __all__ = ["__version__"]
 
