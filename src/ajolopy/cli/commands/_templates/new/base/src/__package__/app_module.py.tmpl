@@ -1,0 +1,10 @@
+"""Root @Module — wires agents / workflows / controllers."""
+
+from ajolopy import Module
+
+from {package_name}.agents.support import Support
+
+
+@Module(agents=[Support])
+class AppModule:
+    """Root module wiring agents, workflows, controllers."""

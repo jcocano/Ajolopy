@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 from . import eval as eval_cmd
 from . import mcp_serve
+from . import new as new_cmd
 
 if TYPE_CHECKING:
     import argparse
@@ -28,6 +29,7 @@ def register_subcommands(
     """
     mcp_serve.register(sub)
     eval_cmd.register(sub)
+    new_cmd.register(sub)
 
 
 __all__ = ["register_subcommands"]

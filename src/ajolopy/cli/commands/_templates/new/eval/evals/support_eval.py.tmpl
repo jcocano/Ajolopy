@@ -1,0 +1,16 @@
+"""Sample @Eval suite for the ``Support`` agent / workflow."""
+
+from ajolopy import Eval, Metric
+from ajolopy.eval.metrics import exact_match
+
+from {package_name}.agents.support import Support
+
+
+@Eval({eval_target_kwarg}=Support, dataset="evals/datasets/support.jsonl")
+class SupportEval:
+    """Smoke-tier evaluation: every prompt echoes back unchanged."""
+
+    @Metric
+    def echoed(self, output: str, expected: dict[str, str]) -> float:
+        """Score 1.0 when ``output`` matches ``expected['text']`` exactly."""
+        return exact_match(output, expected["text"])

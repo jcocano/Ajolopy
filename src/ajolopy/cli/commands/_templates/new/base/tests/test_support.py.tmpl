@@ -1,0 +1,16 @@
+"""Smoke test for the scaffolded {class_prefix} project.
+
+The real LLM provider is not exercised here -- the test only asserts
+that the generated agent / workflow class is importable and decorated
+correctly.
+"""
+
+from {package_name}.agents.support import Support
+
+
+def test_support_is_decorated() -> None:
+    """The scaffolded ``Support`` class survives import.
+
+    Replace this stub with a real test of your agent or workflow.
+    """
+    assert Support is not None
