@@ -887,7 +887,7 @@
       "slug": "cli-new",
       "type": "feature",
       "title": "ajolopy new <name> wizard (4 questions, generates full project)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -896,7 +896,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/cli-new",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/67",
       "spec": "specs/cli-new.md",
       "blocks": [
         "AJ-34",
