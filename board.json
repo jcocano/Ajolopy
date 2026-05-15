@@ -1527,7 +1527,7 @@
       "slug": "publish-pypi",
       "type": "chore",
       "title": "Publish v0.1.0 to PyPI (versioning, release workflow, signed release)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -1536,7 +1536,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "chore/publish-pypi",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/101",
       "spec": "specs/publish-pypi.md",
       "blocks": [],
       "blocked_by": [],
