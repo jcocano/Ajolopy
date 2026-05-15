@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1.7
+
+# Fallback Dockerfile rendered by ``ajolopy new`` when the shared
+# generator is not available. The canonical multi-stage version lives
+# at ``ajolopy.templates.docker.dockerfile.render_dockerfile`` -- this
+# file mirrors its shape closely enough for local development.
+
+FROM python:3.14-slim AS deps
+WORKDIR /app
+
+RUN pip install --no-cache-dir uv
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --frozen --no-dev
+
+FROM deps AS production
+COPY . .
+RUN useradd -m appuser && chown -R appuser /app
+USER appuser
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
+CMD ["uvicorn", "{package_name}.main:app", "--host", "0.0.0.0", "--port", "3000"]

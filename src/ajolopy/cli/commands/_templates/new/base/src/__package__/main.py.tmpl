@@ -1,0 +1,31 @@
+"""Entry point. Run with ``ajolopy dev`` or ``python -m {package_name}.main``.
+
+This module is intentionally import-clean: no network calls, no factory
+bootstrap at import time. ``app`` is a zero-arg coroutine that builds
+the :class:`AjolopyApp` on demand so test runners, type checkers, and
+``ajolopy dev`` can all share the same target without forking.
+"""
+
+import asyncio
+
+from ajolopy import AjolopyFactory
+
+from {package_name}.app_module import AppModule
+
+
+async def app() -> object:
+    """Build the :class:`AjolopyApp` instance lazily.
+
+    ``ajolopy dev`` awaits this coroutine when the server boots; tests
+    can await it inside an :func:`asyncio.run` block.
+    """
+    return await AjolopyFactory.create(AppModule)
+
+
+def main() -> None:
+    """Synchronous wrapper for ``python -m {package_name}.main``."""
+    asyncio.run(app())
+
+
+if __name__ == "__main__":
+    main()

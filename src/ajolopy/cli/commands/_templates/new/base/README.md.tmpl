@@ -1,0 +1,28 @@
+# {project_name}
+
+A minimal Ajolopy project scaffolded by `ajolopy new`.
+
+## Quickstart
+
+```bash
+uv sync
+cp .env.example .env  # then fill in {llm_env_var}
+ajolopy dev
+```
+
+## Layout
+
+- `src/{package_name}/main.py` — ASGI entry point.
+- `src/{package_name}/app_module.py` — `@Module` root wiring.
+- `src/{package_name}/agents/` — `@Agent` / `@Workflow` classes.
+- `tests/` — pytest suite.
+- `evals/` — optional `@Eval` suites + JSONL datasets.
+
+## Useful commands
+
+| Task | Command |
+| ---- | ------- |
+| Install deps | `uv sync` |
+| Run the app | `ajolopy dev` |
+| Run tests | `uv run pytest` |
+| Run evals | `ajolopy eval` |
