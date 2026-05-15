@@ -1892,15 +1892,15 @@
       "slug": "example-ollama-aj68-migration",
       "type": "docs",
       "title": "Migrate local-ollama README to use AJ-68 OLLAMA_BASE_URL env var",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p2",
       "milestone": "v0.1.x",
       "labels": [
         "docs",
         "examples"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "docs/example-ollama-aj68-migration",
       "pr": null,
       "spec": "specs/example-ollama-aj68-migration.md",
       "blocks": [],
