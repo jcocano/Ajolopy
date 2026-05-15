@@ -7,7 +7,7 @@ Importing this module registers every v0.1 target in declaration order:
 2. :class:`~ajolopy.cli.deploy.fly.FlyTarget` — the Fly.io adapter
    that ships with AJ-42.
 3. :class:`~ajolopy.cli.deploy.railway.RailwayTarget` — AJ-43.
-4. :class:`~ajolopy.cli.deploy.stubs.RenderStub` — AJ-44.
+4. :class:`~ajolopy.cli.deploy.render.RenderTarget` — AJ-44.
 5. :class:`~ajolopy.cli.deploy.stubs.VercelStub` — AJ-45.
 
 The follow-up items re-register their real target after importing
@@ -26,7 +26,8 @@ from .errors import (
 from .fly import FlyTarget
 from .railway import RailwayTarget
 from .registry import get_target, list_targets, register_target
-from .stubs import RenderStub, VercelStub
+from .render import RenderTarget
+from .stubs import VercelStub
 
 # Register defaults in display order. Re-importing this module is a
 # no-op for the registry because ``register_target`` overrides the
@@ -34,7 +35,7 @@ from .stubs import RenderStub, VercelStub
 register_target(DockerTarget())
 register_target(FlyTarget())
 register_target(RailwayTarget())
-register_target(RenderStub())
+register_target(RenderTarget())
 register_target(VercelStub())
 
 __all__ = [
@@ -48,7 +49,7 @@ __all__ = [
     "DockerTarget",
     "FlyTarget",
     "RailwayTarget",
-    "RenderStub",
+    "RenderTarget",
     "VercelStub",
     "get_target",
     "list_targets",

@@ -15,7 +15,7 @@ command:
 | `docker`  | `Dockerfile.prod` + `.dockerignore`. Works on k8s / VPS / ECS / on-prem / any container runtime. **Reference implementation.** |
 | `fly`     | `fly.toml`. Generates the manifest and prints the `fly launch` / `fly deploy` flow (`AJ-42`). |
 | `railway` | `railway.json`. Generates the manifest and prints the `railway login` / `railway link` / `railway up` flow for you to run. |
-| `render`  | `render.yaml`. Ships in `AJ-44`. |
+| `render`  | `render.yaml`. Generates the Blueprint Render's dashboard applies; users commit/push the file and apply it from <https://dashboard.render.com/blueprints>. |
 | `vercel`  | `vercel.json` + interactive warning gate. Ships in `AJ-45`. |
 
 The command does **not** invoke `docker build`, `flyctl deploy`, or any
