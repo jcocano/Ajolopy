@@ -6,7 +6,7 @@ Importing this module registers every v0.1 target in declaration order:
    implementation that ships with AJ-37.
 2. :class:`~ajolopy.cli.deploy.stubs.FlyStub` — AJ-42 will replace it
    with the real Fly.io target.
-3. :class:`~ajolopy.cli.deploy.stubs.RailwayStub` — AJ-43.
+3. :class:`~ajolopy.cli.deploy.railway.RailwayTarget` — AJ-43.
 4. :class:`~ajolopy.cli.deploy.stubs.RenderStub` — AJ-44.
 5. :class:`~ajolopy.cli.deploy.stubs.VercelStub` — AJ-45.
 
@@ -23,15 +23,16 @@ from .errors import (
     DeployTargetNotFoundError,
     DeployUserAbortError,
 )
+from .railway import RailwayTarget
 from .registry import get_target, list_targets, register_target
-from .stubs import FlyStub, RailwayStub, RenderStub, VercelStub
+from .stubs import FlyStub, RenderStub, VercelStub
 
 # Register defaults in display order. Re-importing this module is a
 # no-op for the registry because ``register_target`` overrides the
 # slot in place (idempotent).
 register_target(DockerTarget())
 register_target(FlyStub())
-register_target(RailwayStub())
+register_target(RailwayTarget())
 register_target(RenderStub())
 register_target(VercelStub())
 
@@ -45,7 +46,7 @@ __all__ = [
     "DeployUserAbortError",
     "DockerTarget",
     "FlyStub",
-    "RailwayStub",
+    "RailwayTarget",
     "RenderStub",
     "VercelStub",
     "get_target",

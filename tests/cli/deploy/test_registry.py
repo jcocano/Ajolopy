@@ -10,7 +10,7 @@ from ajolopy.cli.deploy import (
     DeployResult,
     DockerTarget,
     FlyStub,
-    RailwayStub,
+    RailwayTarget,
     RenderStub,
     VercelStub,
 )
@@ -56,7 +56,7 @@ def isolated_registry() -> Iterable[None]:
     # ``ajolopy.cli.deploy`` later still see the v0.1 targets.
     register_target(DockerTarget())
     register_target(FlyStub())
-    register_target(RailwayStub())
+    register_target(RailwayTarget())
     register_target(RenderStub())
     register_target(VercelStub())
 

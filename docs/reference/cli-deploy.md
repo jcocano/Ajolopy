@@ -14,7 +14,7 @@ command:
 | --------- | ------------------------------------------------------ |
 | `docker`  | `Dockerfile.prod` + `.dockerignore`. Works on k8s / VPS / ECS / on-prem / any container runtime. **Reference implementation.** |
 | `fly`     | `fly.toml`. Ships in `AJ-42`; today the target prints a pointer at the board item. |
-| `railway` | `railway.json`. Ships in `AJ-43`. |
+| `railway` | `railway.json`. Generates the manifest and prints the `railway login` / `railway link` / `railway up` flow for you to run. |
 | `render`  | `render.yaml`. Ships in `AJ-44`. |
 | `vercel`  | `vercel.json` + interactive warning gate. Ships in `AJ-45`. |
 

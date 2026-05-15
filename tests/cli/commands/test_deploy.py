@@ -196,7 +196,6 @@ def test_yes_flag_is_accepted_without_error(tmp_path: Path) -> None:
     ("target", "board_id"),
     [
         ("fly", "AJ-42"),
-        ("railway", "AJ-43"),
         ("render", "AJ-44"),
         ("vercel", "AJ-45"),
     ],
@@ -207,6 +206,26 @@ def test_stub_target_writes_nothing(tmp_path: Path, target: str, board_id: str) 
     assert board_id in stdout
     # Nothing on disk.
     assert list(tmp_path.iterdir()) == []
+
+
+# ---------------------------------------------------------------------------
+# Railway target — real manifest writer (AJ-43)
+# ---------------------------------------------------------------------------
+
+
+def test_railway_writes_manifest(tmp_path: Path) -> None:
+    code, stdout, stderr = _run(_namespace("railway", out_dir=tmp_path), cwd=tmp_path)
+    assert code == EXIT_OK, stderr
+    assert (tmp_path / "railway.json").is_file()
+    assert "railway.json" in stdout
+
+
+def test_railway_prints_next_steps(tmp_path: Path) -> None:
+    _, stdout, _ = _run(_namespace("railway", out_dir=tmp_path), cwd=tmp_path)
+    assert "Next steps:" in stdout
+    assert "railway login" in stdout
+    assert "railway link" in stdout
+    assert "railway up" in stdout
 
 
 # ---------------------------------------------------------------------------
