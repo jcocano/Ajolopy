@@ -887,15 +887,15 @@
       "slug": "cli-new",
       "type": "feature",
       "title": "ajolopy new <name> wizard (4 questions, generates full project)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "cli",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/cli-new",
       "pr": null,
       "spec": "specs/cli-new.md",
       "blocks": [
