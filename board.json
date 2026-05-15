@@ -1304,8 +1304,8 @@
       "id": "AJ-48",
       "slug": "docs-tutorial-3-steps",
       "type": "docs",
-      "title": "Tutorial — killer demo arc (3 steps: hello, evals, team)",
-      "status": "in_progress",
+      "title": "Tutorial \u2014 killer demo arc (3 steps: hello, evals, team)",
+      "status": "in_review",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -1314,7 +1314,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "docs/docs-tutorial-3-steps",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/83",
       "spec": "specs/docs-tutorial-3-steps.md",
       "blocks": [
         "AJ-50"
