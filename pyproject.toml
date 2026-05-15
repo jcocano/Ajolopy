@@ -208,6 +208,12 @@ executionEnvironments = [
     # resolve from the eval scripts and the smoke test.
     { root = "examples/support-agent", extraPaths = ["examples/support-agent/src"] },
     { root = "examples/support-agent/tests", extraPaths = ["examples/support-agent/src"], reportMissingParameterType = "none", reportUnknownParameterType = "none", reportPrivateUsage = "none", reportUnusedClass = "none", reportUnknownMemberType = "none", reportUnknownVariableType = "none", reportUnknownArgumentType = "none" },
+    # AJ-63 — the runnable on-call example. Same treatment as AJ-50:
+    # `extraPaths` lets `oncall_agent.*` modules resolve from the eval
+    # scripts and the smoke test when CI runs
+    # `uv run pyright examples/oncall-agent`.
+    { root = "examples/oncall-agent", extraPaths = ["examples/oncall-agent/src"] },
+    { root = "examples/oncall-agent/tests", extraPaths = ["examples/oncall-agent/src"], reportMissingParameterType = "none", reportUnknownParameterType = "none", reportPrivateUsage = "none", reportUnusedClass = "none", reportUnknownMemberType = "none", reportUnknownVariableType = "none", reportUnknownArgumentType = "none" },
     # AJ-54 — the dogfood docs bot is type-checked the same way as the
     # AJ-50 example. `extraPaths` adds the project's `src/` so
     # `docsbot.*` modules resolve from the eval scripts and the smoke

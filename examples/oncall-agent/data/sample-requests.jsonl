@@ -1,0 +1,5 @@
+{"input": "We are seeing a sustained spike of 502s on /events for the last 10 minutes. Anything related in the repo?", "expected": {"severity": "high", "service": "events"}}
+{"input": "Latency on /api/checkout doubled after the last deploy. Was there a recent PR touching that path?", "expected": {"severity": "medium", "service": "checkout"}}
+{"input": "A customer reports that GitHub Actions cannot push to our container registry — has anyone changed the workflow lately?", "expected": {"severity": "medium", "service": "ci"}}
+{"input": "Quick question: where do we document the on-call rotation in the team's repo?", "expected": {"severity": "low", "service": "docs"}}
+{"input": "Auth service is hard down, customers cannot log in, paging everyone now.", "expected": {"severity": "high", "service": "auth"}}
