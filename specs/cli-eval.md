@@ -320,114 +320,114 @@ the CLI tests do NOT exercise real agent runtimes.
 
 ### Discovery
 
-- [ ] `ajolopy eval` with no targets defaults to importing `evals`.
-- [ ] `ajolopy eval pkg.mod` imports `pkg.mod`, discovers `@Eval`
+- [x] `ajolopy eval` with no targets defaults to importing `evals`.
+- [x] `ajolopy eval pkg.mod` imports `pkg.mod`, discovers `@Eval`
       classes in its `__dict__`.
-- [ ] `ajolopy eval pkg.mod:Cls` resolves to the named class.
-- [ ] `ajolopy eval pkg.mod:NotAnEval` exits 1 with "not an @Eval
+- [x] `ajolopy eval pkg.mod:Cls` resolves to the named class.
+- [x] `ajolopy eval pkg.mod:NotAnEval` exits 1 with "not an @Eval
       class" message.
-- [ ] `ajolopy eval pkg` walks every submodule recursively.
-- [ ] Two targets producing the same class dedupe (the class runs
+- [x] `ajolopy eval pkg` walks every submodule recursively.
+- [x] Two targets producing the same class dedupe (the class runs
       once).
-- [ ] `ajolopy eval pkg.nonexistent` exits 1 with the module path
+- [x] `ajolopy eval pkg.nonexistent` exits 1 with the module path
       in the message.
-- [ ] Discovery preserves declaration order across targets and
+- [x] Discovery preserves declaration order across targets and
       modules.
-- [ ] Zero `@Eval` classes after discovery exits 3 with "no eval
+- [x] Zero `@Eval` classes after discovery exits 3 with "no eval
       suites discovered" hint.
 
 ### Filtering
 
-- [ ] `--filter "Support*"` keeps only suites whose lowercased name
+- [x] `--filter "Support*"` keeps only suites whose lowercased name
       starts with "support".
-- [ ] Filter is case-insensitive.
-- [ ] An empty match set exits 1 with "no suites matched filter".
+- [x] Filter is case-insensitive.
+- [x] An empty match set exits 1 with "no suites matched filter".
 
 ### Run + persist
 
-- [ ] Each suite produces an `EvalRun` written to
+- [x] Each suite produces an `EvalRun` written to
       `<save_dir>/<timestamp>-<SuiteName>.json`.
-- [ ] All suites in one invocation share the same timestamp prefix.
-- [ ] `--no-save` skips writes entirely (no files created).
-- [ ] `--save-dir /tmp/x` writes to that path.
-- [ ] `--threshold-override 0.9` is applied to every suite for the
+- [x] All suites in one invocation share the same timestamp prefix.
+- [x] `--no-save` skips writes entirely (no files created).
+- [x] `--save-dir /tmp/x` writes to that path.
+- [x] `--threshold-override 0.9` is applied to every suite for the
       invocation; original `_ajolopy_eval.threshold` is restored
       after.
-- [ ] `--threshold-override` outside `[0, 1]` exits 2 (argparse
+- [x] `--threshold-override` outside `[0, 1]` exits 2 (argparse
       usage error).
-- [ ] Suites run in declaration order; the CLI does NOT parallelise.
+- [x] Suites run in declaration order; the CLI does NOT parallelise.
 
 ### Default output
 
-- [ ] TTY stdout: rendered with ANSI colors + `✅` / `⚠️ ` / `❌`
+- [x] TTY stdout: rendered with ANSI colors + `✅` / `⚠️ ` / `❌`
       glyphs.
-- [ ] Non-TTY stdout: no ANSI codes; ASCII status badges
+- [x] Non-TTY stdout: no ANSI codes; ASCII status badges
       (`[PASS]` / `[WARN]` / `[FAIL]`).
-- [ ] Per-suite line includes name, score (3 decimals), threshold
+- [x] Per-suite line includes name, score (3 decimals), threshold
       (3 decimals), and case count.
-- [ ] `⚠️ ` only fires when `--compare-with` produced a regression
+- [x] `⚠️ ` only fires when `--compare-with` produced a regression
       (`passed=True` AND `regressions != []`).
-- [ ] Summary line counts.
-- [ ] Final `Exit code: <N>` line matches the actual exit code.
+- [x] Summary line counts.
+- [x] Final `Exit code: <N>` line matches the actual exit code.
 
 ### `--ci` output
 
-- [ ] `--ci` writes JSON to stdout matching the documented schema.
-- [ ] `schema_version` field is `1`.
-- [ ] `compared_with` is `null` when no prior run is available
+- [x] `--ci` writes JSON to stdout matching the documented schema.
+- [x] `schema_version` field is `1`.
+- [x] `compared_with` is `null` when no prior run is available
       for a suite.
-- [ ] `passed` (top-level) is the count of passing suites; same for
+- [x] `passed` (top-level) is the count of passing suites; same for
       `failed`.
-- [ ] `regressions` (top-level) is the total number of regressed
+- [x] `regressions` (top-level) is the total number of regressed
       metrics across all suites.
-- [ ] `exit_code` field matches the process exit code.
+- [x] `exit_code` field matches the process exit code.
 
 ### `--compare-with`
 
-- [ ] `--compare-with last` picks the most-recent prior run file
+- [x] `--compare-with last` picks the most-recent prior run file
       per suite (timestamp before this invocation's timestamp).
-- [ ] `--compare-with 2026-05-14T22-00-00Z` picks files with that
+- [x] `--compare-with 2026-05-14T22-00-00Z` picks files with that
       exact timestamp prefix.
-- [ ] `--compare-with /path/to/dir` reads runs from the given
+- [x] `--compare-with /path/to/dir` reads runs from the given
       directory.
-- [ ] A suite with NO prior run gets `compared_with=null` in
+- [x] A suite with NO prior run gets `compared_with=null` in
       `--ci` JSON and a `NEW` badge in default output.
-- [ ] A regression on at least one suite forces exit code 1 even
+- [x] A regression on at least one suite forces exit code 1 even
       when every suite individually has `passed=True`.
-- [ ] Regression line in default output names the regressed metric
+- [x] Regression line in default output names the regressed metric
       (e.g., `helpful=0.78 (was 0.92 in last run)`).
-- [ ] `EvalComparisonError` (dataset sha256 mismatch, suite name
+- [x] `EvalComparisonError` (dataset sha256 mismatch, suite name
       mismatch) surfaces as a per-suite warning to stderr; the
       suite is still run / saved, just NOT compared.
 
 ### `--dry-run`
 
-- [ ] `--dry-run` prints the cost estimate table and prompts.
-- [ ] User typing `y` proceeds with the full run.
-- [ ] User typing `n` (or anything not in `y/Y`) exits 4 without
+- [x] `--dry-run` prints the cost estimate table and prompts.
+- [x] User typing `y` proceeds with the full run.
+- [x] User typing `n` (or anything not in `y/Y`) exits 4 without
       running.
-- [ ] `--dry-run --ci` prints the estimate as JSON (top-level
+- [x] `--dry-run --ci` prints the estimate as JSON (top-level
       `dry_run: true`) and exits 0 without prompting OR running.
-- [ ] Unknown model produces an "unknown" line; the total counts
+- [x] Unknown model produces an "unknown" line; the total counts
       the known-model estimates only.
 
 ### Exit codes
 
-- [ ] All-passing run, no compare → exit 0.
-- [ ] Any suite failed → exit 1.
-- [ ] All passed but a regression detected → exit 1.
-- [ ] Bad argparse args (e.g. `--threshold-override 1.5`) → exit 2.
-- [ ] Discovery import error / zero suites → exit 3.
-- [ ] `--dry-run` user declined → exit 4.
+- [x] All-passing run, no compare → exit 0.
+- [x] Any suite failed → exit 1.
+- [x] All passed but a regression detected → exit 1.
+- [x] Bad argparse args (e.g. `--threshold-override 1.5`) → exit 2.
+- [x] Discovery import error / zero suites → exit 3.
+- [x] `--dry-run` user declined → exit 4.
 
 ### Public re-exports
 
-- [ ] `ajolopy eval --help` lists every documented flag in the
+- [x] `ajolopy eval --help` lists every documented flag in the
       help text.
-- [ ] The subcommand is registered via
+- [x] The subcommand is registered via
       `src/ajolopy/cli/commands/__init__.py` (the existing
       registry seam).
-- [ ] No top-level Python re-exports added — the CLI is the
+- [x] No top-level Python re-exports added — the CLI is the
       surface; the underlying `EvalRunner` already lives in
       `ajolopy.eval`.
 
@@ -469,4 +469,32 @@ the CLI tests do NOT exercise real agent runtimes.
 
 ## Implementation notes
 
-(Empty — populated by the implementation PR.)
+- **Threshold override via dynamic subclass.** `EvalMetadata` is a
+  frozen dataclass; mutating it in place would break the AJ-4 contract
+  and leak state to the next invocation. The CLI instead builds a
+  transient subclass of the suite and shadows `_ajolopy_eval` with a
+  `dataclasses.replace(metadata, threshold=N)` copy. The runner sees
+  the override; the user's class stays untouched. See
+  `_apply_threshold_override` in `src/ajolopy/cli/commands/eval.py`.
+- **TTY detection.** `StringIO` raises
+  `io.UnsupportedOperation` from `fileno()`, so a naive
+  `os.isatty(stream.fileno())` blows up under the test harness. The
+  CLI calls `stream.isatty()` when available and swallows the
+  failure path, defaulting to "not a TTY" (ASCII badges, no ANSI).
+- **NEW vs no-compare distinction.** The renderer needs to tell apart
+  "no `--compare-with` was passed" from "compared but no prior run
+  exists". The orchestrator threads a `compare_requested` flag
+  through both renderers; the CI JSON sets `compared_with=null` only
+  in the latter case, and the default renderer emits a `NEW` badge
+  for it.
+- **Discovery import boundary.** `pkgutil.walk_packages` walks
+  sub-packages on demand; the CLI surfaces failures from any visited
+  module via the same `_DiscoveryImportError` path so the user never
+  has to dig through a partial trace.
+- **Dry-run prompt threading.** `builtins.input` is the entry the
+  CLI hits for the y/N prompt — tests monkeypatch it directly.
+  `--dry-run --ci` skips the prompt entirely and emits a JSON
+  estimate with `dry_run: true`; the run does not execute.
+- **No new runtime deps.** Colours via stdlib + manual ANSI; JSON via
+  stdlib; cost estimate via `get_active_catalog()` (AJ-30). The CLI
+  ships zero new entries in `pyproject.toml`.
