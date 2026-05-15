@@ -913,7 +913,7 @@
       "slug": "cli-dev",
       "type": "feature",
       "title": "ajolopy dev (uvicorn --reload + .env watcher)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -922,7 +922,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/cli-dev",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/68",
       "spec": "specs/cli-dev.md",
       "blocks": [
         "AJ-54"
