@@ -1227,15 +1227,15 @@
       "slug": "vercel-deploy",
       "type": "feature",
       "title": "Vercel deploy target (vercel.json + warnings flow)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p2",
       "milestone": "v0.1",
       "labels": [
         "deploy",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/vercel-deploy",
       "pr": null,
       "spec": "specs/vercel-deploy.md",
       "blocks": [],
