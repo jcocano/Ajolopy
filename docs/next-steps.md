@@ -60,6 +60,15 @@ running locally. Here is where to go from here.
   subclass over the project's own `docs/` tree, exercises
   `@Agent` + `@Tool` + `@Stream` + `@Eval` end-to-end, and ships
   pre-generated `Dockerfile.prod` + `fly.toml`.
+- **[`examples/contextual-rag`](https://github.com/jcocano/Ajolopy/tree/main/examples/contextual-rag)**
+  is the RAG flagship example
+  ([`AJ-67`](https://github.com/jcocano/Ajolopy/blob/main/board.json)).
+  Contextual chunking (every chunk ships the parent section's
+  summary), hybrid retrieval (0.4 keyword + 0.6 semantic-hash), and
+  citation-enforcing evals (`addresses_query` LLM-judge plus two
+  deterministic checks for the `[path#section]` citation block and
+  the right cited section). Documents the upgrade path to
+  `QdrantRetriever` / `PgvectorRetriever` for real embeddings.
 - **Dogfood apps roadmap.** A small set of end-to-end Ajolopy projects
   maintained alongside the framework — the same way NestJS ships
   `nest-cli` examples. Tracked as
