@@ -1775,7 +1775,7 @@
       "slug": "example-local-ollama",
       "type": "docs",
       "title": "Example: local LLM agent (Ollama via universal provider, no API key)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1783,8 +1783,8 @@
         "v0.1",
         "examples"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "docs/example-local-ollama",
       "pr": null,
       "spec": "specs/example-local-ollama.md",
       "blocks": [],
