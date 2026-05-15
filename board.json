@@ -1823,7 +1823,7 @@
       "slug": "universal-provider-env-base-urls",
       "type": "feature",
       "title": "UniversalOpenAIProvider should read ${PREFIX}_BASE_URL env vars",
-      "status": "in_review",
+      "status": "done",
       "priority": "p2",
       "milestone": "v0.1.x",
       "labels": [
@@ -1839,14 +1839,14 @@
       "estimate": null,
       "created_at": "2026-05-15",
       "updated_at": "2026-05-15",
-      "closed_at": null
+      "closed_at": "2026-05-15"
     },
     {
       "id": "AJ-69",
       "slug": "lazy-fallback-provider-instantiation",
       "type": "refactor",
       "title": "Lazy-instantiate fallback providers (defer until primary failure)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p2",
       "milestone": "v0.1.x",
       "labels": [
@@ -1862,14 +1862,14 @@
       "estimate": null,
       "created_at": "2026-05-15",
       "updated_at": "2026-05-15",
-      "closed_at": null
+      "closed_at": "2026-05-15"
     },
     {
       "id": "AJ-70",
       "slug": "pricing-catalog-silence-local-models",
       "type": "feature",
       "title": "Silence pricing-catalog warning or accept overrides for local/custom models",
-      "status": "in_review",
+      "status": "done",
       "priority": "p2",
       "milestone": "v0.1.x",
       "labels": [
@@ -1885,7 +1885,7 @@
       "estimate": null,
       "created_at": "2026-05-15",
       "updated_at": "2026-05-15",
-      "closed_at": null
+      "closed_at": "2026-05-15"
     }
   ]
 }
