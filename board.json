@@ -913,15 +913,15 @@
       "slug": "cli-dev",
       "type": "feature",
       "title": "ajolopy dev (uvicorn --reload + .env watcher)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "cli",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/cli-dev",
       "pr": null,
       "spec": "specs/cli-dev.md",
       "blocks": [
