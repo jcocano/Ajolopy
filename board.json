@@ -1015,7 +1015,7 @@
       "slug": "cli-deploy",
       "type": "feature",
       "title": "ajolopy deploy [target] (fly/railway/render/vercel/docker)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1024,7 +1024,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/cli-deploy",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/90",
       "spec": "specs/cli-deploy.md",
       "blocks": [
         "AJ-42",
@@ -1304,7 +1304,7 @@
       "id": "AJ-48",
       "slug": "docs-tutorial-3-steps",
       "type": "docs",
-      "title": "Tutorial — killer demo arc (3 steps: hello, evals, team)",
+      "title": "Tutorial \u2014 killer demo arc (3 steps: hello, evals, team)",
       "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
