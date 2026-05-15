@@ -18,13 +18,23 @@ from ajolopy.providers import register_provider
 from ajolopy.providers.universal_openai import UniversalOpenAIProvider
 
 # Env vars covered by the provider's per-prefix table. Cleared on every
-# test entry so each test starts from a known-empty baseline.
+# test entry so each test starts from a known-empty baseline. The
+# ``_BASE_URL`` family was added by AJ-68 (env-backed magical default
+# for ``UniversalOpenAIProvider._resolve_base_url``) and must be cleared
+# too so the default-URL branch stays reachable from a developer's
+# shell that happens to export e.g. ``OLLAMA_BASE_URL``.
 _PER_PREFIX_ENV_VARS: tuple[str, ...] = (
     "GROQ_API_KEY",
     "TOGETHER_API_KEY",
     "MISTRAL_API_KEY",
     "DEEPSEEK_API_KEY",
     "OPENROUTER_API_KEY",
+    "OLLAMA_BASE_URL",
+    "GROQ_BASE_URL",
+    "TOGETHER_BASE_URL",
+    "MISTRAL_BASE_URL",
+    "DEEPSEEK_BASE_URL",
+    "OPENROUTER_BASE_URL",
 )
 
 

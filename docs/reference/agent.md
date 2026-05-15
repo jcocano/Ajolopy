@@ -79,6 +79,19 @@ async def main() -> None:
 | `tools`                | `list[type] \| None`                          | `None`        | Extra classes whose `@Tool` methods this agent should expose. |
 | `integrations`         | `list[type] \| None`                          | `None`        | List of [`@MCP`](mcp.md)-decorated classes to source MCP tools from. |
 
+!!! tip "Per-prefix base-URL override (universal provider)"
+    For the OpenAI-compatible universal provider — the one that backs
+    `ollama:*`, `groq:*`, `together:*`, `mistral:*`, `deepseek:*`, and
+    `openrouter:*` model strings — every prefix's default endpoint can
+    be overridden through a `${PREFIX}_BASE_URL` environment variable:
+    `OLLAMA_BASE_URL`, `GROQ_BASE_URL`, `TOGETHER_BASE_URL`,
+    `MISTRAL_BASE_URL`, `DEEPSEEK_BASE_URL`, `OPENROUTER_BASE_URL`. The
+    env var is read lazily on the first request for that prefix and
+    falls through to the framework default when unset or empty.
+    Typical uses: pointing `ollama:*` at a remote Ollama daemon, or at
+    a local LM Studio server on `http://127.0.0.1:1234/v1`. See
+    [`specs/universal-provider-env-base-urls.md`](https://github.com/jcocano/ajolopy/blob/main/specs/universal-provider-env-base-urls.md).
+
 ## Escape hatches
 
 - **Per-request system prompts.** Pass `system=` a callable; the framework

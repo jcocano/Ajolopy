@@ -90,12 +90,15 @@ def test_groq_client_is_cached_after_first_build(
     assert call_count["n"] == 1
 
 
-def test_ollama_builds_without_consulting_any_env_var(
+def test_ollama_builds_without_consulting_api_key_env_vars(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Ollama runs locally and uses the literal "ollama" placeholder for
-    # the API key. The resolver must NOT touch any env var to build
-    # the client.
+    # the API key. The resolver must NOT touch any per-prefix API key
+    # env var to build the client. (Reading ``OLLAMA_BASE_URL`` for the
+    # base-URL override is expected — AJ-68 — but it must be unset for
+    # this test so the default URL is still picked.)
+    monkeypatch.delenv("OLLAMA_BASE_URL", raising=False)
     accessed: list[str] = []
     real_environ_get = __import__("os").environ.get
 
@@ -117,5 +120,5 @@ def test_ollama_builds_without_consulting_any_env_var(
     # base_url for local Ollama is in place.
     assert captured["kwargs"]["api_key"] == "ollama"
     assert captured["kwargs"]["base_url"] == "http://localhost:11434/v1"
-    # No per-prefix env var was probed during resolution.
+    # No per-prefix API key env var was probed during resolution.
     assert not any(name.endswith("_API_KEY") for name in accessed)
