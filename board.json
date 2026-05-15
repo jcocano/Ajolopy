@@ -1550,15 +1550,15 @@
       "slug": "launch-comms",
       "type": "story",
       "title": "Public v0.1 launch (HN/X posts, README final, demo video)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "release",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "story/launch-comms",
       "pr": null,
       "spec": "specs/launch-comms.md",
       "blocks": [],
