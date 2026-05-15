@@ -130,10 +130,12 @@ def test_passed_instance_is_returned_unchanged() -> None:
             return []
 
         @override
-        async def append(self, session_id: str, message: Message) -> None: ...
+        async def append(self, session_id: str, message: Message) -> None:
+            return None
 
         @override
-        async def clear(self, session_id: str) -> None: ...
+        async def clear(self, session_id: str) -> None:
+            return None
 
     instance = CustomMemory()
     assert resolve_memory(instance) is instance

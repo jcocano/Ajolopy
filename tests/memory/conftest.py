@@ -7,9 +7,6 @@ fixture body.
 """
 
 from tests.agent.conftest import (
-    FakeProvider as FakeProvider,
-)
-from tests.agent.conftest import (
     fake_provider_factory as fake_provider_factory,
 )
 from tests.agent.conftest import (
