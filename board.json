@@ -1305,15 +1305,15 @@
       "slug": "docs-tutorial-3-steps",
       "type": "docs",
       "title": "Tutorial — killer demo arc (3 steps: hello, evals, team)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
         "docs",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "docs/docs-tutorial-3-steps",
       "pr": null,
       "spec": "specs/docs-tutorial-3-steps.md",
       "blocks": [
