@@ -1869,15 +1869,15 @@
       "slug": "pricing-catalog-silence-local-models",
       "type": "feature",
       "title": "Silence pricing-catalog warning or accept overrides for local/custom models",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p2",
       "milestone": "v0.1.x",
       "labels": [
         "observability",
         "enhancement"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/pricing-catalog-silence-local-models",
       "pr": null,
       "spec": "specs/pricing-catalog-silence-local-models.md",
       "blocks": [],
