@@ -1869,7 +1869,7 @@
       "slug": "pricing-catalog-silence-local-models",
       "type": "feature",
       "title": "Silence pricing-catalog warning or accept overrides for local/custom models",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p2",
       "milestone": "v0.1.x",
       "labels": [
@@ -1878,7 +1878,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/pricing-catalog-silence-local-models",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/117",
       "spec": "specs/pricing-catalog-silence-local-models.md",
       "blocks": [],
       "blocked_by": [],
