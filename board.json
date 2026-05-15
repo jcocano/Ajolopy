@@ -1846,15 +1846,15 @@
       "slug": "lazy-fallback-provider-instantiation",
       "type": "refactor",
       "title": "Lazy-instantiate fallback providers (defer until primary failure)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p2",
       "milestone": "v0.1.x",
       "labels": [
         "agent",
         "refactor"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "refactor/lazy-fallback-provider-instantiation",
       "pr": null,
       "spec": "specs/lazy-fallback-provider-instantiation.md",
       "blocks": [],
