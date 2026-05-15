@@ -23,6 +23,17 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
 
 
+def _empty_metadata() -> dict[str, Any]:
+    """Typed factory for the empty ``Document.metadata`` default.
+
+    Using ``default_factory=dict`` directly resolves to
+    ``dict[Unknown, Unknown]`` under pyright strict; this thin
+    wrapper carries the explicit annotation so the field's inferred
+    type stays ``Mapping[str, Any]``.
+    """
+    return {}
+
+
 @dataclass(frozen=True, slots=True)
 class Document:
     """A single indexable record.
@@ -35,7 +46,7 @@ class Document:
 
     id: str
     text: str
-    metadata: Mapping[str, Any] = field(default_factory=dict)
+    metadata: Mapping[str, Any] = field(default_factory=_empty_metadata)
 
 
 @dataclass(frozen=True, slots=True)
