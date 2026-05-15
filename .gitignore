@@ -14,6 +14,8 @@ dist/
 .venv/
 venv/
 env/
+# CLI subcommand tests (AJ-36) live under tests/cli/env/ and are tracked.
+!tests/cli/env/
 
 # Note: uv.lock IS committed — only the venv and caches are ignored.
 
