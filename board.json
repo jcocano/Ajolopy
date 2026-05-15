@@ -1337,7 +1337,7 @@
       "slug": "docs-reference",
       "type": "docs",
       "title": "Reference docs for each of the 10 primitives",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -1346,7 +1346,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "docs/docs-reference",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/75",
       "spec": "specs/docs-reference.md",
       "blocks": [
         "AJ-57"
