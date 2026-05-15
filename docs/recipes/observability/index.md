@@ -38,6 +38,34 @@ recipes below differ only in where to point the exporter.
     change. The framework does not bind to a vendor; the recipes are
     cookbooks, not lock-ins.
 
+!!! tip "Silencing the unknown-model warning"
+    Models that are missing from the embedded pricing snapshot trigger a
+    one-time `WARNING ajolopy.observability.pricing` per process so unknown
+    cloud models never silently report `$0`. That default is right for
+    pay-per-token endpoints — but pure noise for local / self-hosted models
+    where there is no cost to track. Two layers handle this:
+
+    - **Default silent prefixes.** `ollama:*` is silenced out of the box.
+      Onboarding against a local Ollama via the
+      [local-LLM example](https://github.com/jcocano/Ajolopy/tree/main/examples/local-ollama)
+      stays quiet with zero ceremony.
+    - **`pricing_silence=` on the factory.** Pass an iterable of exact model
+      strings or prefix tokens to silence the warning for custom self-hosted
+      prefixes (`vllm:`, `lmstudio:`, your own internal name) or for one-off
+      custom models:
+
+        ```python
+        await AjolopyFactory.create(
+            RootModule,
+            pricing_silence={"vllm", "my-fine-tune-v1"},
+        )
+        ```
+
+    The chat-span emission contract is unchanged in every silenced case:
+    unknown models still **omit** `gen_ai.cost_usd*` from the span — only
+    the log line goes away. Models with real costs continue to register
+    via `pricing_overrides=`.
+
 ## Which one should I pick?
 
 | Backend                          | Best for                                                                                  | Hosted | Self-host | AI-native | Notes                                                            |
