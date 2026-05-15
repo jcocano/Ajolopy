@@ -1,0 +1,5 @@
+{"input": "What is @Agent?", "expected": {"topic": "agent", "paths": ["reference/agent.md", "tutorial/step-1-hello.md"]}}
+{"input": "How do I install ajolopy?", "expected": {"topic": "install", "paths": ["install.md", "quickstart.md"]}}
+{"input": "Which LLM providers does Ajolopy support?", "expected": {"topic": "providers", "paths": ["index.md", "reference/agent.md"]}}
+{"input": "How do I run an eval suite in CI?", "expected": {"topic": "eval", "paths": ["reference/eval.md", "tutorial/step-2-evals.md"]}}
+{"input": "How do I deploy to Fly.io?", "expected": {"topic": "deploy", "paths": ["reference/cli-deploy.md", "next-steps.md"]}}

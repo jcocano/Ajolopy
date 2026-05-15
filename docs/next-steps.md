@@ -22,7 +22,14 @@ running locally. Here is where to go from here.
   [3-step killer demo tutorial](tutorial/index.md). Fork it, set
   `ANTHROPIC_API_KEY`, and run `uv sync && ajolopy dev` to see every
   primitive in action against a real provider.
-- **Dogfood apps.** A small set of end-to-end Ajolopy projects
+- **[`dogfood/docsbot`](https://github.com/jcocano/Ajolopy/tree/main/dogfood/docsbot)**
+  is Ajolopy's own docs bot — the first dogfood app
+  ([`AJ-54`](https://github.com/jcocano/Ajolopy/blob/main/board.json)).
+  Answers questions about the framework using an in-memory `Retriever`
+  subclass over the project's own `docs/` tree, exercises
+  `@Agent` + `@Tool` + `@Stream` + `@Eval` end-to-end, and ships
+  pre-generated `Dockerfile.prod` + `fly.toml`.
+- **Dogfood apps roadmap.** A small set of end-to-end Ajolopy projects
   maintained alongside the framework — the same way NestJS ships
   `nest-cli` examples. Tracked as
   [`AJ-54`](https://github.com/jcocano/Ajolopy/blob/main/board.json) and

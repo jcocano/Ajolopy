@@ -175,6 +175,9 @@ ignore = [
 # The runnable AJ-50 example ships its own `tests/` directory; same
 # rationale as the framework's own `tests/` tree.
 "examples/**/tests/**" = ["ANN", "ARG", "PT011", "RUF012", "S101", "TC"]
+# The AJ-54 dogfood docs bot ships its own `tests/` directory; same
+# rationale as the framework's own `tests/` tree.
+"dogfood/**/tests/**" = ["ANN", "ARG", "PT011", "RUF012", "S101", "TC"]
 # Internal tools intentionally call PATH-resolved binaries (e.g. `git`).
 "tools/**" = ["S603", "S607"]
 
@@ -205,6 +208,12 @@ executionEnvironments = [
     # resolve from the eval scripts and the smoke test.
     { root = "examples/support-agent", extraPaths = ["examples/support-agent/src"] },
     { root = "examples/support-agent/tests", extraPaths = ["examples/support-agent/src"], reportMissingParameterType = "none", reportUnknownParameterType = "none", reportPrivateUsage = "none", reportUnusedClass = "none", reportUnknownMemberType = "none", reportUnknownVariableType = "none", reportUnknownArgumentType = "none" },
+    # AJ-54 — the dogfood docs bot is type-checked the same way as the
+    # AJ-50 example. `extraPaths` adds the project's `src/` so
+    # `docsbot.*` modules resolve from the eval scripts and the smoke
+    # test.
+    { root = "dogfood/docsbot", extraPaths = ["dogfood/docsbot/src"] },
+    { root = "dogfood/docsbot/tests", extraPaths = ["dogfood/docsbot/src"], reportMissingParameterType = "none", reportUnknownParameterType = "none", reportPrivateUsage = "none", reportUnusedClass = "none", reportUnknownMemberType = "none", reportUnknownVariableType = "none", reportUnknownArgumentType = "none" },
 ]
 
 # ---------------------------------------------------------------------------
