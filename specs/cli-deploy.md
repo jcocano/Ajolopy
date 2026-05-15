@@ -243,79 +243,79 @@ command itself (so no monkeypatching `subprocess` is required).
 
 ### Command surface
 
-- [ ] `ajolopy deploy` (no positional) prints usage and exits with
+- [x] `ajolopy deploy` (no positional) prints usage and exits with
       code `2`.
-- [ ] `ajolopy deploy unknown` exits with code `2` and the error
+- [x] `ajolopy deploy unknown` exits with code `2` and the error
       lists all five registered targets.
-- [ ] `ajolopy deploy --help` lists all five targets with their
+- [x] `ajolopy deploy --help` lists all five targets with their
       `description` strings; the order is the registration order.
-- [ ] `ajolopy deploy docker` against an empty `tmp_path` writes
+- [x] `ajolopy deploy docker` against an empty `tmp_path` writes
       `Dockerfile.prod` and `.dockerignore`, prints the two
       `docker build` / `docker run` next-step lines, and exits 0.
-- [ ] `ajolopy deploy docker` against a `tmp_path` that already has
+- [x] `ajolopy deploy docker` against a `tmp_path` that already has
       `Dockerfile.prod` and no `--force` exits with code `2` and
       hints at `--force`.
-- [ ] `ajolopy deploy docker --force` overwrites the existing files.
-- [ ] `ajolopy deploy docker --dry-run` prints both files to stdout
+- [x] `ajolopy deploy docker --force` overwrites the existing files.
+- [x] `ajolopy deploy docker --dry-run` prints both files to stdout
       (with a `# <path>` header per file) and writes nothing.
-- [ ] `ajolopy deploy docker --out <other-path>` writes to the
+- [x] `ajolopy deploy docker --out <other-path>` writes to the
       supplied path instead of cwd.
-- [ ] `--yes` / `-y` is accepted (no error) even when the target
+- [x] `--yes` / `-y` is accepted (no error) even when the target
       does not require confirmation; this keeps the CLI surface
       forward-compatible with AJ-45's Vercel warning gate.
-- [ ] Exit codes for the four error cases match the constants in
+- [x] Exit codes for the four error cases match the constants in
       `deploy.py` (`EXIT_OK`, `EXIT_USAGE`, `EXIT_USER_ABORT`,
       `EXIT_INTERNAL`).
 
 ### Registry
 
-- [ ] `register_target(Cls)` adds a target keyed by `Cls.name`.
-- [ ] Registering a name a second time replaces the earlier
+- [x] `register_target(Cls)` adds a target keyed by `Cls.name`.
+- [x] Registering a name a second time replaces the earlier
       registration (the "last in wins" semantics AJ-42–45 rely on).
-- [ ] `get_target("docker")` returns the registered `DockerTarget`
+- [x] `get_target("docker")` returns the registered `DockerTarget`
       instance.
-- [ ] `get_target("nope")` raises `DeployTargetNotFound` with the
+- [x] `get_target("nope")` raises `DeployTargetNotFound` with the
       list of known names in the message.
-- [ ] `list_targets()` returns the registration order, de-duplicated
+- [x] `list_targets()` returns the registration order, de-duplicated
       by `name`.
 
 ### `DockerTarget` reference impl
 
-- [ ] `prepare()` returns exactly two files: `Dockerfile.prod` and
+- [x] `prepare()` returns exactly two files: `Dockerfile.prod` and
       `.dockerignore`, both as relative `Path` objects.
-- [ ] The `Dockerfile.prod` output equals
+- [x] The `Dockerfile.prod` output equals
       `render_dockerfile(target="production", python_version=…, app_module=…, port=…)`
       for the same context inputs.
-- [ ] The `.dockerignore` output equals `render_dockerignore()`.
-- [ ] `next_steps()` yields the two `docker build` / `docker run`
+- [x] The `.dockerignore` output equals `render_dockerignore()`.
+- [x] `next_steps()` yields the two `docker build` / `docker run`
       lines, with the project name resolved from `pyproject.toml`'s
       `[project] name` when available and `Path.cwd().name`
       otherwise.
 
 ### Stub targets
 
-- [ ] `FlyStub.prepare()` returns `files={}` and a `notes` entry
+- [x] `FlyStub.prepare()` returns `files={}` and a `notes` entry
       pointing at AJ-42.
-- [ ] Same for `RailwayStub` (AJ-43), `RenderStub` (AJ-44),
+- [x] Same for `RailwayStub` (AJ-43), `RenderStub` (AJ-44),
       `VercelStub` (AJ-45).
-- [ ] `next_steps()` yields one line per stub with the AJ-X link.
-- [ ] `ajolopy deploy fly` exits 0, writes nothing, and prints the
+- [x] `next_steps()` yields one line per stub with the AJ-X link.
+- [x] `ajolopy deploy fly` exits 0, writes nothing, and prints the
       stub message + AJ-42 pointer. Same for the three others.
 
 ### Documentation
 
-- [ ] `docs/reference/cli-deploy.md` exists with: purpose, signature,
+- [x] `docs/reference/cli-deploy.md` exists with: purpose, signature,
       kwargs table, escape hatches (custom targets via
       `register_target`), common gotchas, see-also.
-- [ ] `mkdocs.yml` `nav:` extended under `Reference:` with a
+- [x] `mkdocs.yml` `nav:` extended under `Reference:` with a
       `"ajolopy deploy": reference/cli-deploy.md` entry, ordered
       alphabetically with the existing CLI entries.
-- [ ] `uv run --group docs mkdocs build --strict` passes.
+- [x] `uv run --group docs mkdocs build --strict` passes.
 
 ### Quality gates
 
-- [ ] `uv run ruff check src/ajolopy/cli/deploy src/ajolopy/cli/commands/deploy.py tests/cli/deploy tests/cli/commands/test_deploy.py` — zero violations.
-- [ ] `uv run ruff format --check` — clean.
-- [ ] `uv run pyright src/ajolopy/cli/deploy src/ajolopy/cli/commands/deploy.py` — `0 errors`.
-- [ ] `uv run pytest tests/cli/deploy tests/cli/commands/test_deploy.py` — green.
-- [ ] Full repo `uv run pytest` — no new failures.
+- [x] `uv run ruff check src/ajolopy/cli/deploy src/ajolopy/cli/commands/deploy.py tests/cli/deploy tests/cli/commands/test_deploy.py` — zero violations.
+- [x] `uv run ruff format --check` — clean.
+- [x] `uv run pyright src/ajolopy/cli/deploy src/ajolopy/cli/commands/deploy.py` — `0 errors`.
+- [x] `uv run pytest tests/cli/deploy tests/cli/commands/test_deploy.py` — green.
+- [x] Full repo `uv run pytest` — no new failures.

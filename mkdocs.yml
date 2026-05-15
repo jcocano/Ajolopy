@@ -67,6 +67,7 @@ nav:
       - "@Injectable": reference/injectable.md
       - "@Controller": reference/controller.md
       - "@UseGuards": reference/use-guards.md
+      - "ajolopy deploy": reference/cli-deploy.md
   - Recipes:
       - Observability:
           - Overview: recipes/observability/index.md
