@@ -1727,7 +1727,7 @@
       "slug": "example-memory-redis",
       "type": "docs",
       "title": "Example: persistent assistant with @Agent(memory=redis://...)",
-      "status": "backlog",
+      "status": "ready",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1738,7 +1738,7 @@
       "owner": null,
       "branch": null,
       "pr": null,
-      "spec": null,
+      "spec": "specs/example-memory-redis.md",
       "blocks": [],
       "blocked_by": [],
       "estimate": null,
