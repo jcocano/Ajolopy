@@ -1938,15 +1938,15 @@
       "slug": "examples-index-readme",
       "type": "docs",
       "title": "Add examples/README.md index with production use cases",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p2",
       "milestone": "v0.1.x",
       "labels": [
         "docs",
         "examples"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "docs/examples-index-readme",
       "pr": null,
       "spec": "specs/examples-index-readme.md",
       "blocks": [],
