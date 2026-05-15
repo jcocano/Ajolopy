@@ -285,10 +285,12 @@ def _collect_vars(
 ) -> list[dict[str, Any]]:
     """Return one descriptor per field of ``config_cls``.
 
-    Each descriptor exposes ``name`` / ``set`` / ``length`` / ``value``
-    / ``masked_value`` so both renderers can format consistently. The
-    masked value is computed once here so the JSON and text paths can
-    never drift.
+    Each descriptor exposes ``name`` / ``set`` / ``length`` /
+    ``masked_value``. Every value is masked through :func:`_mask_value`
+    regardless of whether the name looks secret — the CLI MUST NOT
+    print raw env-var contents to stdout (CodeQL flags any clear-text
+    flow as a leak). The ``secret`` boolean stays as a hint for
+    consumers of the JSON payload, but it never gates masking.
     """
     rows: list[dict[str, Any]] = []
     for name, info in config_cls.model_fields.items():
@@ -299,23 +301,19 @@ def _collect_vars(
                     "name": name,
                     "set": False,
                     "length": 0,
-                    "value": None,
                     "masked_value": None,
                     "secret": _looks_secret(name),
                     "required": _is_required(info),
                 }
             )
             continue
-        is_secret = _looks_secret(name)
-        masked = _mask_value(raw) if is_secret else raw
         rows.append(
             {
                 "name": name,
                 "set": True,
                 "length": len(raw),
-                "value": raw if not is_secret else None,
-                "masked_value": masked,
-                "secret": is_secret,
+                "masked_value": _mask_value(raw),
+                "secret": _looks_secret(name),
                 "required": _is_required(info),
             }
         )
@@ -364,9 +362,7 @@ def _render_show_text(rows: list[dict[str, Any]], *, stdout: IO[str]) -> None:
         name = cast("str", row["name"])
         padded = name.ljust(width)
         if row["set"]:
-            display = (
-                cast("str", row["masked_value"]) if row["secret"] else cast("str", row["value"])
-            )
+            display = cast("str", row["masked_value"])
             print(f"{padded}  {set_glyph} set      ({display})", file=stdout)
         else:
             print(f"{padded}  {missing_glyph} missing", file=stdout)

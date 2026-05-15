@@ -64,7 +64,10 @@ class TestSetVsMissingGlyph:
         # Non-TTY (StringIO) renders the ASCII fallback.
         assert "APP_ENV" in out
         assert "[set]" in out
-        assert "production" in out
+        # Every value is masked (length-aware) — the raw value never
+        # reaches stdout, regardless of whether the name looks secret.
+        assert "production" not in out
+        assert "10 chars" in out
 
     def test_missing_marker_when_env_var_absent(
         self,
@@ -95,16 +98,20 @@ class TestMaskingSecretLookingNames:
         assert "1234" in out
         assert "chars" in out
 
-    def test_non_secret_value_is_rendered_verbatim(
+    def test_non_secret_value_is_also_masked(
         self,
         tmp_path: Path,
         project_factory: Any,
     ) -> None:
+        # AJ-36 / PR #72 CodeQL alert: every value is masked, even
+        # ones whose name does not look secret. The raw env-var
+        # content never reaches stdout — only its length signature.
         project_factory(tmp_path, package="envapp", config_body=SAMPLE_CONFIG)
         environ = {"APP_ENV": "production"}
         code, out, _err = _run(["env-show"], cwd=tmp_path, environ=environ)
         assert code == env_cmd.EXIT_OK
-        assert "production" in out
+        assert "production" not in out
+        assert "10 chars" in out
 
     def test_short_secret_collapses_to_length_only(self) -> None:
         masked = env_cmd._mask_value("short")
@@ -269,8 +276,11 @@ class TestDotenvFileIsRead:
         code, out, _err = _run(["env-show"], cwd=tmp_path, environ={})
         assert code == env_cmd.EXIT_OK
         assert "[set]" in out
-        assert "staging" in out
-        # Secret values from .env are still masked.
+        # Even non-secret values are length-masked; the raw "staging"
+        # never reaches stdout (CodeQL leak-prevention rule).
+        assert "staging" not in out
+        assert "7 chars" in out
+        # Secret values from .env are similarly never printed verbatim.
         assert "sk-from-dotenv" not in out
 
     def test_os_environ_wins_over_dotenv(
@@ -286,6 +296,9 @@ class TestDotenvFileIsRead:
             environ={"APP_ENV": "production"},
         )
         assert code == env_cmd.EXIT_OK
-        # The process-env value shadows the dotenv value.
-        assert "production" in out
-        assert "staging" not in out
+        # The process-env value shadows the dotenv value. Both are
+        # length-masked so neither raw string reaches stdout, but the
+        # length differs — production has 10 chars, staging has 7 —
+        # so we can still distinguish which one was used.
+        assert "10 chars" in out
+        assert "7 chars" not in out
