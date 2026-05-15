@@ -1015,15 +1015,15 @@
       "slug": "cli-deploy",
       "type": "feature",
       "title": "ajolopy deploy [target] (fly/railway/render/vercel/docker)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "cli",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/cli-deploy",
       "pr": null,
       "spec": "specs/cli-deploy.md",
       "blocks": [
