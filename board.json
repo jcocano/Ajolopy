@@ -1201,15 +1201,15 @@
       "slug": "render-deploy",
       "type": "feature",
       "title": "Render deploy target (render.yaml generator + flow)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "deploy",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/render-deploy",
       "pr": null,
       "spec": "specs/render-deploy.md",
       "blocks": [],
