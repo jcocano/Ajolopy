@@ -151,16 +151,16 @@ curl -X POST http://127.0.0.1:8000/chat -d '{"message": "hello"}'
 
 ## Acceptance criteria
 
-- [ ] `uv run mkdocs serve` builds the site without errors.
-- [ ] `uv run mkdocs build` produces a `site/` directory.
-- [ ] `docs/quickstart.md` exists and follows the documented
+- [x] `uv run mkdocs serve` builds the site without errors.
+- [x] `uv run mkdocs build` produces a `site/` directory.
+- [x] `docs/quickstart.md` exists and follows the documented
       structure (5 sections).
-- [ ] `docs/install.md` lists every optional extra with one-line
+- [x] `docs/install.md` lists every optional extra with one-line
       descriptions.
-- [ ] `docs/next-steps.md` links to AJ-48 / AJ-49 / AJ-50 / repo.
-- [ ] `mkdocs.yml` has the nav structure as documented.
-- [ ] `pyproject.toml` declares the `docs` dependency group.
-- [ ] `.github/workflows/docs.yml` exists and is SHA-pinned.
+- [x] `docs/next-steps.md` links to AJ-48 / AJ-49 / AJ-50 / repo.
+- [x] `mkdocs.yml` has the nav structure as documented.
+- [x] `pyproject.toml` declares the `docs` dependency group.
+- [x] `.github/workflows/docs.yml` exists and is SHA-pinned.
 
 ## Implementation pointers
 
@@ -175,4 +175,25 @@ curl -X POST http://127.0.0.1:8000/chat -d '{"message": "hello"}'
 
 ## Implementation notes
 
-(Empty — populated by the implementation PR.)
+- **mkdocs.yml** sets `strict: true` at the top level (in addition to the
+  CLI flag) so any local `uv run mkdocs build` catches broken refs
+  without the developer remembering the flag.
+- **GitHub Pages deploy** uses the official
+  `configure-pages` + `upload-pages-artifact` + `deploy-pages` flow
+  rather than `mkdocs gh-deploy`. Reasons: no PAT needed, deploys via
+  OIDC, `pages: write` is scoped to the deploy job (workflow default
+  remains `contents: read`), and all three actions are SHA-pinned per
+  SECURITY.md.
+- **Strict build doubles as smoke test.** The `build` job runs on every
+  push and PR and runs `mkdocs build --strict`; the `deploy` job only
+  runs on push to main and is gated on the build job. PRs therefore
+  get the docs gate without leaking deploy permissions.
+- **Optional unit test** (`tests/test_docs.py`) parametrises over every
+  `*.md` under `docs/` and asserts each declares a top-level `#`
+  heading. Cheap confidence gate that catches the most common "page
+  renders empty in nav" mistake without depending on mkdocs at test
+  time.
+- **`.gitignore`** now excludes `/site/` so local `mkdocs build` runs
+  do not leak the rendered HTML into commits.
+- **README.md** gets a one-line "Documentation / Quickstart / Install"
+  link cluster near the top, no other prose changes.

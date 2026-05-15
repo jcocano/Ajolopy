@@ -124,6 +124,13 @@ dev = [
     "fakeredis>=2.0",
     "mongomock-motor>=0.0.30",
 ]
+# AJ-47 — docs site (mkdocs-material). Kept out of the runtime install so
+# end users never pull mkdocs as a transitive dependency. CI installs this
+# group only for the docs build/deploy workflow.
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+]
 
 # ---------------------------------------------------------------------------
 # ruff — lint + format (replaces black, isort, flake8)

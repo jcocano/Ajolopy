@@ -1,0 +1,29 @@
+/*
+ * AJ-47 — minor brand polish on top of mkdocs-material.
+ *
+ * Keep this stylesheet small. The default Material theme already covers
+ * 95% of the visual brand; this file exists only to tighten the
+ * primitives table, give code blocks a little more breathing room, and
+ * pin the grid cards used on the landing page.
+ */
+
+/* Tighten the "10 primitives" 2-column table on the landing page. */
+.md-typeset table:not([class]) th,
+.md-typeset table:not([class]) td {
+  padding: 0.55em 0.9em;
+}
+
+/* A touch more vertical rhythm around fenced code blocks. */
+.md-typeset pre > code {
+  line-height: 1.55;
+}
+
+/* Slightly bolder primary-color link hover so docs feel "alive". */
+.md-typeset a:hover {
+  text-decoration: underline;
+}
+
+/* Center the grid-card icons used on docs/index.md. */
+.md-typeset .grid.cards > :is(ul, ol) > li > :is(p, h2, h3) :is(.twemoji, .lg) {
+  vertical-align: middle;
+}

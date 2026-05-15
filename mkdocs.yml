@@ -1,0 +1,70 @@
+# AJ-47 — mkdocs-material site configuration.
+#
+# Builds with: `uv run mkdocs build --strict`
+# Local dev:   `uv run mkdocs serve`
+# Deploys via `.github/workflows/docs.yml` to GitHub Pages on push to main.
+#
+# Future items (AJ-48 tutorial, AJ-49 reference, AJ-51/52 recipes) will extend
+# the `nav:` tree additively — keep the existing entries ordered for the
+# happy-path reader (Home -> Quickstart -> Install -> Next steps).
+
+site_name: Ajolopy
+site_description: AI-native production framework for Python.
+site_url: https://jcocano.github.io/Ajolopy/
+repo_url: https://github.com/jcocano/Ajolopy
+repo_name: jcocano/Ajolopy
+edit_uri: edit/main/docs/
+
+# Fail the build if a docs link points at a file that does not exist. Keeps
+# `mkdocs build --strict` honest as the smoke test.
+strict: true
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - content.code.annotate
+    - search.highlight
+    - search.suggest
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Install: install.md
+  - Next steps: next-steps.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra_css:
+  - stylesheets/extra.css
