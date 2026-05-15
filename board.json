@@ -1799,7 +1799,7 @@
       "slug": "example-contextual-rag",
       "type": "docs",
       "title": "Example: contextual RAG agent (chunking + hybrid retrieval + citations)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1807,8 +1807,8 @@
         "v0.1",
         "examples"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "docs/example-contextual-rag",
       "pr": null,
       "spec": "specs/example-contextual-rag.md",
       "blocks": [],
