@@ -1464,7 +1464,7 @@
       "slug": "dogfood-docsbot",
       "type": "story",
       "title": "Dogfood app #1: Ajolopy docs bot (mes 4-5)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1473,7 +1473,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "story/dogfood-docsbot",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/102",
       "spec": "specs/dogfood-docsbot.md",
       "blocks": [
         "AJ-57"
