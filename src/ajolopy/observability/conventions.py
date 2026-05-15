@@ -289,6 +289,36 @@ AJOLOPY_EVAL_SCORE_PREFIX = "ajolopy.eval.score."
 ``ajolopy.eval.score.helpful``. No constant per metric — the name is
 built at emission time from the metric's class-declared identifier."""
 
+# ---------------------------------------------------------------------------
+# Cross-provider fallback span event (AJ-23)
+# ---------------------------------------------------------------------------
+
+GEN_AI_CHAT_FALLBACK_EVENT = "gen_ai.chat.fallback"
+"""Name of the span event recorded on the *next* ``chat`` span whenever the
+preceding provider call raised :class:`LLMProviderError` and the runtime
+advanced to the next model in the fallback chain. The event documents the
+transition so trace viewers can show "model X failed → model Y handled it"
+without scraping span statuses."""
+
+AJOLOPY_FALLBACK_FROM = "ajolopy.fallback.from"
+"""The failing model string that triggered the fallback (``"claude-sonnet-4-7"``)."""
+
+AJOLOPY_FALLBACK_FROM_PROVIDER = "ajolopy.fallback.from_provider"
+"""Provider key of the failing model (``"anthropic"``)."""
+
+AJOLOPY_FALLBACK_TO = "ajolopy.fallback.to"
+"""The next model string the runtime advanced to (``"gpt-4o-mini"``)."""
+
+AJOLOPY_FALLBACK_TO_PROVIDER = "ajolopy.fallback.to_provider"
+"""Provider key of the next model (``"openai"``)."""
+
+AJOLOPY_FALLBACK_REASON = "ajolopy.fallback.reason"
+"""``str(exception)`` from the failing call, truncated to 200 characters so
+trace backends never reject the attribute as oversized."""
+
+FALLBACK_REASON_MAX_CHARS = 200
+"""Hard cap applied to :data:`AJOLOPY_FALLBACK_REASON`. Spec-locked."""
+
 
 def eval_run_span_name(suite_name: str) -> str:
     """Span name for the root of one :meth:`EvalRunner.run`.
@@ -322,6 +352,11 @@ __all__ = [
     "AJOLOPY_EVAL_TARGET_KIND",
     "AJOLOPY_EVAL_TARGET_NAME",
     "AJOLOPY_EVAL_THRESHOLD",
+    "AJOLOPY_FALLBACK_FROM",
+    "AJOLOPY_FALLBACK_FROM_PROVIDER",
+    "AJOLOPY_FALLBACK_REASON",
+    "AJOLOPY_FALLBACK_TO",
+    "AJOLOPY_FALLBACK_TO_PROVIDER",
     "AJOLOPY_MCP_SERVER_DURATION_MS",
     "AJOLOPY_MCP_SERVER_IS_ERROR",
     "AJOLOPY_MCP_SERVER_NAME",
@@ -336,6 +371,8 @@ __all__ = [
     "AJOLOPY_WORKFLOW_NAME",
     "AJOLOPY_WORKFLOW_OPERATION",
     "AJOLOPY_WORKFLOW_STEP_COUNT",
+    "FALLBACK_REASON_MAX_CHARS",
+    "GEN_AI_CHAT_FALLBACK_EVENT",
     "GEN_AI_COMPLETION",
     "GEN_AI_COST_USD",
     "GEN_AI_COST_USD_CACHE_CREATION",

@@ -37,7 +37,14 @@ from ajolopy.memory import Memory, resolve_memory
 from ajolopy.observability import (
     AJOLOPY_AGENT_NAME,
     AJOLOPY_AGENT_OPERATION,
+    AJOLOPY_FALLBACK_FROM,
+    AJOLOPY_FALLBACK_FROM_PROVIDER,
+    AJOLOPY_FALLBACK_REASON,
+    AJOLOPY_FALLBACK_TO,
+    AJOLOPY_FALLBACK_TO_PROVIDER,
     AJOLOPY_STREAMING,
+    FALLBACK_REASON_MAX_CHARS,
+    GEN_AI_CHAT_FALLBACK_EVENT,
     GEN_AI_COMPLETION,
     GEN_AI_OPERATION_NAME,
     GEN_AI_PROMPT,
@@ -95,6 +102,62 @@ SystemPrompt = str | Callable[[str], str]
 
 FallbackSpec = str | list[str] | Callable[[str], Awaitable[str] | str] | None
 """``fallback`` kwarg accepts a single model, a list, or a callable."""
+
+
+class FallbackTransition:
+    """One ``primary → secondary`` transition recorded between attempts.
+
+    Captured eagerly when the runtime catches :class:`LLMProviderError` and
+    advances to the next model in the chain; flushed onto the **next
+    successful** ``chat`` span via :func:`emit_fallback_events_on_span` so
+    trace viewers see "model X failed → model Y handled it" even when the
+    chain had to skip more than one model along the way.
+    """
+
+    __slots__ = ("from_model", "from_provider", "reason", "to_model", "to_provider")
+
+    def __init__(
+        self,
+        *,
+        from_model: str,
+        from_provider: str,
+        to_model: str,
+        to_provider: str,
+        reason: str,
+    ) -> None:
+        self.from_model = from_model
+        self.from_provider = from_provider
+        self.to_model = to_model
+        self.to_provider = to_provider
+        # Reason is truncated at ingest so the buffered value is always wire-safe.
+        self.reason = reason[:FALLBACK_REASON_MAX_CHARS] if reason else ""
+
+
+def emit_fallback_events_on_span(
+    span: Span,
+    transitions: list[FallbackTransition],
+) -> None:
+    """Append one :data:`GEN_AI_CHAT_FALLBACK_EVENT` per pending transition.
+
+    Lives at module scope so :class:`WorkflowRuntime` can reuse it without
+    importing the agent runtime's private helpers. ``transitions`` is
+    cleared in place after every event has been added so the caller's
+    accumulator stays in sync with what landed on the span.
+    """
+    if not transitions:
+        return
+    for transition in transitions:
+        span.add_event(
+            name=GEN_AI_CHAT_FALLBACK_EVENT,
+            attributes={
+                AJOLOPY_FALLBACK_FROM: transition.from_model,
+                AJOLOPY_FALLBACK_FROM_PROVIDER: transition.from_provider,
+                AJOLOPY_FALLBACK_TO: transition.to_model,
+                AJOLOPY_FALLBACK_TO_PROVIDER: transition.to_provider,
+                AJOLOPY_FALLBACK_REASON: transition.reason,
+            },
+        )
+    transitions.clear()
 
 
 class AgentRuntime:
@@ -164,13 +227,16 @@ class AgentRuntime:
         # Resolve and instantiate every model's provider exactly once.
         fallback_models = self._normalize_fallback(fallback)
         self._fallback_callable = fallback if callable(fallback) else None
-        self._models: list[tuple[str, LLMProvider]] = []
+        # ``_models`` holds (model_str, provider_instance, provider_key) so the
+        # fallback observability layer (AJ-23) can label each transition with
+        # the provider key without re-resolving it at run time.
+        self._models: list[tuple[str, LLMProvider, str]] = []
         provider_cache: dict[str, LLMProvider] = {}
         for model_str in [model, *fallback_models]:
             provider_key = self._resolve_provider_key(model_str)
             if provider_key not in provider_cache:
                 provider_cache[provider_key] = self._instantiate_provider(provider_key)
-            self._models.append((model_str, provider_cache[provider_key]))
+            self._models.append((model_str, provider_cache[provider_key], provider_key))
 
         self._primary_provider_key = self._resolve_provider_key(model)
         self._memory: Memory | None = resolve_memory(memory)  # type: ignore[arg-type]
@@ -322,8 +388,15 @@ class AgentRuntime:
         # ``ajolopy.cost_usd.total`` attr.
         child_costs: list[float | None] = []
 
+        # Pending fallback transitions accumulate when an LLMProviderError
+        # advances the runtime to the next model. The first **successful**
+        # chat span of every subsequent attempt drains them via
+        # :func:`emit_fallback_events_on_span`. Two consecutive failures
+        # therefore flush both transitions on the chat span that eventually
+        # responds (per AJ-23 spec).
+        pending_fallbacks: list[FallbackTransition] = []
         with self._invoke_span(operation="run", streaming=False) as invoke_span:
-            for model_str, provider in self._models:
+            for index, (model_str, provider, provider_key) in enumerate(self._models):
                 try:
                     final_text = await self._run_tool_loop(
                         agent_instance=agent_instance,
@@ -334,9 +407,23 @@ class AgentRuntime:
                         child_costs=child_costs,
                         cost_sink=cost_sink,
                         tool_calls_sink=tool_calls_sink,
+                        pending_fallbacks=pending_fallbacks,
                     )
                 except LLMProviderError as exc:
                     last_error = exc
+                    # Record the transition that just failed → next model.
+                    next_idx = index + 1
+                    if next_idx < len(self._models):
+                        next_model, _, next_provider_key = self._models[next_idx]
+                        pending_fallbacks.append(
+                            FallbackTransition(
+                                from_model=model_str,
+                                from_provider=provider_key,
+                                to_model=next_model,
+                                to_provider=next_provider_key,
+                                reason=str(exc),
+                            )
+                        )
                     # Reset the message buffer between fallback attempts so a
                     # half-finished tool loop doesn't leak into the next try.
                     prompt_messages = self._build_messages(history, message)
@@ -378,9 +465,10 @@ class AgentRuntime:
             wire_tools: list[Tool] | None = self._wire_tools or None
             last_error: BaseException | None = None
             child_costs: list[float | None] = []
+            pending_fallbacks: list[FallbackTransition] = []
 
             with self._invoke_span(operation="stream", streaming=True) as invoke_span:
-                for model_str, provider in self._models:
+                for index, (model_str, provider, provider_key) in enumerate(self._models):
                     prompt_messages = self._build_messages(history, message)
                     try:
                         collected: list[str] = []
@@ -393,11 +481,24 @@ class AgentRuntime:
                             child_costs=child_costs,
                             cost_sink=cost_sink,
                             tool_calls_sink=tool_calls_sink,
+                            pending_fallbacks=pending_fallbacks,
                         ):
                             collected.append(delta)
                             yield delta
                     except LLMProviderError as exc:
                         last_error = exc
+                        next_idx = index + 1
+                        if next_idx < len(self._models):
+                            next_model, _, next_provider_key = self._models[next_idx]
+                            pending_fallbacks.append(
+                                FallbackTransition(
+                                    from_model=model_str,
+                                    from_provider=provider_key,
+                                    to_model=next_model,
+                                    to_provider=next_provider_key,
+                                    reason=str(exc),
+                                )
+                            )
                         continue
                     await self._persist_turn(message, "".join(collected))
                     set_root_cost_total(invoke_span, child_costs)
@@ -431,6 +532,7 @@ class AgentRuntime:
         child_costs: list[float | None],
         cost_sink: list[float | None] | None = None,
         tool_calls_sink: list[str] | None = None,
+        pending_fallbacks: list[FallbackTransition] | None = None,
     ) -> str:
         """Drive the function-calling loop until a tool-free response.
 
@@ -446,6 +548,7 @@ class AgentRuntime:
                 wire_tools=wire_tools,
                 child_costs=child_costs,
                 cost_sink=cost_sink,
+                pending_fallbacks=pending_fallbacks,
             )
             if not response.tool_calls:
                 return response.text
@@ -482,6 +585,7 @@ class AgentRuntime:
         child_costs: list[float | None],
         cost_sink: list[float | None] | None = None,
         tool_calls_sink: list[str] | None = None,
+        pending_fallbacks: list[FallbackTransition] | None = None,
     ) -> AsyncIterator[str]:
         """Stream text deltas, transparently handling tool-call rounds."""
         for iteration in range(self._max_tool_iterations + 1):
@@ -531,6 +635,10 @@ class AgentRuntime:
                     span.record_exception(exc)
                     span.set_status(Status(StatusCode.ERROR, str(exc)))
                     raise
+                # Flush pending fallback transitions onto this successful
+                # streaming chat span (AJ-23).
+                if pending_fallbacks:
+                    emit_fallback_events_on_span(span, pending_fallbacks)
                 self._record_chat_response(
                     span,
                     text="".join(text_parts),
@@ -589,6 +697,7 @@ class AgentRuntime:
         wire_tools: list[Tool] | None,
         child_costs: list[float | None],
         cost_sink: list[float | None] | None = None,
+        pending_fallbacks: list[FallbackTransition] | None = None,
     ) -> Response:
         with self._chat_span(provider=provider, model_str=model_str) as span:
             self._record_chat_request(span, prompt_messages=prompt_messages, streaming=False)
@@ -605,6 +714,11 @@ class AgentRuntime:
                 span.record_exception(exc)
                 span.set_status(Status(StatusCode.ERROR, str(exc)))
                 raise
+            # Flush any pending fallback transitions onto this **successful**
+            # chat span (AJ-23). Drains the buffer so only the first
+            # successful span per attempt records the transitions.
+            if pending_fallbacks:
+                emit_fallback_events_on_span(span, pending_fallbacks)
             self._record_chat_response(
                 span,
                 text=response.text,
@@ -1005,4 +1119,5 @@ __all__ = [
     "FallbackSpec",
     "Response",
     "SystemPrompt",
+    "emit_fallback_events_on_span",
 ]
