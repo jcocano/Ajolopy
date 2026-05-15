@@ -49,8 +49,8 @@ Prose specs live next to the board in [`specs/<slug>.md`](./specs).
 | `ready` | Spec exists, all blockers closed, free to claim |
 | `in_progress` | Claimed; owner + branch set |
 | `blocked` | Claimed but waiting (see `NOTES` section of the spec) |
-| `in_review` | PR is open |
-| `done` | Merged to `main` |
+| `in_review` | PR is open (legacy state — new items skip straight to `done` in the feature PR) |
+| `done` | Marked in the feature PR's last commit; corrected by the actual merge |
 | `cancelled` | Abandoned (no longer blocks other items) |
 
 ### CLI — `tools/board.py`
@@ -84,9 +84,14 @@ uv run python tools/board.py validate             # schema + semantic checks
 6. Read `specs/<slug>.md`. Pick the first unchecked item under
    `## Acceptance criteria`. Implement it (test-first or test-alongside —
    author's call per item).
-7. Open a PR when every acceptance item has at least one passing test.
-8. After merge: `uv run python tools/board.py status AJ-<n> done` and commit
-   (`chore(board): close AJ-<n>`).
+7. Before opening the PR, transition the item to `done` with
+   `uv run python tools/board.py status AJ-<n> done` and commit
+   (`chore(board): AJ-<n> → done`). This `done` is aspirational by ~30s
+   (the PR has not merged yet) but is corrected the moment the merge
+   button fires. Avoids a follow-up "close PR" per item.
+8. Open the PR. Every acceptance item must have at least one passing
+   test. The PR's commit chain is: `promote → seed spec`, `claim`,
+   `feat: ...`, `AJ-<n> → done`.
 
 ### Multi-agent operation
 
