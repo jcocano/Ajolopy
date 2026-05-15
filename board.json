@@ -2,7 +2,7 @@
   "$schema": "./.board-schema.json",
   "version": 1,
   "updated_at": "2026-05-15",
-  "next_id": 72,
+  "next_id": 73,
   "items": [
     {
       "id": "AJ-1",
@@ -1909,6 +1909,29 @@
       "created_at": "2026-05-15",
       "updated_at": "2026-05-15",
       "closed_at": "2026-05-15"
+    },
+    {
+      "id": "AJ-72",
+      "slug": "example-ollama-cross-provider-fallback",
+      "type": "docs",
+      "title": "Add cross-provider fallback to local-ollama (showcase AJ-69 lazy fallback)",
+      "status": "ready",
+      "priority": "p2",
+      "milestone": "v0.1.x",
+      "labels": [
+        "docs",
+        "examples"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": "specs/example-ollama-cross-provider-fallback.md",
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-15",
+      "updated_at": "2026-05-15",
+      "closed_at": null
     }
   ]
 }
