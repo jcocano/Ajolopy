@@ -107,26 +107,26 @@ Per-subcommand shape; documented inline.
 ## Acceptance criteria
 
 ### `env:show`
-- [ ] Lists every field of the discovered `BaseConfig` subclass.
-- [ ] Sets `✓` when env var is present, `✗` otherwise.
-- [ ] Masks values for secret-looking names.
-- [ ] `--ci` JSON output.
+- [x] Lists every field of the discovered `BaseConfig` subclass.
+- [x] Sets `✓` when env var is present, `✗` otherwise.
+- [x] Masks values for secret-looking names.
+- [x] `--ci` JSON output.
 
 ### `env:validate`
-- [ ] All valid → exit 0.
-- [ ] Any invalid → exit 1.
-- [ ] Per-field error message included.
-- [ ] `--ci` JSON output.
+- [x] All valid → exit 0.
+- [x] Any invalid → exit 1.
+- [x] Per-field error message included.
+- [x] `--ci` JSON output.
 
 ### `env:diff`
-- [ ] Reads `.env` and `.env.example` from cwd.
-- [ ] Lists adds and removes.
-- [ ] Missing `.env.example` → exit 1 with message.
-- [ ] Identical files → exit 0 with "no differences" message.
+- [x] Reads `.env` and `.env.example` from cwd.
+- [x] Lists adds and removes.
+- [x] Missing `.env.example` → exit 1 with message.
+- [x] Identical files → exit 0 with "no differences" message.
 
 ### CLI integration
-- [ ] All 3 subcommands registered.
-- [ ] Argparse uses `env-show` etc. internally; user-facing examples
+- [x] All 3 subcommands registered.
+- [x] Argparse uses `env-show` etc. internally; user-facing examples
       and `--help` show the colon form via parser description.
 
 ## Implementation pointers
@@ -140,4 +140,32 @@ Per-subcommand shape; documented inline.
 
 ## Implementation notes
 
-(Empty — populated by the implementation PR.)
+- All three subcommands live in `src/ajolopy/cli/commands/env.py`.
+  Each handler is split into pure helpers (`_discover_config`,
+  `_collect_vars`, `_mask_value`, `_parse_dotenv`) so the CLI tests
+  drive everything through `io.StringIO` buffers without spinning a
+  full project.
+- The colon-form alias is implemented as a tiny `COLON_ALIASES` map
+  in `src/ajolopy/cli/dispatcher.py`; `_rewrite_colon_aliases` rewrites
+  the first `argv` element BEFORE argparse sees it. Only the
+  subcommand slot is considered so a user-supplied value later in
+  `argv` (e.g. a `--filter` pattern containing a colon) is left
+  intact.
+- BaseConfig discovery walks `src/<package>/` for a single Python
+  package, imports `<package>.app_module`, and returns the first
+  `BaseConfig` subclass declared in or imported into that module.
+  Falls back to scanning `<package>/__init__.py` when `app_module`
+  does not declare a config class so projects without an AppModule
+  still work.
+- Secret-looking field names (case-insensitive `key|token|password|
+  secret`) collapse to `first3…last4 (Nchars)`; values shorter than
+  8 characters collapse to `(Nchars)` only so we never accidentally
+  print most of a short secret.
+- Per-subcommand JSON shape carries a `schema_version` so downstream
+  CI consumers can pin against a stable contract:
+
+    - `env:show` → `{schema_version, subcommand, vars[], exit_code}`
+    - `env:validate` → `{schema_version, subcommand, valid[],
+      errors[], exit_code}`
+    - `env:diff` → `{schema_version, subcommand, env_present,
+      adds[], removes[], exit_code}`

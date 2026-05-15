@@ -10,15 +10,49 @@ The dispatcher itself owns no MCP / framework knowledge -- every
 subcommand registers its parser via :func:`register_subcommands`. Future
 items (AJ-32 ff) add their commands by extending the registry without
 touching this module's body.
+
+Argparse subparser names cannot contain ``:``. The user-facing
+``env:show`` / ``env:validate`` / ``env:diff`` subcommands therefore use
+``env-show`` / ``env-validate`` / ``env-diff`` as the internal parser
+names; :func:`_rewrite_colon_aliases` rewrites the first ``argv``
+element before argparse sees it so both forms invoke the same handler.
 """
 
 import argparse
+import sys
 from typing import TYPE_CHECKING
 
 from .commands import register_subcommands
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+
+# Mapping from user-facing colon form to the argparse-friendly hyphen
+# form. Kept tiny on purpose: only commands that include a ``:`` in
+# their public name need an entry. Tests assert against this mapping
+# directly so a typo here cannot regress silently.
+COLON_ALIASES: dict[str, str] = {
+    "env:show": "env-show",
+    "env:validate": "env-validate",
+    "env:diff": "env-diff",
+}
+
+
+def _rewrite_colon_aliases(argv: list[str]) -> list[str]:
+    """Return ``argv`` with the first colon-form subcommand rewritten.
+
+    Only ``argv[0]`` (the subcommand slot) is considered; any later
+    occurrence is treated as a value the user typed deliberately (for
+    example a ``--filter`` pattern) and is left untouched.
+    """
+    if not argv:
+        return argv
+    head = argv[0]
+    replacement = COLON_ALIASES.get(head)
+    if replacement is None:
+        return argv
+    return [replacement, *argv[1:]]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -39,10 +73,12 @@ def main(argv: list[str] | None = None) -> int:
     processes) can assert against it. The installed console script
     raises ``SystemExit(code)`` so OS exit codes match.
     """
+    effective: list[str] = list(sys.argv[1:]) if argv is None else list(argv)
+    effective = _rewrite_colon_aliases(effective)
     parser = build_parser()
-    args = parser.parse_args(argv)
+    args = parser.parse_args(effective)
     func: Callable[[argparse.Namespace], int] = args.func
     return func(args)
 
 
-__all__ = ["build_parser", "main"]
+__all__ = ["COLON_ALIASES", "build_parser", "main"]
