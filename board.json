@@ -1175,15 +1175,15 @@
       "slug": "railway-deploy",
       "type": "feature",
       "title": "Railway deploy target (railway.json generator + flow)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "deploy",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/railway-deploy",
       "pr": null,
       "spec": "specs/railway-deploy.md",
       "blocks": [],
