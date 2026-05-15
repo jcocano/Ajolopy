@@ -1,19 +1,40 @@
+# AJ-56 — Release pipeline for Ajolopy.
+#
+# Triggers on a pushed annotated tag matching `v*.*.*` (release candidates
+# `v*.*.*-rc*` are accepted via the same pattern). The full pipeline is:
+#
+#   preflight     -> quality gates + tag/version match + uv build
+#   twine-check   -> validate the wheel + sdist render cleanly on PyPI
+#   sign          -> sigstore signatures for every dist file
+#   publish       -> PyPI upload via trusted publishing (OIDC, no secrets)
+#   github-release-> create the GitHub release + attach artifacts
+#
+# Top-level permissions default to `contents: read`. Jobs widen the scope
+# only where strictly required (id-token for OIDC, contents:write for the
+# release creation).
+#
+# All third-party Actions are pinned to commit SHAs per SECURITY.md.
+# Dependabot keeps them updated weekly via `.github/dependabot.yml`.
+
 name: Release
 
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"
 
 permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build distribution
+  preflight:
+    name: Preflight checks (lint, types, tests, build)
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    outputs:
+      version: ${{ steps.assert-version.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -28,6 +49,43 @@ jobs:
       - name: Install Python
         run: uv python install 3.14
 
+      # Pull the full extras matrix mirrored from ci.yml so the release
+      # never publishes a build that would fail strict typing or testing
+      # under any documented install footprint.
+      - name: Install dependencies (all extras)
+        run: uv sync --frozen --extra otel --extra mcp --extra redis --extra postgres --extra mongo --extra qdrant --extra pgvector
+
+      - name: ruff check
+        run: uv run ruff check
+
+      - name: ruff format --check
+        run: uv run ruff format --check
+
+      - name: pyright
+        run: uv run pyright
+
+      - name: pytest
+        run: uv run pytest
+
+      # Tag/version gate: the pushed tag (minus the leading `v`) must equal
+      # `ajolopy.__version__`. Mismatch fails the release before any side
+      # effect — the only way to "release" the wrong version is to push a
+      # tag that contradicts the source, and we refuse that here.
+      - name: Assert tag matches ajolopy.__version__
+        id: assert-version
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          tag_version="${tag#v}"
+          src_version="$(uv run python -c 'import ajolopy; print(ajolopy.__version__)')"
+          echo "Tag version: ${tag_version}"
+          echo "Source version: ${src_version}"
+          if [ "${tag_version}" != "${src_version}" ]; then
+            echo "::error::Tag '${tag}' does not match ajolopy.__version__='${src_version}'"
+            exit 1
+          fi
+          echo "version=${src_version}" >> "${GITHUB_OUTPUT}"
+
       - name: Build wheel and sdist
         run: uv build --no-sources
 
@@ -38,14 +96,41 @@ jobs:
           path: dist/
           retention-days: 7
 
-  publish:
-    name: Publish to PyPI
-    needs: build
+  twine-check:
+    name: twine check (PyPI render validation)
+    needs: preflight
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/ajolopy
     permissions:
+      contents: read
+    steps:
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
+        with:
+          enable-cache: true
+
+      - name: Install Python
+        run: uv python install 3.14
+
+      - name: Download dist artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: dist
+          path: dist/
+
+      - name: twine check
+        # `--with twine` pulls twine into an ephemeral environment without
+        # adding it as a project dependency. The repo's runtime + dev deps
+        # stay unchanged.
+        run: uv run --with twine twine check dist/*
+
+  sign:
+    name: Sign artifacts with sigstore
+    needs: twine-check
+    runs-on: ubuntu-latest
+    permissions:
+      # OIDC token used by sigstore to mint a short-lived signing cert
+      # against the public-good Fulcio CA. No long-lived signing key is
+      # ever generated or stored.
       id-token: write
     steps:
       - name: Download dist artifacts
@@ -54,5 +139,75 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Publish to PyPI (Trusted Publisher / OIDC)
+      - name: Sign wheels and sdists
+        uses: sigstore/gh-action-sigstore-python@04cffa1d795717b140764e8b640de88853c92acc  # v3.3.0
+        with:
+          inputs: ./dist/*.tar.gz ./dist/*.whl
+
+      - name: Upload signed bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: dist-signed
+          # `dist/` now contains the originals plus the sigstore bundles
+          # (`*.sigstore`). Both are needed by the publish + release jobs.
+          path: dist/
+          retention-days: 7
+
+  publish:
+    name: Publish to PyPI (trusted publishing / OIDC)
+    needs: sign
+    runs-on: ubuntu-latest
+    environment:
+      # The `pypi` GitHub Environment is created once in the repo
+      # settings. It optionally gates the upload behind a manual review.
+      name: pypi
+      url: https://pypi.org/p/ajolopy
+    permissions:
+      id-token: write
+    steps:
+      - name: Download signed dist artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: dist-signed
+          path: dist/
+
+      - name: Strip sigstore bundles before upload
+        # PyPI rejects `*.sigstore` files in the upload payload; only the
+        # wheel and the sdist belong on the index. The signatures stay
+        # attached to the GitHub release for end-user verification.
+        run: rm -f dist/*.sigstore dist/*.sigstore.json
+
+      - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b  # v1.14.0
+        # No `password` / `PYPI_TOKEN`: trusted publishing exchanges the
+        # workflow's OIDC token for a one-shot upload credential server
+        # side. The repo holds no PyPI secret.
+
+  github-release:
+    name: Create GitHub release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download signed dist artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: dist-signed
+          path: dist/
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda  # v3.0.0
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          # Mark `-rcN` tags as pre-releases automatically so the GitHub
+          # "latest release" pointer skips them.
+          prerelease: ${{ contains(github.ref_name, '-rc') }}
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/*.sigstore
+            dist/*.sigstore.json
+          fail_on_unmatched_files: false
