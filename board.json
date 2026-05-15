@@ -729,7 +729,7 @@
       "slug": "eval-metrics-builtin",
       "type": "feature",
       "title": "Built-in metrics (exact_match, json_match, llm_judge, contains, not_contains, intent_match, tool_called)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p2",
       "milestone": "v0.1",
       "labels": [
@@ -750,7 +750,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-14",
-      "closed_at": null
+      "closed_at": "2026-05-14"
     },
     {
       "id": "AJ-27",
