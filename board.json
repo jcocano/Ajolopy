@@ -1799,7 +1799,7 @@
       "slug": "example-contextual-rag",
       "type": "docs",
       "title": "Example: contextual RAG agent (chunking + hybrid retrieval + citations)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1809,7 +1809,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "docs/example-contextual-rag",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/112",
       "spec": "specs/example-contextual-rag.md",
       "blocks": [],
       "blocked_by": [],
