@@ -44,7 +44,11 @@ from typing import Any
 from opentelemetry.trace import Span, Status, StatusCode
 
 from ajolopy.agent.errors import AgentError
-from ajolopy.agent.runtime import AgentRuntime
+from ajolopy.agent.runtime import (
+    AgentRuntime,
+    FallbackTransition,
+    emit_fallback_events_on_span,
+)
 from ajolopy.observability import (
     AJOLOPY_STREAMING,
     AJOLOPY_WORKFLOW_COORDINATOR_MODEL,
@@ -82,7 +86,7 @@ from ajolopy.providers import (
     resolve_provider,
 )
 
-from .errors import WorkflowConfigError, WorkflowMaxStepsError, WorkflowRouteError
+from .errors import WorkflowConfigError, WorkflowError, WorkflowMaxStepsError, WorkflowRouteError
 from .events import (
     WorkflowEvent,
     make_agent_result,
@@ -165,6 +169,7 @@ class WorkflowRuntime:
         coordinator: str | None,
         max_steps: int,
         route_override: _RouteCallable | None,
+        coordinator_fallback: tuple[str, ...] = (),
         catalog: Catalog | None = None,
         integrations: list[type[Any]] | None = None,
     ) -> None:
@@ -175,6 +180,7 @@ class WorkflowRuntime:
             _delegate_tool_name(cls): cls for cls in agents
         }
         self._coordinator_model = coordinator
+        self._coordinator_fallback: tuple[str, ...] = coordinator_fallback
         self._max_steps = max_steps
         self._route_override = route_override
         self._catalog = catalog
@@ -201,10 +207,22 @@ class WorkflowRuntime:
             kwarg=integrations,
         )
 
-        # Resolve the coordinator's provider once at construction time so
-        # misconfigurations surface at decoration time, not at first call.
+        # Resolve every coordinator model (primary + fallback chain) once at
+        # construction time so misconfigurations surface at decoration time,
+        # not at first call. Provider instances are deduplicated across the
+        # chain — two models routed to the same provider share one
+        # :class:`LLMProvider` instance (AJ-23 spec: "_models[i]
+        # instantiation happens only once per provider key").
+        self._coordinator_models: list[tuple[str, LLMProvider, str]] = []
         if coordinator is not None and route_override is None:
-            self._coordinator_provider = self._instantiate_coordinator_provider(coordinator)
+            provider_cache: dict[str, LLMProvider] = {}
+            for model_str in [coordinator, *self._coordinator_fallback]:
+                provider_key, provider = self._instantiate_coordinator_provider(
+                    model_str,
+                    cache=provider_cache,
+                )
+                self._coordinator_models.append((model_str, provider, provider_key))
+            self._coordinator_provider = self._coordinator_models[0][1]
         else:
             self._coordinator_provider = None
 
@@ -289,12 +307,22 @@ class WorkflowRuntime:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _instantiate_coordinator_provider(model: str) -> LLMProvider:
-        """Resolve and instantiate the provider for ``coordinator=model``.
+    def _instantiate_coordinator_provider(
+        model: str,
+        *,
+        cache: dict[str, LLMProvider] | None = None,
+    ) -> tuple[str, LLMProvider]:
+        """Resolve and instantiate the provider for ``model``.
 
-        Surfaces both unknown-model and provider-instantiation failures as
-        :class:`WorkflowConfigError` so they fail the decorator, not the
-        first request.
+        Returns the ``(provider_key, provider_instance)`` pair so callers can
+        build the ``(model, provider, key)`` triple used by the fallback
+        observability layer. Surfaces both unknown-model and provider-
+        instantiation failures as :class:`WorkflowConfigError` so they fail
+        the decorator, not the first request.
+
+        ``cache`` lets callers share one :class:`LLMProvider` instance
+        across the primary + fallback chain when several models route to
+        the same provider key.
         """
         try:
             key = resolve_provider(model)
@@ -303,6 +331,8 @@ class WorkflowRuntime:
                 f"Unknown coordinator model {model!r}: {exc}. Check the "
                 f"registered provider prefixes or call register_route()."
             ) from exc
+        if cache is not None and key in cache:
+            return key, cache[key]
         try:
             cls = get_provider_class(key)
         except ProviderNotRegisteredError as exc:
@@ -312,9 +342,12 @@ class WorkflowRuntime:
                 f"ajolopy.providers.* package."
             ) from exc
         try:
-            return cls()
+            provider = cls()
         except Exception as exc:
             raise WorkflowConfigError(f"Failed to instantiate provider {key!r}: {exc}") from exc
+        if cache is not None:
+            cache[key] = provider
+        return key, provider
 
     def _resolve_catalog(self) -> Catalog:
         if self._catalog is not None:
@@ -446,9 +479,7 @@ class WorkflowRuntime:
         child_costs: list[float | None],
         counters: dict[str, int],
     ) -> AsyncIterator[WorkflowEvent]:
-        provider = self._coordinator_provider
-        model = self._coordinator_model
-        if provider is None or model is None:  # pragma: no cover - invariant from decorator
+        if not self._coordinator_models:  # pragma: no cover - invariant from decorator
             raise WorkflowConfigError(
                 f"Workflow {self._workflow_name!r} reached the coordinator path "
                 f"without a configured coordinator model."
@@ -457,14 +488,23 @@ class WorkflowRuntime:
             Message(role="system", content=_COORDINATOR_SYSTEM_PROMPT),
             Message(role="user", content=message),
         ]
+        # Pending fallback transitions are persistent across coordinator
+        # turns: a single turn drains them onto its successful chat span,
+        # but if that turn itself fails the queue keeps growing until the
+        # chain succeeds (AJ-23 spec — two failures land two events on the
+        # eventually-successful chat span).
+        pending_fallbacks: list[FallbackTransition] = []
 
         for _step in range(self._max_steps):
             counters["steps"] += 1
-            text_parts, tool_calls_this_turn, finish_reason = await self._coordinator_turn(
-                provider=provider,
-                model=model,
+            (
+                text_parts,
+                tool_calls_this_turn,
+                finish_reason,
+            ) = await self._coordinator_turn_with_fallback(
                 prompt_messages=prompt_messages,
                 child_costs=child_costs,
+                pending_fallbacks=pending_fallbacks,
             )
             _ = finish_reason  # captured on the span; nothing else uses it here.
 
@@ -549,6 +589,62 @@ class WorkflowRuntime:
             step_count=self._max_steps,
         )
 
+    async def _coordinator_turn_with_fallback(
+        self,
+        *,
+        prompt_messages: list[Message],
+        child_costs: list[float | None],
+        pending_fallbacks: list[FallbackTransition],
+    ) -> tuple[list[str], list[ToolCall], str | None]:
+        """Drive one coordinator turn through the configured fallback chain.
+
+        Iterates :data:`_coordinator_models` (primary first, then every
+        ``coordinator_fallback=`` entry) and tries each model in order. On
+        :class:`LLMProviderError`, records a fallback transition into
+        ``pending_fallbacks`` and advances to the next model. When every
+        model is exhausted, raises :class:`WorkflowError` so the workflow
+        run fails — matching :class:`ajolopy.agent.runtime.AgentRuntime`'s
+        exhaustion path.
+        """
+        last_error: LLMProviderError | None = None
+        for index, (model_str, provider, provider_key) in enumerate(self._coordinator_models):
+            try:
+                return await self._coordinator_turn(
+                    provider=provider,
+                    model=model_str,
+                    prompt_messages=prompt_messages,
+                    child_costs=child_costs,
+                    pending_fallbacks=pending_fallbacks,
+                )
+            except LLMProviderError as exc:
+                last_error = exc
+                next_idx = index + 1
+                if next_idx < len(self._coordinator_models):
+                    next_model, _, next_provider_key = self._coordinator_models[next_idx]
+                    pending_fallbacks.append(
+                        FallbackTransition(
+                            from_model=model_str,
+                            from_provider=provider_key,
+                            to_model=next_model,
+                            to_provider=next_provider_key,
+                            reason=str(exc),
+                        )
+                    )
+                continue
+        # Chain exhaustion. When no fallback chain is configured (single
+        # primary coordinator) we preserve AJ-6's behavior and propagate
+        # the underlying :class:`LLMProviderError` verbatim. When the user
+        # configured a ``coordinator_fallback=`` and the framework actually
+        # advanced through it before exhausting, surface a
+        # :class:`WorkflowError` so callers can distinguish "primary
+        # failed" from "every model failed" (AJ-23 spec).
+        if len(self._coordinator_models) <= 1 and last_error is not None:
+            raise last_error
+        raise WorkflowError(
+            f"Workflow {self._workflow_name!r} exhausted all coordinator models"
+            f"{f' (last error: {last_error})' if last_error is not None else ''}."
+        ) from last_error
+
     async def _coordinator_turn(
         self,
         *,
@@ -556,6 +652,7 @@ class WorkflowRuntime:
         model: str,
         prompt_messages: list[Message],
         child_costs: list[float | None],
+        pending_fallbacks: list[FallbackTransition] | None = None,
     ) -> tuple[list[str], list[ToolCall], str | None]:
         """Run one coordinator turn via ``provider.stream``.
 
@@ -600,6 +697,12 @@ class WorkflowRuntime:
                 span.record_exception(exc)
                 span.set_status(Status(StatusCode.ERROR, str(exc)))
                 raise
+            # Flush any pending fallback transitions onto this successful
+            # coordinator chat span (AJ-23). The drain mirrors the agent
+            # runtime's behaviour so multi-step chains land on the first
+            # chat span that actually responded.
+            if pending_fallbacks:
+                emit_fallback_events_on_span(span, pending_fallbacks)
             self._record_chat_response(
                 span,
                 finish_reasons=[finish_reason] if finish_reason else [],

@@ -52,6 +52,7 @@ def Workflow[T](  # noqa: N802 — public surface mirrors the Brief's primitive 
     *,
     agents: list[type[Any]],
     coordinator: str | None = None,
+    coordinator_fallback: list[str] | None = None,
     integrations: list[type[Any]] | None = None,
     max_steps: int = _DEFAULT_MAX_STEPS,
     catalog: Catalog | None = None,
@@ -66,6 +67,7 @@ def Workflow[T](  # noqa: N802 — public surface mirrors the Brief's primitive 
     """
     _validate_max_steps(max_steps)
     _validate_integrations(integrations)
+    _validate_coordinator_fallback(coordinator_fallback)
     _validate_agents(agents)
 
     def _decorate(cls: type[T]) -> type[T]:
@@ -87,12 +89,19 @@ def Workflow[T](  # noqa: N802 — public surface mirrors the Brief's primitive 
 
         # When ``route()`` overrides, the coordinator model is not used,
         # so we deliberately skip its provider resolution to avoid raising
-        # a config error on an unused model.
+        # a config error on an unused model. ``coordinator_fallback`` is
+        # equally ignored on the override path (AJ-23 spec).
         effective_coordinator = None if route_override is not None else coordinator
+        effective_fallback = (
+            tuple(coordinator_fallback)
+            if coordinator_fallback is not None and route_override is None
+            else ()
+        )
         runtime = WorkflowRuntime(
             workflow_cls=cls,
             agents=agents,
             coordinator=effective_coordinator,
+            coordinator_fallback=effective_fallback,
             max_steps=max_steps,
             route_override=route_override,
             catalog=catalog,
@@ -123,6 +132,29 @@ def _validate_max_steps(max_steps: int) -> None:
         raise WorkflowConfigError(f"@Workflow max_steps must be an int >= 1, got {max_steps!r}.")
     if max_steps < 1:
         raise WorkflowConfigError(f"@Workflow max_steps must be >= 1, got {max_steps}.")
+
+
+def _validate_coordinator_fallback(coordinator_fallback: list[str] | None) -> None:
+    """Validate the shape of ``coordinator_fallback=`` at decoration time.
+
+    The per-entry provider resolution lives in
+    :class:`WorkflowRuntime.__init__` so misconfigured chains surface the
+    same way as the coordinator model itself; this function only checks
+    the structural contract (``None`` or list of strings).
+    """
+    if coordinator_fallback is None:
+        return
+    if not isinstance(coordinator_fallback, list):  # pyright: ignore[reportUnnecessaryIsInstance]
+        raise WorkflowConfigError(
+            f"@Workflow coordinator_fallback= must be a list of model strings, "
+            f"got {type(coordinator_fallback).__name__}."
+        )
+    for entry in coordinator_fallback:
+        if not isinstance(entry, str):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise WorkflowConfigError(
+                f"@Workflow coordinator_fallback= entries must be model strings, "
+                f"got {type(entry).__name__}."
+            )
 
 
 def _validate_integrations(integrations: list[type[Any]] | None) -> None:
