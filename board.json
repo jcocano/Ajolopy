@@ -1201,7 +1201,7 @@
       "slug": "render-deploy",
       "type": "feature",
       "title": "Render deploy target (render.yaml generator + flow)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1220,7 +1220,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-15",
-      "closed_at": null
+      "closed_at": "2026-05-15"
     },
     {
       "id": "AJ-45",
