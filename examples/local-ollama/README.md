@@ -103,6 +103,44 @@ model spends tokens reviewing further.
 
 ---
 
+## Cross-provider fallback (no API key required for the happy path)
+
+`CodeReviewer` declares two model entries — a **local primary** and a
+**cloud fallback**:
+
+```python
+@Agent(
+    model="ollama:llama3.3",
+    fallback="claude-haiku-4-5",
+    ...
+)
+class CodeReviewer:
+    ...
+```
+
+The pattern is the framework's answer to **production pain #5** from the
+Brief: "Anthropic outage = app caída". One declaration, two providers,
+zero retry loop to write by hand.
+
+Thanks to **AJ-69 (lazy fallback provider instantiation)** the cloud
+fallback's provider is **not** constructed at decoration time. That means:
+
+- Run the example with no `ANTHROPIC_API_KEY` and the local Ollama
+  primary handles every request. The fallback never instantiates, so
+  the Anthropic env var is never validated.
+- Set `ANTHROPIC_API_KEY` in production and the fallback fires the
+  first time the local primary returns a retriable error (timeout,
+  connection refused, daemon down). The framework swaps to
+  `claude-haiku-4-5` mid-request, logs a
+  `gen_ai.fallback.used` attribute on the span, and the user sees an
+  answer instead of a stack trace.
+
+The `.env.example` ships `ANTHROPIC_API_KEY=` as an optional, empty
+placeholder. Leave it empty for local development; set it before you
+deploy.
+
+---
+
 ## Why no API key?
 
 The universal OpenAI-compatible provider routes by **prefix**. Every
@@ -120,35 +158,35 @@ an opt-in API-key env var:
 
 Ollama runs locally and accepts any non-empty placeholder for the key,
 so Ajolopy passes the literal string `"ollama"` to the SDK. The
-universal provider reads `OLLAMA_BASE_URL` (and the equivalent
-`${PREFIX}_BASE_URL` for every other supported prefix) at first request
-time and falls back to the baked-in default when unset (AJ-68).
+framework reads no environment variable for the `ollama:` prefix.
 
-### Remote Ollama / LM Studio / vLLM (the escape hatch)
+### Remote Ollama (the escape hatch)
 
 If you run Ollama on a different machine — a workstation with a GPU, a
-homelab box, a remote VPS — or you swap it for **LM Studio**, **vLLM**,
-or any other OpenAI-compatible local server, set `OLLAMA_BASE_URL` in
-your `.env` (or the shell) and Ajolopy routes there automatically:
+homelab box, a remote VPS — construct
+:class:`~ajolopy.providers.universal_openai.UniversalOpenAIProvider`
+with the `base_urls=` kwarg and register it manually:
 
-```bash
-# In .env or your shell:
-OLLAMA_BASE_URL=http://my-ollama.lan:11434/v1
-# or for LM Studio defaults:
-OLLAMA_BASE_URL=http://127.0.0.1:1234/v1
+```python
+import openai
+
+from ajolopy.providers.universal_openai import UniversalOpenAIProvider
+from ajolopy.providers.registry import register_provider
+
+register_provider(
+    "universal-openai",
+    UniversalOpenAIProvider,
+    overwrite=True,
+)
+# Or pass a pre-built AsyncOpenAI client per prefix:
+provider = UniversalOpenAIProvider(
+    base_urls={"ollama": "http://my-ollama.lan:11434/v1"},
+    # clients={"ollama": openai.AsyncOpenAI(base_url="...", api_key="ollama")},
+)
 ```
 
-No code change required; the env var wins over the baked-in default.
-If you want a programmatic override (e.g. a test that patches the URL
-without touching the environment), the constructor kwarg
-`UniversalOpenAIProvider(base_urls={"ollama": "..."})` still wins over
-the env var.
-
-The `ollama:` prefix is also silenced by default in the pricing
-catalog (AJ-70) — no "Unknown model" warning fires when you run a
-locally-hosted model that has no per-token cost. To silence additional
-custom prefixes (e.g. `vllm:`), pass `pricing_silence={"vllm"}` to
-`AjolopyFactory.create(...)`.
+The `.env.example` documents `OLLAMA_BASE_URL` as a convention; the
+framework itself does NOT read it.
 
 ---
 

@@ -12,10 +12,15 @@ Drift notes:
 
 - ``@Agent`` has no ``trace=`` kwarg in v0.1; OTel instrumentation is
   always-on and cheap when no SDK is installed.
-- No ``fallback=`` here: a single-laptop Ollama daemon has nothing to
-  fall back to. The README documents adding a hosted fallback
-  (``fallback="groq:llama-3.3-70b-versatile"``) when the example moves
-  to production.
+- ``fallback="claude-haiku-4-5"`` shows the framework's
+  cross-provider-fallback pattern (production pain #5 from the
+  Brief). Thanks to AJ-69 (lazy fallback provider instantiation), the
+  Anthropic provider is **not** constructed at decoration time — the
+  example boots and runs against the local Ollama daemon with no
+  ``ANTHROPIC_API_KEY`` set. The cloud fallback only instantiates the
+  first time the local primary fails (timeout, refused connection,
+  daemon down). Set ``ANTHROPIC_API_KEY`` in production if you want
+  the fallback path to actually fire.
 - ``lint_function`` uses ``ast.parse`` only — no third-party imports —
   so the example's dependency footprint stays at ``ajolopy`` plus
   ``pydantic``.
@@ -48,6 +53,7 @@ class ReviewRequest(BaseModel):
         "Otherwise give two or three specific, actionable suggestions "
         "(naming, types, idioms, bugs). No preamble, no closing pleasantry."
     ),
+    fallback="claude-haiku-4-5",
 )
 class CodeReviewer:
     """Local code reviewer running on Ollama via the universal provider."""

@@ -8,6 +8,7 @@ regressions when the upstream framework moves.
 """
 
 import asyncio
+from typing import Any, cast
 
 from local_ollama.agents.reviewer import CodeReviewer, ReviewRequest
 
@@ -17,6 +18,33 @@ def test_reviewer_agent_is_decorated() -> None:
     assert hasattr(CodeReviewer, "_agent_runtime")
     assert callable(getattr(CodeReviewer, "run", None))
     assert callable(getattr(CodeReviewer, "stream", None))
+
+
+def test_cross_provider_fallback_is_lazy() -> None:
+    """Primary is ``ollama:*`` (eager), fallback is ``claude-*`` (lazy).
+
+    AJ-72 wires ``fallback="claude-haiku-4-5"`` onto ``CodeReviewer`` to
+    demonstrate Ajolopy's cross-provider fallback. AJ-69 made fallback
+    provider construction lazy, so this example boots cleanly with no
+    ``ANTHROPIC_API_KEY`` set — the Anthropic provider is only built
+    when the local primary fails.
+
+    The test reaches into ``AgentRuntime._models`` (private surface) to
+    confirm both halves of the contract: primary is eagerly built, fallback
+    is ``None`` at decoration time. ``getattr`` indirection sidesteps
+    pyright's attribute-access checks for the decorator-injected
+    ``_agent_runtime`` field without touching the framework's public types.
+    """
+    runtime: Any = getattr(CodeReviewer, "_agent_runtime")  # noqa: B009
+    models = cast("list[tuple[str, object | None, str]]", runtime._models)
+    assert len(models) == 2, "expected primary + fallback chain"
+
+    assert models[0][0] == "ollama:llama3.3"
+    assert models[0][1] is not None, "primary must be eagerly instantiated"
+    assert models[1][0] == "claude-haiku-4-5"
+    assert models[1][1] is None, (
+        "fallback provider must be None at decoration time (AJ-69 lazy build)"
+    )
 
 
 def test_lint_function_tool_is_registered() -> None:

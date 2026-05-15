@@ -17,11 +17,17 @@ Modules:
   ``ajolopy dev``.
 """
 
-# Side-effect import — registers ``UniversalOpenAIProvider`` under the
-# ``"universal-openai"`` routing key so ``@Agent(model="ollama:...")``
-# can resolve at decoration time without raising
-# ``ProviderNotRegisteredError``. See
-# ``ajolopy/providers/universal_openai/__init__.py``.
+# Side-effect imports — register the provider classes under their
+# routing keys so the agent's primary + fallback chain resolves at
+# decoration time without ``ProviderNotRegisteredError``.
+#
+# - ``universal_openai`` covers the local Ollama primary (model
+#   ``"ollama:llama3.3"``).
+# - ``anthropic`` covers the cloud fallback (``"claude-haiku-4-5"``).
+#   AJ-69 makes the fallback's provider *instance* lazy, but the
+#   registry binding check stays eager — the import below satisfies
+#   that check without validating ``ANTHROPIC_API_KEY``.
+import ajolopy.providers.anthropic  # pyright: ignore[reportUnusedImport]
 import ajolopy.providers.universal_openai  # noqa: F401  # pyright: ignore[reportUnusedImport]
 
 __all__ = ["__version__"]
