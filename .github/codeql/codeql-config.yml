@@ -1,0 +1,33 @@
+name: "Ajolopy CodeQL config"
+
+# Inherit the workflow's default query suites (security-extended +
+# security-and-quality) and apply path-scoped exclusions for known
+# false positives.
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+# Path-scoped exclusions for the queries we cannot fix at the source.
+# Each entry MUST be accompanied by a short rationale below.
+query-filters:
+  # ----------------------------------------------------------------------
+  # py/clear-text-logging-sensitive-data — excluded for the env CLI module.
+  #
+  # AJ-36's `ajolopy env:show` is a user-invoked diagnostic command. The
+  # env-var values it inspects are masked through `_mask_value(value) ->
+  # f"({len(value)} chars)"`, which strips every byte of content and
+  # leaves only the integer length. CodeQL's taint analysis still flags
+  # the print sites because the masked-string variable is derived from
+  # an environ.get(...) read and the analyzer cannot recognize the
+  # sanitizer.
+  #
+  # Trust boundary: the user runs the command in THEIR own shell to
+  # diagnose THEIR own .env / process env. Nothing crosses a process /
+  # network / file boundary — output goes to the same stdout the user
+  # is already authenticated to read. The substring of a value never
+  # reaches the output anyway (mask is length-only). This exclusion is
+  # narrow: only this file, only this query.
+  - exclude:
+      id: py/clear-text-logging-sensitive-data
+      paths:
+        - src/ajolopy/cli/commands/env.py
