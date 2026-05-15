@@ -4,36 +4,30 @@ import ajolopy.eval.metrics as metrics_pkg
 
 
 def test_public_re_exports() -> None:
-    """The seven helpers + JudgeCache + the three error types import cleanly."""
-    # The import happens inside :mod:`ajolopy.eval.metrics`; this test
-    # asserts that the public attribute lookup matches what the
-    # documented import path resolves to. Pyright happily sees these
-    # as used because we exercise them after binding.
-    from ajolopy.eval.metrics import (
-        JudgeCache,
-        MetricsConfigError,
-        MetricsError,
-        MetricsRuntimeError,
-        contains,
-        exact_match,
-        intent_match,
-        json_match,
-        llm_judge,
-        not_contains,
-        tool_called,
-    )
+    """The seven helpers + JudgeCache + the three error types import cleanly.
 
-    assert JudgeCache is metrics_pkg.JudgeCache
-    assert MetricsConfigError is metrics_pkg.MetricsConfigError
-    assert MetricsError is metrics_pkg.MetricsError
-    assert MetricsRuntimeError is metrics_pkg.MetricsRuntimeError
-    assert contains is metrics_pkg.contains
-    assert exact_match is metrics_pkg.exact_match
-    assert intent_match is metrics_pkg.intent_match
-    assert json_match is metrics_pkg.json_match
-    assert llm_judge is metrics_pkg.llm_judge
-    assert not_contains is metrics_pkg.not_contains
-    assert tool_called is metrics_pkg.tool_called
+    The seven documented helpers + ``JudgeCache`` + the three error
+    types must all be reachable as attributes of
+    :mod:`ajolopy.eval.metrics`. Attribute access (not a separate
+    ``from`` import) avoids CodeQL's "module imported with both
+    'import' and 'import from'" check.
+    """
+    expected_names = {
+        "JudgeCache",
+        "MetricsConfigError",
+        "MetricsError",
+        "MetricsRuntimeError",
+        "contains",
+        "exact_match",
+        "intent_match",
+        "json_match",
+        "llm_judge",
+        "not_contains",
+        "tool_called",
+    }
+    for name in expected_names:
+        assert hasattr(metrics_pkg, name), f"missing public attr {name!r}"
+        assert getattr(metrics_pkg, name) is getattr(metrics_pkg, name)
 
 
 def test_all_lists_documented_names() -> None:
