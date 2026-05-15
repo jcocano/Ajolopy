@@ -1846,7 +1846,7 @@
       "slug": "lazy-fallback-provider-instantiation",
       "type": "refactor",
       "title": "Lazy-instantiate fallback providers (defer until primary failure)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p2",
       "milestone": "v0.1.x",
       "labels": [
@@ -1855,7 +1855,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "refactor/lazy-fallback-provider-instantiation",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/116",
       "spec": "specs/lazy-fallback-provider-instantiation.md",
       "blocks": [],
       "blocked_by": [],
