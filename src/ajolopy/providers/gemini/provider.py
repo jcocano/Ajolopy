@@ -551,6 +551,23 @@ class GeminiProvider(LLMProvider):
     def supports_tool_calling(self) -> bool:
         return True
 
+    @override
+    async def health_check(self) -> None:
+        """Reach the Gemini API with the cheapest call available.
+
+        Iterates a single entry of ``client.aio.models.list()`` because the
+        endpoint requires only a valid API key and does not bill tokens.
+        Translates SDK exceptions to :class:`GeminiProviderError` so the
+        doctor renderer never sees raw SDK internals.
+        """
+        try:
+            iterator = self._aio_models.list()
+            async for _ in iterator:
+                # Pulling one page is enough to validate auth + connectivity.
+                break
+        except _RETRIABLE_SDK_EXCEPTIONS as exc:
+            raise GeminiProviderError(f"Gemini SDK error during health_check(): {exc}") from exc
+
     # ------------------------------------------------------------------
     # AJ-58 — cache lifecycle (opt-in via ``cache_strategy="auto"``)
     # ------------------------------------------------------------------

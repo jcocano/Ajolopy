@@ -327,6 +327,22 @@ class AnthropicProvider(LLMProvider):
     def supports_tool_calling(self) -> bool:
         return True
 
+    @override
+    async def health_check(self) -> None:
+        """Reach the Anthropic API with the cheapest call available.
+
+        Uses ``models.list(limit=1)`` because it requires only a valid
+        API key and does not bill tokens. Translates SDK exceptions to
+        :class:`AnthropicProviderError` so the doctor renderer never
+        sees raw ``httpx`` / SDK internals.
+        """
+        try:
+            await self._client.models.list(limit=1)
+        except _RETRIABLE_SDK_EXCEPTIONS as exc:
+            raise AnthropicProviderError(
+                f"Anthropic SDK error during health_check(): {exc}"
+            ) from exc
+
     # ------------------------------------------------------------------
     # internal helpers
     # ------------------------------------------------------------------

@@ -86,3 +86,16 @@ class LLMProvider(ABC):
     @abstractmethod
     def supports_tool_calling(self) -> bool:
         """Whether this provider accepts ``tools=[...]`` on completion calls."""
+
+    async def health_check(self) -> None:
+        """Reach the upstream API with the cheapest call available.
+
+        Used by ``ajolopy doctor`` to validate that credentials work and the
+        provider's network endpoint is reachable. The default implementation
+        raises :class:`NotImplementedError` so subclasses override it with the
+        cheapest request shape on their wire format (typically a ``list
+        models`` call or a 1-token completion). Concrete providers MUST
+        translate vendor errors into :class:`LLMProviderError` so the doctor
+        runner can render them uniformly without importing every SDK.
+        """
+        raise NotImplementedError(f"{type(self).__name__} does not implement health_check().")

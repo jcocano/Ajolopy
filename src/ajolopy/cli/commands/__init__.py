@@ -9,7 +9,7 @@ dispatcher unaware of any particular subcommand's implementation.
 
 from typing import TYPE_CHECKING
 
-from . import dev, env, generate, mcp_serve
+from . import dev, doctor, env, generate, mcp_serve
 from . import eval as eval_cmd
 from . import new as new_cmd
 
@@ -33,6 +33,7 @@ def register_subcommands(
     dev.register(sub)
     generate.register(sub)
     env.register(sub)
+    doctor.register(sub)
 
 
 __all__ = ["register_subcommands"]
