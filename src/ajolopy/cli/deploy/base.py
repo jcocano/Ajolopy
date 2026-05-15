@@ -65,8 +65,13 @@ class DeployTarget(Protocol):
     name: ClassVar[str]
     description: ClassVar[str]
 
-    def prepare(self, ctx: DeployContext) -> DeployResult: ...
-    def next_steps(self, ctx: DeployContext, result: DeployResult) -> Iterable[str]: ...
+    def prepare(self, ctx: DeployContext) -> DeployResult:
+        """Render the files this target wants written, as relative paths."""
+        raise NotImplementedError
+
+    def next_steps(self, ctx: DeployContext, result: DeployResult) -> Iterable[str]:
+        """Yield human-readable post-write instructions (e.g. the ``docker build`` line)."""
+        raise NotImplementedError
 
 
 __all__ = ["DeployContext", "DeployResult", "DeployTarget"]

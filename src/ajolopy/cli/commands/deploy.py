@@ -15,7 +15,7 @@ import argparse
 import sys
 import tomllib
 from pathlib import Path
-from typing import IO, Any, cast
+from typing import IO, cast
 
 from ajolopy.cli.deploy import (
     DeployContext,
@@ -229,9 +229,10 @@ def _resolve_project_name(project_root: Path) -> str:
         ) from exc
     project_table = data.get("project")
     if isinstance(project_table, dict):
-        # ``tomllib.loads`` returns ``dict[str, Any]``; narrow to ``Any``
-        # to let pyright accept the heterogeneous ``.get`` call.
-        table = cast("dict[str, Any]", project_table)
+        # ``tomllib.loads`` returns ``dict[str, Any]``; narrow the inner
+        # value type to ``object`` so the ``.get(...)`` call type-checks
+        # without pulling ``Any`` into the runtime imports.
+        table = cast("dict[str, object]", project_table)
         name = table.get("name")
         if isinstance(name, str) and name:
             return name

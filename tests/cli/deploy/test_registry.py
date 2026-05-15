@@ -5,7 +5,15 @@ from typing import ClassVar
 
 import pytest
 
-from ajolopy.cli.deploy import DeployContext, DeployResult
+from ajolopy.cli.deploy import (
+    DeployContext,
+    DeployResult,
+    DockerTarget,
+    FlyStub,
+    RailwayStub,
+    RenderStub,
+    VercelStub,
+)
 from ajolopy.cli.deploy.errors import DeployTargetNotFoundError
 from ajolopy.cli.deploy.registry import (
     _clear_registry_for_tests,
@@ -46,13 +54,11 @@ def isolated_registry() -> Iterable[None]:
     _clear_registry_for_tests()
     # Re-register the default surface so unrelated tests that import
     # ``ajolopy.cli.deploy`` later still see the v0.1 targets.
-    import ajolopy.cli.deploy as _pkg
-
-    _pkg.register_target(_pkg.DockerTarget())
-    _pkg.register_target(_pkg.FlyStub())
-    _pkg.register_target(_pkg.RailwayStub())
-    _pkg.register_target(_pkg.RenderStub())
-    _pkg.register_target(_pkg.VercelStub())
+    register_target(DockerTarget())
+    register_target(FlyStub())
+    register_target(RailwayStub())
+    register_target(RenderStub())
+    register_target(VercelStub())
 
 
 def test_register_target_inserts_in_order(isolated_registry: None) -> None:
