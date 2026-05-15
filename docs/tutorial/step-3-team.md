@@ -302,9 +302,11 @@ end to end. From here:
 - **Standalone example app (`AJ-50`)** — the same arc as a runnable
   repo you can fork and deploy. Live at
   [`examples/support-agent`](https://github.com/jcocano/Ajolopy/tree/main/examples/support-agent).
-- **[Observability recipes](../next-steps.md#put-it-in-production)** —
-  now that `trace=True` is emitting spans, plug Langfuse / Sentry /
-  Grafana / Honeycomb / Datadog into the standard OTel exporter.
+- **[Observability recipes](../recipes/observability/index.md)** —
+  install `ajolopy[otel]` and point the standard OTel env vars at
+  Langfuse / Sentry / Grafana / Honeycomb / Datadog. OTel spans flow
+  whether or not you wire an exporter — without the SDK they are cheap
+  no-ops.
 - **[Install extras](../install.md)** — pick the optional extras
   (`otel`, `mcp`, `redis`, `postgres`, `mongo`) you need for your stack.
 

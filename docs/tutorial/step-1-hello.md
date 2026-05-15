@@ -36,7 +36,6 @@ class ChatRequest(BaseModel):
 @Agent(
     model="claude-sonnet-4-7",
     system="You are Acme Support. Be concise, friendly, and accurate.",
-    trace=True,
     fallback="claude-haiku-4-5",
 )
 class Support:
@@ -62,13 +61,13 @@ from ajolopy.http import Body
 
 ## What every kwarg buys you
 
-Twelve real lines (without imports). Each token has a job:
+A handful of real lines (without imports). Each token has a job:
 
 | Token                                | What it does                                                                                       | What it replaces                                                                 |
 | ------------------------------------ | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `@Agent(model="claude-sonnet-4-7")`  | Picks the provider (Anthropic) by prefix, validates the model, wires the SDK at boot.              | ~5 lines of SDK init + provider selection logic.                                 |
 | `system="You are Acme Support..."`   | Sets the system prompt once. Static strings unlock prompt caching when you opt in with `cache=`.   | A `messages=[{"role": "system", ...}]` dance on every call.                      |
-| `trace=True`                         | Emits one OpenTelemetry span per `run` / `stream` with `gen_ai.*` attributes and `gen_ai.cost_usd`. | ~20 lines: tracer setup, manual span boundaries, token/cost accounting wrappers. |
+| OpenTelemetry always-on              | Emits one span per `run` / `stream` with `gen_ai.*` attributes and `gen_ai.cost_usd`. No kwarg — install `ajolopy[otel]` and point standard OTel env vars at your backend. | ~20 lines: tracer setup, manual span boundaries, token/cost accounting wrappers. |
 | `fallback="claude-haiku-4-5"`        | On retriable provider failure, transparently retries on the named model.                            | ~40 lines: retry policy, alternate client, error classification.                  |
 | `@Tool` + Python type hints          | Synthesises the JSON Schema, registers the tool, runs the function-calling loop.                    | ~40 lines: hand-written schema, `tool_use` reentry, `tool_result` plumbing.       |
 | `@Stream("/chat")`                   | Mounts the method as an SSE endpoint with heartbeats and disconnect cancellation.                   | ~30 lines: Starlette streaming response, keepalives, cancel-on-disconnect.        |
@@ -144,7 +143,7 @@ You have a `Support` agent that:
 4. Falls back to `claude-haiku-4-5` automatically if Sonnet returns a
    retriable error.
 5. Emits one OpenTelemetry span per request — ready to land in
-   [Langfuse / Sentry / Grafana / Honeycomb / Datadog](../next-steps.md#put-it-in-production)
+   [Langfuse / Sentry / Grafana / Honeycomb / Datadog](../recipes/observability/index.md)
    the moment you wire an exporter.
 
 That is **production from day one**. Twelve lines, one dependency. No

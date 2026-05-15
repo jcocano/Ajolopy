@@ -23,7 +23,6 @@ conversational surface. For multi-agent orchestration use
     system: str | Callable[..., str],
     *,
     memory: str | dict | type[Memory] | None = None,
-    trace: bool = False,
     cache: Literal["prompt"] | None = None,
     fallback: str | list[str] | Callable | None = None,
     temperature: float | None = None,
@@ -33,6 +32,14 @@ conversational surface. For multi-agent orchestration use
     integrations: list[type] | None = None,
 )
 ```
+
+!!! note "OpenTelemetry is always on"
+    There is no `trace=` kwarg in v0.1. The decorator emits one
+    OpenTelemetry span per `run` / `stream` unconditionally. Without an
+    SDK installed (the `ajolopy[otel]` extra) those spans are cheap
+    no-ops. Backend selection happens at the SDK layer via standard
+    OTel env vars (`OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_SERVICE_NAME`,
+    …). See the [Observability recipes](../recipes/observability/index.md).
 
 ## Quick example
 
@@ -64,7 +71,6 @@ async def main() -> None:
 | `model`                | `str`                                         | required      | Model string routed via prefix (`claude-*`, `gpt-*`, `gemini-*`, `ollama:*`, ...). |
 | `system`               | `str \| Callable[..., str]`                   | required      | Static system prompt, or a callable for per-request prompts. |
 | `memory`               | `str \| dict \| type[Memory] \| None`         | `None`        | URL string (`redis://...`), config dict, or `Memory` subclass. |
-| `trace`                | `bool`                                        | `False`       | Emit one OpenTelemetry span per `run` / `stream`. |
 | `cache`                | `Literal["prompt"] \| None`                   | `None`        | `"prompt"` forwards to the provider's prompt-caching hook (static `system` only). |
 | `fallback`             | `str \| list[str] \| Callable \| None`        | `None`        | Model(s) to retry on retriable provider failure, or a custom callable. |
 | `temperature`          | `float \| None`                               | `None`        | Sampling temperature forwarded to the provider. |
