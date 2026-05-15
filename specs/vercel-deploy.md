@@ -157,36 +157,36 @@ vercel deploy --prod    # production deploy
 
 ## Acceptance criteria
 
-- [ ] `VercelTarget` lives in `src/ajolopy/cli/deploy/vercel.py` and is
+- [x] `VercelTarget` lives in `src/ajolopy/cli/deploy/vercel.py` and is
   registered by `src/ajolopy/cli/deploy/__init__.py` in place of
   `VercelStub`.
-- [ ] `VercelStub` is removed from `stubs.py`; the other three stubs and
+- [x] `VercelStub` is removed from `stubs.py`; the other three stubs and
   the file's docstring remain intact.
-- [ ] With `ctx.yes=True`, `prepare()` skips the prompt and returns one
+- [x] With `ctx.yes=True`, `prepare()` skips the prompt and returns one
   file: `Path("vercel.json")`. The JSON parses cleanly and matches the
   documented structure (`version=2`, single build with `@vercel/python`,
   single route `/(.*)` → `main.py`).
-- [ ] With `ctx.yes=False` and `stdin=StringIO("y\n")` or
+- [x] With `ctx.yes=False` and `stdin=StringIO("y\n")` or
   `StringIO("yes\n")`, `prepare()` proceeds and writes the file.
-- [ ] With `ctx.yes=False` and `stdin=StringIO("n\n")` or
+- [x] With `ctx.yes=False` and `stdin=StringIO("n\n")` or
   `StringIO("\n")` (default N), `prepare()` raises
   `DeployUserAbortError`.
-- [ ] With `ctx.yes=False`, the warning text printed to the injected
+- [x] With `ctx.yes=False`, the warning text printed to the injected
   `stdout` contains the four documented sections: limitations,
   "if your app has", "Vercel works well for", and the "Continue?"
   prompt.
-- [ ] `next_steps()` yields exactly three strings — `vercel login`,
+- [x] `next_steps()` yields exactly three strings — `vercel login`,
   `vercel link`, `vercel deploy --prod` — in that order.
-- [ ] `name == "vercel"`; `description` mentions "Vercel".
-- [ ] CLI: `ajolopy deploy vercel --yes` against an empty `tmp_path`
+- [x] `name == "vercel"`; `description` mentions "Vercel".
+- [x] CLI: `ajolopy deploy vercel --yes` against an empty `tmp_path`
   writes `vercel.json` and exits `EXIT_OK`. Without `--yes`, declining
   the gate exits `EXIT_USER_ABORT` (1) and writes nothing.
-- [ ] `tests/cli/deploy/test_stubs.py` drops the `VercelStub` row and
+- [x] `tests/cli/deploy/test_stubs.py` drops the `VercelStub` row and
   import. `tests/cli/commands/test_deploy.py` drops the `vercel` row
   from the stub parametrize and adds the gate happy/abort path.
-- [ ] `docs/reference/cli-deploy.md` updates the Vercel row + adds a
+- [x] `docs/reference/cli-deploy.md` updates the Vercel row + adds a
   short note about the warning gate.
-- [ ] Quality gates: ruff check + format clean over the touched files,
+- [x] Quality gates: ruff check + format clean over the touched files,
   pyright strict clean over the same, pytest green, `mkdocs build
   --strict` passes.
 

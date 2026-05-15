@@ -16,7 +16,7 @@ command:
 | `fly`     | `fly.toml`. Generates the manifest and prints the `fly launch` / `fly deploy` flow (`AJ-42`). |
 | `railway` | `railway.json`. Generates the manifest and prints the `railway login` / `railway link` / `railway up` flow for you to run. |
 | `render`  | `render.yaml`. Generates the Blueprint Render's dashboard applies; users commit/push the file and apply it from <https://dashboard.render.com/blueprints>. |
-| `vercel`  | `vercel.json` + interactive warning gate. Ships in `AJ-45`. |
+| `vercel`  | `vercel.json` after an interactive warning gate about Vercel's limitations for Python AI apps. Pass `-y` / `--yes` to skip the prompt. |
 
 The command does **not** invoke `docker build`, `flyctl deploy`, or any
 platform CLI in v0.1 — it generates the manifests and prints the next
@@ -88,16 +88,52 @@ To overwrite an existing file:
 $ ajolopy deploy docker --force
 ```
 
-The remaining cloud targets are registered today but not yet
-implemented; running them prints the tracking item:
+The cloud targets all generate their platform-specific manifest and
+print the next-step commands for you to run. For example:
 
 ```bash
 $ ajolopy deploy railway
-Railway deploy target lands via AJ-43. See board.json for status.
+Wrote:
+  /workspace/acme-support/railway.json
 
 Next steps:
-  Tracking item: AJ-43. For now, follow the Railway docs manually.
+  railway login
+  railway link
+  railway up
 ```
+
+The `vercel` target ships an interactive warning gate before it writes
+the manifest:
+
+```bash
+$ ajolopy deploy vercel
+Vercel for Python AI apps has serious limitations:
+  - Serverless function timeout: 300s max (Pro plan)
+  - No persistent in-process state (in-memory Memory backends fail)
+  - Cold starts can break long SSE streams
+
+If your app has:
+  - Workflows > 5 min          -> use Fly.io or Railway
+  - Persistent in-proc memory  -> use Fly.io or Railway
+  - Long streaming             -> use Fly.io or Railway
+
+Vercel works well for:
+  - Single-turn short agents
+  - Batch endpoints
+  - Non-streaming APIs
+
+Continue with Vercel? (y/N) y
+Wrote:
+  /workspace/acme-support/vercel.json
+
+Next steps:
+  vercel login
+  vercel link             # link to an existing project
+  vercel deploy --prod    # production deploy
+```
+
+Pass `-y` / `--yes` to skip the prompt in scripted runs. Declining the
+gate exits `EXIT_USER_ABORT` (`1`) without writing anything.
 
 ## Escape hatches
 
@@ -132,11 +168,10 @@ Next steps:
   project to a different version is a follow-up (no `--python-version`
   flag in v0.1 — call `render_dockerfile(python_version=...)` directly
   from your own script if you need it).
-- The remaining stub targets print pointers at the relevant board
-  items rather than failing. That is deliberate so `--help` lists
-  every v0.1 target from day one; the placeholder messages disappear
-  when `AJ-43` / `AJ-44` / `AJ-45` land their real adapters
-  (`AJ-42` already shipped Fly.io).
+- The `vercel` target is the only v0.1 target that prompts the user
+  inside `prepare()`. The injectable `stdin` / `stdout` on
+  `VercelTarget` keep tests hermetic; pass `-y` to skip the gate in
+  CI or scripted flows.
 
 ## See also
 

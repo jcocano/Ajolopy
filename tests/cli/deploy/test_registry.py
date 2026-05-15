@@ -12,7 +12,7 @@ from ajolopy.cli.deploy import (
     FlyTarget,
     RailwayTarget,
     RenderTarget,
-    VercelStub,
+    VercelTarget,
 )
 from ajolopy.cli.deploy.errors import DeployTargetNotFoundError
 from ajolopy.cli.deploy.registry import (
@@ -58,7 +58,7 @@ def isolated_registry() -> Iterable[None]:
     register_target(FlyTarget())
     register_target(RailwayTarget())
     register_target(RenderTarget())
-    register_target(VercelStub())
+    register_target(VercelTarget())
 
 
 def test_register_target_inserts_in_order(isolated_registry: None) -> None:
