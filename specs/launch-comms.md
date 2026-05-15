@@ -84,19 +84,24 @@ v0.1 — first public release. Active development.
 MIT
 ```
 
-### Launch comms — `docs/launch/`
+### Launch comms — `int/launch/v0.1/` (gitignored)
 
-A new docs section that holds the marketing-facing drafts the
-maintainer publishes by hand. Three pages:
+Marketing-facing drafts the maintainer publishes by hand. **These do
+NOT ship to GitHub Pages or to the public repo.** They live under
+`int/` (gitignored — see `.gitignore`) so reviewers and HN visitors
+cannot read the talking-points playbook before the post lands, and so
+the public docs site stays focused on user-facing content.
 
-- `docs/launch/index.md` — overview ("what's in this folder, why")
-- `docs/launch/hn-post.md` — Show HN draft (title + body).
-- `docs/launch/x-thread.md` — X / Bluesky thread (10–15 numbered posts).
-- `docs/launch/demo-video-script.md` — 60–90 second video script
-  (shots, dialogue, on-screen captions).
+- `int/launch/v0.1/index.md` — overview ("what's in this folder, why").
+- `int/launch/v0.1/hn-post.md` — Show HN draft (title + body + reply talking points).
+- `int/launch/v0.1/x-thread.md` — X / Bluesky thread (10–15 numbered posts).
+- `int/launch/v0.1/demo-video-script.md` — 60–90 second video script (shots, captions, re-record recipe).
+- `int/launch/v0.1/demo.cast` — asciinema cast snapshot of the demo flow.
 
-`mkdocs.yml` gets a top-level `Launch:` nav section (or a sub-section
-under `Contributing:` — pick the cleaner option, document why).
+The maintainer keeps these locally (or syncs them via a private
+channel — Notion, Google Doc, private repo, whichever fits the team).
+Each new release forks a fresh `int/launch/v0.X/` folder so the
+playbook iterates over time without leaking past drafts.
 
 ### Out of scope
 
@@ -118,12 +123,14 @@ under `Contributing:` — pick the cleaner option, document why).
 - [x] `README.md` drops `@Metric` from the 10-primitives table or
       footnotes that it's bundled with `@Eval` (AJ-5 was cancelled
       and rolled into AJ-4).
-- [x] `docs/launch/index.md` overview page.
-- [x] `docs/launch/hn-post.md` — title + body draft ready to paste.
-- [x] `docs/launch/x-thread.md` — 10–15 numbered posts.
-- [x] `docs/launch/demo-video-script.md` — shot list + dialogue +
+- [x] `int/launch/v0.1/index.md` overview page (gitignored — local-only).
+- [x] `int/launch/v0.1/hn-post.md` — title + body draft ready to paste.
+- [x] `int/launch/v0.1/x-thread.md` — 10–15 numbered posts.
+- [x] `int/launch/v0.1/demo-video-script.md` — shot list + dialogue +
       timing.
-- [x] `mkdocs.yml` nav extended to surface the launch section.
+- [x] `int/launch/v0.1/demo.cast` — asciinema snapshot of the demo flow.
+- [x] `int/` added to `.gitignore` so launch comms stay off GitHub Pages
+      and out of the public repo.
 - [x] `uv run --group docs mkdocs build --strict` passes.
 - [x] Every internal link in the new docs resolves.
 - [x] No mention of "pre-alpha" or "10–16 months" anywhere in

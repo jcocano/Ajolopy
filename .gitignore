@@ -57,6 +57,11 @@ Thumbs.db
 # you run `uv run mkdocs build`. Deployed to GitHub Pages from CI.
 /site/
 
+# Internal artifacts — drafts, comms, release playbooks. Tracked locally
+# by the maintainer (and shared out of band) but never committed: nothing
+# under int/ should leak to the public repo or GitHub Pages.
+/int/
+
 # AI coding tools — local-only, never committed.
 # The repository must not contain AI prompts, agent configs, or assistant
 # instructions. These files may exist on contributors' machines but are
