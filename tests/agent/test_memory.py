@@ -1,7 +1,12 @@
-"""Tests for the Memory escape hatch.
+"""Tests for the Memory escape hatch on ``@Agent``.
 
-Covers the "Memory escape hatch" acceptance group plus the in-package
-defaults provided by AJ-1 (full backend support lands in AJ-24).
+End-to-end backend coverage lives in ``tests/memory/``; this file pins
+the integration contract between :func:`Agent` and the memory layer:
+
+- The ``memory=`` kwarg accepts a :class:`Memory` subclass and the
+  runtime exercises ``get``/``append`` in the documented order.
+- A passed-through :class:`Memory` instance is reused verbatim by the
+  runtime (no implicit copy / clone).
 """
 
 from typing import TYPE_CHECKING, override
@@ -18,24 +23,23 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.asyncio
-async def test_memory_url_string_is_passed_to_in_memory_factory(
+async def test_memory_instance_is_attached_verbatim(
     register_fake_anthropic: type[FakeProvider],
 ) -> None:
     _ = register_fake_anthropic
 
+    shared = InMemoryMemory()
+
     @Agent(
         model="claude-sonnet-4-7",
         system="…",
-        memory="redis://localhost:6379",
+        memory=shared,
     )
     class Demo:
         pass
 
     runtime = Demo._agent_runtime  # type: ignore[attr-defined]
-    memory = runtime._memory
-    assert isinstance(memory, InMemoryMemory)
-    # The URL is preserved as metadata so AJ-24 can swap in a real backend.
-    assert memory.url == "redis://localhost:6379"
+    assert runtime._memory is shared
 
 
 @pytest.mark.asyncio
@@ -58,6 +62,11 @@ async def test_memory_subclass_get_and_append_are_called(
         async def append(self, session_id: str, message: Message) -> None:
             self.calls.append(("append", session_id, message.content))
             self.store.append(message)
+
+        @override
+        async def clear(self, session_id: str) -> None:
+            self.calls.append(("clear", session_id, None))
+            self.store.clear()
 
     @Agent(
         model="claude-sonnet-4-7",

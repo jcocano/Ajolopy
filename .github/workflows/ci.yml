@@ -65,9 +65,11 @@ jobs:
       - name: Install dependencies
         # Pull the `otel` + `mcp` extras so pyright can resolve the SDK
         # imports used by `ajolopy.observability.tracing`,
-        # `ajolopy.mcp.*`, and `ajolopy.mcp_server.*`. End-user installs
-        # still keep both SDKs opt-in.
-        run: uv sync --frozen --extra otel --extra mcp
+        # `ajolopy.mcp.*`, and `ajolopy.mcp_server.*`. Pull the
+        # `redis` + `postgres` + `mongo` extras so the AJ-24 memory
+        # backends import cleanly under strict typing. End-user
+        # installs still keep every SDK opt-in.
+        run: uv sync --frozen --extra otel --extra mcp --extra redis --extra postgres --extra mongo
       - name: pyright
         run: uv run pyright
 
@@ -89,9 +91,11 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
       - name: Install dependencies
         # Pull the `otel` + `mcp` extras so the observability and
-        # mcp/mcp_server test suites can import the SDKs. Both extras
-        # stay opt-in for end users.
-        run: uv sync --frozen --extra otel --extra mcp
+        # mcp/mcp_server test suites can import the SDKs. Pull the
+        # `redis` + `postgres` + `mongo` extras so the AJ-24 memory
+        # backends can import their SDKs at test time. Every extra
+        # stays opt-in for end users.
+        run: uv sync --frozen --extra otel --extra mcp --extra redis --extra postgres --extra mongo
       - name: pytest
         run: uv run pytest
 
