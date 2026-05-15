@@ -67,9 +67,11 @@ jobs:
         # imports used by `ajolopy.observability.tracing`,
         # `ajolopy.mcp.*`, and `ajolopy.mcp_server.*`. Pull the
         # `redis` + `postgres` + `mongo` extras so the AJ-24 memory
-        # backends import cleanly under strict typing. End-user
-        # installs still keep every SDK opt-in.
-        run: uv sync --frozen --extra otel --extra mcp --extra redis --extra postgres --extra mongo
+        # backends import cleanly under strict typing. Pull the
+        # `qdrant` + `pgvector` extras so the AJ-62 RAG retrievers
+        # import cleanly under strict typing. End-user installs still
+        # keep every SDK opt-in.
+        run: uv sync --frozen --extra otel --extra mcp --extra redis --extra postgres --extra mongo --extra qdrant --extra pgvector
       - name: pyright
         run: uv run pyright
 
@@ -93,9 +95,11 @@ jobs:
         # Pull the `otel` + `mcp` extras so the observability and
         # mcp/mcp_server test suites can import the SDKs. Pull the
         # `redis` + `postgres` + `mongo` extras so the AJ-24 memory
-        # backends can import their SDKs at test time. Every extra
+        # backends can import their SDKs at test time. Pull the
+        # `qdrant` + `pgvector` extras so the AJ-62 RAG retriever
+        # tests can import their SDKs at test time. Every extra
         # stays opt-in for end users.
-        run: uv sync --frozen --extra otel --extra mcp --extra redis --extra postgres --extra mongo
+        run: uv sync --frozen --extra otel --extra mcp --extra redis --extra postgres --extra mongo --extra qdrant --extra pgvector
       - name: pytest
         run: uv run pytest
 
