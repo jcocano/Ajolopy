@@ -1727,7 +1727,7 @@
       "slug": "example-memory-redis",
       "type": "docs",
       "title": "Example: persistent assistant with @Agent(memory=redis://...)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1737,7 +1737,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "docs/example-memory-redis",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/111",
       "spec": "specs/example-memory-redis.md",
       "blocks": [],
       "blocked_by": [],
