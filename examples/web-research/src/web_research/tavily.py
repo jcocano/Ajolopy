@@ -79,7 +79,9 @@ class TavilyProtocol(Protocol):
     cheap.
     """
 
-    async def search(self, query: str, max_results: int = 5) -> list[SearchResult]: ...
+    async def search(self, query: str, max_results: int = 5) -> list[SearchResult]:
+        """Execute a Tavily-style search and return the top ``max_results`` hits."""
+        raise NotImplementedError
 
 
 # Tavily's REST endpoint. Constant so a test (or a future self-hosted
