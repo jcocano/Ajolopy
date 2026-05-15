@@ -29,6 +29,29 @@ Authors adding a new provider should either match the LiteLLM key style or
 register an alias via :class:`Catalog.with_overrides`. The default catalog
 is loaded lazily on first use to keep import time tight (< 50 ms for the
 ~1.4 MB snapshot).
+
+**Unknown-model warning silencing (AJ-70).** The one-time WARNING emitted
+for unknown models is the right default for cloud models the operator pays
+per-token for, but pure noise for local / self-hosted ones (``ollama:*``,
+custom on-prem inference). Two silencing layers ship in v0.1:
+
+1. **Default silent prefixes.** Models whose prefix segment (everything
+   before the first ``:`` or ``/``) appears in
+   :data:`_DEFAULT_SILENT_PREFIXES` skip the warning automatically. The
+   list is intentionally small — a prefix qualifies only when the
+   corresponding universal-OpenAI route declares ``api_key_env=None``
+   AND the upstream service is intended to run on the operator's own
+   infrastructure. Today only ``ollama`` matches; new entries land
+   behind their own PR + spec note since they are user-visible behaviour
+   changes.
+2. **Per-catalog silence list.** :class:`Catalog` accepts a keyword-only
+   ``silence_models=`` argument (and :class:`AjolopyFactory.create` a
+   paired ``pricing_silence=``) — an iterable of exact model strings
+   **and** prefix tokens. Both match the same way the default list does,
+   so passing ``{"vllm"}`` silences ``vllm:foo`` and ``vllm:bar`` alike.
+
+The chat-span emission is unchanged in every case: unknown models still
+omit ``gen_ai.cost_usd*``; only the log line goes away.
 """
 
 import json
@@ -53,6 +76,23 @@ _LOGGER = logging.getLogger("ajolopy.observability.pricing")
 # LiteLLM ships a leading documentation entry under ``sample_spec``. Skip it
 # when loading so it cannot be accidentally treated as a real model.
 _SAMPLE_SPEC_KEY = "sample_spec"
+
+
+# Prefixes whose unknown-model warning is silenced by default (AJ-70). A
+# prefix qualifies when:
+#
+#   1. The universal-OpenAI route declares ``api_key_env=None`` (it is
+#      operator-hosted infrastructure, not a billed cloud endpoint), AND
+#   2. The upstream service is intended to run on the user's own machine
+#      / cluster rather than be reached over the public internet.
+#
+# Today only ``ollama`` matches both conditions (cf.
+# ``ajolopy.providers.universal_openai.provider._PREFIX_DEFAULTS``). New
+# entries land behind their own PR + spec note since adding a prefix is a
+# user-visible behaviour change. The constant is **not** imported from the
+# provider package to keep the observability module free of provider-package
+# dependencies; the rule is enforced by review.
+_DEFAULT_SILENT_PREFIXES: frozenset[str] = frozenset({"ollama"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,9 +142,21 @@ class Catalog:
     _default_lock: threading.Lock = threading.Lock()
     _default_instance: Catalog | None = None
 
-    def __init__(self, prices: Mapping[str, ModelPrice]) -> None:
+    def __init__(
+        self,
+        prices: Mapping[str, ModelPrice],
+        *,
+        silence_models: Iterable[str] | None = None,
+    ) -> None:
         # Copy so caller mutations cannot retroactively change the catalog.
         self._prices: dict[str, ModelPrice] = dict(prices)
+        # Freeze the silence list for the same reason: a downstream caller
+        # mutating the original iterable must not retroactively shift this
+        # catalog's policy. The set holds both exact model names and prefix
+        # tokens; ``_warn_unknown`` checks both forms.
+        self._silence_models: frozenset[str] = (
+            frozenset(silence_models) if silence_models is not None else frozenset()
+        )
         self._warned_unknown: set[str] = set()
         self._warned_lock = threading.Lock()
 
@@ -134,12 +186,27 @@ class Catalog:
 
         Overrides replace the matching snapshot entries wholesale — no
         per-tier merge. Keys absent from the snapshot are added as new
-        entries. The receiver is left unchanged.
+        entries. The receiver is left unchanged. The silence-list policy
+        carries over unchanged so a user who builds a catalog via
+        :class:`AjolopyFactory.create(pricing_overrides=..., pricing_silence=...)`
+        does not need to know the kwarg evaluation order.
         """
         merged: dict[str, ModelPrice] = dict(self._prices)
         for key, price in overrides.items():
             merged[key] = price
-        return Catalog(merged)
+        return Catalog(merged, silence_models=self._silence_models)
+
+    def with_silence(self, *models: str) -> Catalog:
+        """Return a new :class:`Catalog` with extra silenced models / prefixes.
+
+        Each positional argument is either an exact model string
+        (``"my-custom-model"``) or a prefix token (``"vllm"``); both are
+        matched the same way as :data:`_DEFAULT_SILENT_PREFIXES`. The
+        receiver is left unchanged. Combines with :meth:`with_overrides`
+        in either order — the silence policy and the pricing data are
+        independent.
+        """
+        return Catalog(self._prices, silence_models=self._silence_models | frozenset(models))
 
     # ------------------------------------------------------------------
     # lookup
@@ -184,12 +251,36 @@ class Catalog:
         with self._warned_lock:
             if model in self._warned_unknown:
                 return
+            # Record the model even when the policy silences it: the dedup
+            # invariant ("one log line per model per process") survives a
+            # later silence-policy change that way — a model that was silent
+            # on the first lookup stays silent on the second.
             self._warned_unknown.add(model)
+            if self._is_silenced(model):
+                return
         _LOGGER.warning(
             "Unknown model %r — gen_ai.cost_usd omitted from spans. "
             "Register a pricing_overrides entry to silence this warning.",
             model,
         )
+
+    def _is_silenced(self, model: str) -> bool:
+        """Return ``True`` when the unknown-model warning should be suppressed.
+
+        Combines the three silencing sources from the AJ-70 spec:
+
+        1. Default silent prefixes (:data:`_DEFAULT_SILENT_PREFIXES`).
+        2. Exact model strings in this catalog's silence list.
+        3. Prefix tokens in this catalog's silence list.
+        """
+        if model in self._silence_models:
+            return True
+        prefix = _prefix_segment(model)
+        if prefix is None:
+            return False
+        if prefix in _DEFAULT_SILENT_PREFIXES:
+            return True
+        return prefix in self._silence_models
 
 
 # ---------------------------------------------------------------------------
@@ -281,6 +372,30 @@ def _normalisation_candidates(model: str) -> Iterable[str]:
         bare = model.rsplit("/", 1)[-1].rsplit(":", 1)[-1]
         if bare and bare != model:
             yield bare
+
+
+def _prefix_segment(model: str) -> str | None:
+    """Return the prefix segment of ``model`` or ``None`` for a bare name.
+
+    The segment is everything before the first ``:`` or ``/``. Used by the
+    silence policy to match prefix tokens (e.g. ``"ollama"`` matches
+    ``"ollama:llama3.3"``) without forcing callers to know which separator
+    syntax the model string uses.
+
+    Returns ``None`` when the model string has neither separator (so a
+    bare name like ``"claude-sonnet-4-5"`` never accidentally matches a
+    silence list whose entries are intended as prefix tokens).
+    """
+    colon = model.find(":")
+    slash = model.find("/")
+    if colon == -1 and slash == -1:
+        return None
+    # Pick the earliest separator; ``min`` over the two positions while
+    # treating -1 as "absent" needs a small dance.
+    candidates = [pos for pos in (colon, slash) if pos != -1]
+    cut = min(candidates)
+    prefix = model[:cut]
+    return prefix or None
 
 
 def _load_snapshot_prices() -> dict[str, ModelPrice]:

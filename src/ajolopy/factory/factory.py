@@ -45,6 +45,8 @@ from .app import AjolopyApp
 from .errors import FactoryConfigError, FactoryStartupError
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from starlette.applications import Starlette
 
     from ajolopy.di import Container
@@ -62,6 +64,7 @@ class AjolopyFactory:
         container: Container | None = None,
         http: Starlette | None = None,
         pricing_overrides: dict[str, ModelPrice] | None = None,
+        pricing_silence: Iterable[str] | None = None,
     ) -> AjolopyApp:
         """Build and return an :class:`AjolopyApp` for ``root_module``.
 
@@ -85,6 +88,15 @@ class AjolopyFactory:
             process-wide default — agents decorated before factory
             bootstrap pick it up on the next chat-span emission
             (the runtime resolves the catalog lazily).
+        pricing_silence:
+            Optional iterable of exact model strings **or** prefix
+            tokens whose unknown-model WARNING should be suppressed.
+            Stacks with the framework's default silent-prefix list
+            (currently ``ollama:*``); the chat-span emission is
+            unchanged in every case — only the log line goes away.
+            Pass e.g. ``{"vllm", "lmstudio"}`` to silence custom
+            self-hosted prefixes, or ``{"my-fine-tune-v1"}`` for a
+            specific custom model.
 
         Raises
         ------
@@ -114,11 +126,20 @@ class AjolopyFactory:
         #     catalog becomes the process-wide default — agents decorated
         #     before factory bootstrap pick it up lazily on the next chat
         #     span emission (the runtime resolves the catalog at call time,
-        #     not at decoration time). Passing ``None`` clears any prior
-        #     override so re-bootstrapping with a fresh factory in tests
-        #     does not leak state from the previous run.
-        if pricing_overrides:
-            set_default_catalog(Catalog.from_snapshot().with_overrides(pricing_overrides))
+        #     not at decoration time). Passing ``None`` for BOTH override
+        #     kwargs clears any prior catalog so re-bootstrapping with a
+        #     fresh factory in tests does not leak state from the previous
+        #     run. ``pricing_silence`` is forwarded as a separate dimension:
+        #     a user can silence prefixes without registering overrides
+        #     (and vice versa), or do both in any kwarg order.
+        silence_list = list(pricing_silence) if pricing_silence is not None else []
+        if pricing_overrides or silence_list:
+            catalog = Catalog.from_snapshot()
+            if pricing_overrides:
+                catalog = catalog.with_overrides(pricing_overrides)
+            if silence_list:
+                catalog = catalog.with_silence(*silence_list)
+            set_default_catalog(catalog)
         else:
             set_default_catalog(None)
 
