@@ -231,8 +231,8 @@ class TestProviderHealthCheck:
     ) -> None:
         del with_anthropic_key
 
-        async def _ok(self: object) -> None:
-            del self
+        async def _ok(_self: object) -> None:
+            return
 
         from ajolopy.providers.anthropic import AnthropicProvider
 
@@ -249,8 +249,7 @@ class TestProviderHealthCheck:
     ) -> None:
         del with_anthropic_key
 
-        async def _boom(self: object) -> None:
-            del self
+        async def _boom(_self: object) -> None:
             raise RuntimeError("upstream 503")
 
         from ajolopy.providers.anthropic import AnthropicProvider
@@ -269,8 +268,7 @@ class TestProviderHealthCheck:
     ) -> None:
         del with_anthropic_key
 
-        async def _hang(self: object) -> None:
-            del self
+        async def _hang(_self: object) -> None:
             await asyncio.sleep(10)
 
         from ajolopy.providers.anthropic import AnthropicProvider
@@ -397,8 +395,8 @@ class TestMCPServersCheck:
         # the module — the test does not need an instance.
         del ServerEntry
 
-        async def _noop(cls: object) -> None:
-            del cls
+        async def _noop(_cls: object) -> None:
+            return
 
         mcp_registry_reset.connect_all_for = _noop
 
@@ -413,8 +411,7 @@ class TestMCPServersCheck:
 
         mcp_registry_reset.register_class(A, entries=[], timeout=5.0)
 
-        async def _boom(cls: object) -> None:
-            del cls
+        async def _boom(_cls: object) -> None:
             raise RuntimeError("simulated mcp failure")
 
         mcp_registry_reset.connect_all_for = _boom
@@ -434,8 +431,7 @@ class TestMCPServersCheck:
 
         mcp_registry_reset.register_class(A, entries=[], timeout=5.0)
 
-        async def _hang(cls: object) -> None:
-            del cls
+        async def _hang(_cls: object) -> None:
             await asyncio.sleep(10)
 
         mcp_registry_reset.connect_all_for = _hang

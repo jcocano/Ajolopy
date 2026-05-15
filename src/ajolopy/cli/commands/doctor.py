@@ -59,12 +59,13 @@ import socket
 import sys
 import time
 import urllib.parse
+from collections.abc import Awaitable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, TYPE_CHECKING, ClassVar, Literal, Protocol, cast, runtime_checkable
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Sequence
+    from collections.abc import Sequence
 
 
 __all__ = [
@@ -162,7 +163,7 @@ class Check(Protocol):
         The runner pairs this with the duration + maps the tri-state to
         a :class:`Status` label.
         """
-        ...
+        raise NotImplementedError
 
 
 # ---------------------------------------------------------------------------
@@ -366,7 +367,9 @@ class ProviderHealthCheck:
         if health_check is None or not callable(health_check):
             return None, f"{self._class_name}.health_check() not implemented"
         try:
-            awaitable = cast("Awaitable[None]", health_check())
+            # Unquoted form so CodeQL sees Awaitable used at runtime
+            # (its `py/unused-import` rule misses string-form casts).
+            awaitable = cast(Awaitable[None], health_check())  # noqa: TC006
             await asyncio.wait_for(awaitable, timeout=_NETWORK_TIMEOUT_S)
         except TimeoutError:
             return None, f"health_check timed out after {int(_NETWORK_TIMEOUT_S)}s"
@@ -490,9 +493,9 @@ def _probe_tcp(host: str, port: int) -> None:
     Raises :class:`OSError` on any socket error. The caller wraps this
     in :func:`asyncio.wait_for` for the per-check timeout.
     """
-    with socket.create_connection((host, port), timeout=_NETWORK_TIMEOUT_S) as sock:
-        # Connection established is enough — close immediately.
-        del sock
+    with socket.create_connection((host, port), timeout=_NETWORK_TIMEOUT_S):
+        # Connection established is enough — context manager closes it.
+        pass
 
 
 def _is_tty(stream: IO[str]) -> bool:
