@@ -142,6 +142,14 @@ class UniversalOpenAIProvider(LLMProvider):
       the env var is never consulted for the overridden prefix.
     - ``base_urls={"ollama": "http://my-ollama.lan:11434/v1"}`` —
       per-prefix endpoint override (e.g. a remote Ollama instance).
+      Wins over the env-var lookup below.
+    - ``${PREFIX}_BASE_URL`` env var — per-prefix endpoint override
+      read lazily on the first request for the prefix (e.g.
+      ``OLLAMA_BASE_URL``, ``GROQ_BASE_URL``, ``TOGETHER_BASE_URL``,
+      ``MISTRAL_BASE_URL``, ``DEEPSEEK_BASE_URL``,
+      ``OPENROUTER_BASE_URL``). Empty string falls through to the
+      baked-in default. Precedence is ``base_urls=`` kwarg > env var >
+      baked-in default.
     - ``clients={"groq": openai.AsyncOpenAI(...)}`` — pre-built SDK
       client. Wins over both other kwargs and over the per-prefix
       defaults; used by callers that need custom transport.
@@ -398,9 +406,11 @@ class UniversalOpenAIProvider(LLMProvider):
 
         1. Pre-built client supplied via ``clients=`` kwarg (also covers
            the cache populated by previous calls).
-        2. ``base_url`` from ``base_urls=`` override or the per-prefix
-           default; ``api_key`` from ``api_keys=`` override or the
-           per-prefix env var.
+        2. ``base_url``: ``base_urls=`` constructor override, then the
+           ``${PREFIX}_BASE_URL`` env var (read lazily — empty string
+           falls through), then the per-prefix baked-in default.
+        3. ``api_key``: ``api_keys=`` constructor override, then the
+           per-prefix ``api_key_env`` env var.
 
         Subclasses extending the provider to new prefixes should
         override this method and call ``super()._resolve_client(prefix)``
@@ -413,11 +423,40 @@ class UniversalOpenAIProvider(LLMProvider):
         if defaults is None:
             self._raise_unknown_prefix(prefix)
 
-        base_url = self._base_url_overrides.get(prefix, defaults.default_base_url)
+        base_url = self._resolve_base_url(prefix, defaults)
         api_key = self._resolve_api_key(prefix, defaults)
         client = openai.AsyncOpenAI(base_url=base_url, api_key=api_key)
         self._clients[prefix] = client
         return client
+
+    def _resolve_base_url(self, prefix: str, defaults: _PrefixDefaults) -> str:
+        """Resolve the base URL for ``prefix`` from overrides, env, or default.
+
+        Precedence (high to low):
+
+        1. ``base_urls={"<prefix>": "..."}`` constructor override —
+           wins over everything else.
+        2. ``${PREFIX.upper()}_BASE_URL`` env var (``OLLAMA_BASE_URL``,
+           ``GROQ_BASE_URL``, ``TOGETHER_BASE_URL``,
+           ``MISTRAL_BASE_URL``, ``DEEPSEEK_BASE_URL``,
+           ``OPENROUTER_BASE_URL``). Empty string is treated as "not
+           set" — same convention as ``_resolve_api_key`` — and falls
+           through to the default.
+        3. ``defaults.default_base_url`` — the per-prefix value baked
+           into ``_PREFIX_DEFAULTS``.
+
+        Values are forwarded to ``openai.AsyncOpenAI`` verbatim; the
+        env var is treated as trusted operator configuration (no
+        scheme / host validation), matching how ``api_key_env`` is
+        consumed today.
+        """
+        override = self._base_url_overrides.get(prefix)
+        if override is not None:
+            return override
+        env_value = os.environ.get(f"{prefix.upper()}_BASE_URL")
+        if env_value:
+            return env_value
+        return defaults.default_base_url
 
     def _resolve_api_key(self, prefix: str, defaults: _PrefixDefaults) -> str:
         """Resolve the API key for ``prefix`` from overrides or env var.
