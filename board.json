@@ -1227,7 +1227,7 @@
       "slug": "vercel-deploy",
       "type": "feature",
       "title": "Vercel deploy target (vercel.json + warnings flow)",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p2",
       "milestone": "v0.1",
       "labels": [
@@ -1236,7 +1236,7 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "feature/vercel-deploy",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/95",
       "spec": "specs/vercel-deploy.md",
       "blocks": [],
       "blocked_by": [
