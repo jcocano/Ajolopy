@@ -1,0 +1,3 @@
+{"input": "Refund order 4392, the package was damaged.", "expected": {"domain": "billing", "must_contain_any": ["refund", "billing", "invoice"]}}
+{"input": "Our API is returning 502s when we POST to /events.", "expected": {"domain": "technical", "must_contain_any": ["502", "error", "log", "retry"]}}
+{"input": "What are your support hours?", "expected": {"domain": "general", "must_contain_any": ["hours", "support", "available"]}}

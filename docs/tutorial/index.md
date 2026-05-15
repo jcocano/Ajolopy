@@ -68,8 +68,9 @@ Start with **[Step 1 — Hello to prod](step-1-hello.md)**.
 When you finish Step 3 the tutorial closes the loop with pointers to:
 
 - The [reference docs](../reference/index.md) for every kwarg you saw.
-- The standalone [support-agent example](https://github.com/jcocano/ajolopy/blob/main/board.json)
-  (`AJ-50`) — the same arc as an installable repo you can fork.
+- The standalone
+  [`examples/support-agent`](https://github.com/jcocano/Ajolopy/tree/main/examples/support-agent)
+  example — the same arc as an installable repo you can fork (`AJ-50`).
 - The [observability recipes](../next-steps.md#put-it-in-production)
   (Langfuse / Sentry / Grafana / Honeycomb / Datadog) once you want the
   `trace=True` data to land somewhere.

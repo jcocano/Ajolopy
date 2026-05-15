@@ -17,10 +17,16 @@ running locally. Here is where to go from here.
 
 ## Read real projects
 
-- **Example projects (dogfood).** A small set of end-to-end Ajolopy
-  apps maintained alongside the framework — the same way NestJS ships
+- **[`examples/support-agent`](https://github.com/jcocano/Ajolopy/tree/main/examples/support-agent)**
+  is the runnable companion to the
+  [3-step killer demo tutorial](tutorial/index.md). Fork it, set
+  `ANTHROPIC_API_KEY`, and run `uv sync && ajolopy dev` to see every
+  primitive in action against a real provider.
+- **Dogfood apps.** A small set of end-to-end Ajolopy projects
+  maintained alongside the framework — the same way NestJS ships
   `nest-cli` examples. Tracked as
-  [`AJ-50`](https://github.com/jcocano/Ajolopy/blob/main/specs/docs-examples.md).
+  [`AJ-54`](https://github.com/jcocano/Ajolopy/blob/main/board.json) and
+  [`AJ-55`](https://github.com/jcocano/Ajolopy/blob/main/board.json).
 
 ## Put it in production
 
