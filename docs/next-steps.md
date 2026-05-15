@@ -45,6 +45,14 @@ running locally. Here is where to go from here.
   OpenAI-compatible provider — install Ollama,
   `ollama pull llama3.3`, `uv sync && ajolopy dev`, and the streaming
   code reviewer answers `POST /chat` entirely on your laptop.
+- **[`examples/memory-assistant`](https://github.com/jcocano/Ajolopy/tree/main/examples/memory-assistant)**
+  is the persistent-assistant reference for
+  `@Agent(memory="redis://...")`. A `SessionScopedMemory` wrapper plus a
+  request `ContextVar` partition chat history per `session_id`, so two
+  users hitting the same `/chat` endpoint see independent transcripts in
+  Redis. Ships with a `docker-compose.yml`, a `Dockerfile.prod`, and a
+  5-row eval suite whose `memory_isolation` metric catches cross-session
+  leaks.
 - **[`dogfood/docsbot`](https://github.com/jcocano/Ajolopy/tree/main/dogfood/docsbot)**
   is Ajolopy's own docs bot — the first dogfood app
   ([`AJ-54`](https://github.com/jcocano/Ajolopy/blob/main/board.json)).
