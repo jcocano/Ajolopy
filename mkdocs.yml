@@ -4,9 +4,9 @@
 # Local dev:   `uv run mkdocs serve`
 # Deploys via `.github/workflows/docs.yml` to GitHub Pages on push to main.
 #
-# Future items (AJ-51/52 recipes) will extend the `nav:` tree additively —
+# Future items (AJ-52 deploy recipes) will extend the `nav:` tree additively —
 # keep the existing entries ordered for the happy-path reader
-# (Home -> Quickstart -> Install -> Tutorial -> Reference -> Next steps).
+# (Home -> Quickstart -> Install -> Tutorial -> Reference -> Recipes -> Next steps).
 
 site_name: Ajolopy
 site_description: AI-native production framework for Python.
@@ -67,6 +67,14 @@ nav:
       - "@Injectable": reference/injectable.md
       - "@Controller": reference/controller.md
       - "@UseGuards": reference/use-guards.md
+  - Recipes:
+      - Observability:
+          - Overview: recipes/observability/index.md
+          - Langfuse: recipes/observability/langfuse.md
+          - Sentry: recipes/observability/sentry.md
+          - Grafana stack: recipes/observability/grafana.md
+          - Honeycomb: recipes/observability/honeycomb.md
+          - Datadog: recipes/observability/datadog.md
   - Next steps: next-steps.md
 
 markdown_extensions:

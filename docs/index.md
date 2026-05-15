@@ -57,6 +57,10 @@ with zero ceremony, and an **escape hatch** (subclass or override) for the
   The three-step killer demo arc — agent, evals, multi-agent + MCP —
   in roughly 55 lines.
 
+- :material-chart-line: **[Recipes](recipes/observability/index.md)**
+  Plug Ajolopy into Langfuse, Sentry, Grafana, Honeycomb, or Datadog in
+  under 10 minutes — same pipeline, different exporter.
+
 - :material-package-variant: **[Install](install.md)**
   Core install plus the full optional-extras matrix (observability, MCP,
   memory backends).
