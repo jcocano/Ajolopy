@@ -2,7 +2,7 @@
   "$schema": "./.board-schema.json",
   "version": 1,
   "updated_at": "2026-05-15",
-  "next_id": 63,
+  "next_id": 68,
   "items": [
     {
       "id": "AJ-1",
@@ -1697,6 +1697,126 @@
       "created_at": "2026-05-14",
       "updated_at": "2026-05-15",
       "closed_at": "2026-05-15"
+    },
+    {
+      "id": "AJ-63",
+      "slug": "example-oncall-mcp",
+      "type": "docs",
+      "title": "Example: on-call agent via @MCP (GitHub MCP server)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "docs",
+        "v0.1",
+        "examples"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-15",
+      "updated_at": "2026-05-15",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-64",
+      "slug": "example-memory-redis",
+      "type": "docs",
+      "title": "Example: persistent assistant with @Agent(memory=redis://...)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "docs",
+        "v0.1",
+        "examples"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-15",
+      "updated_at": "2026-05-15",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-65",
+      "slug": "example-web-research",
+      "type": "docs",
+      "title": "Example: web research agent (Tavily @Tool integration)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "docs",
+        "v0.1",
+        "examples"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-15",
+      "updated_at": "2026-05-15",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-66",
+      "slug": "example-local-ollama",
+      "type": "docs",
+      "title": "Example: local LLM agent (Ollama via universal provider, no API key)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "docs",
+        "v0.1",
+        "examples"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-15",
+      "updated_at": "2026-05-15",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-67",
+      "slug": "example-contextual-rag",
+      "type": "docs",
+      "title": "Example: contextual RAG agent (chunking + hybrid retrieval + citations)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.1",
+      "labels": [
+        "docs",
+        "v0.1",
+        "examples"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-15",
+      "updated_at": "2026-05-15",
+      "closed_at": null
     }
   ]
 }
