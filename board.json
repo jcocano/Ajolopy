@@ -1304,7 +1304,7 @@
       "id": "AJ-48",
       "slug": "docs-tutorial-3-steps",
       "type": "docs",
-      "title": "Tutorial — killer demo arc (3 steps: hello, evals, team)",
+      "title": "Tutorial \u2014 killer demo arc (3 steps: hello, evals, team)",
       "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
@@ -1915,7 +1915,7 @@
       "slug": "example-ollama-cross-provider-fallback",
       "type": "docs",
       "title": "Add cross-provider fallback to local-ollama (showcase AJ-69 lazy fallback)",
-      "status": "in_progress",
+      "status": "done",
       "priority": "p2",
       "milestone": "v0.1.x",
       "labels": [
@@ -1924,14 +1924,14 @@
       ],
       "owner": "jesus.cocano@gmail.com",
       "branch": "docs/example-ollama-cross-provider-fallback",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/121",
       "spec": "specs/example-ollama-cross-provider-fallback.md",
       "blocks": [],
       "blocked_by": [],
       "estimate": null,
       "created_at": "2026-05-15",
       "updated_at": "2026-05-15",
-      "closed_at": null
+      "closed_at": "2026-05-15"
     }
   ]
 }
