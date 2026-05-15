@@ -1464,7 +1464,7 @@
       "slug": "dogfood-docsbot",
       "type": "story",
       "title": "Dogfood app #1: Ajolopy docs bot (mes 4-5)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -1490,7 +1490,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-15",
-      "closed_at": null
+      "closed_at": "2026-05-15"
     },
     {
       "id": "AJ-55",
@@ -1527,7 +1527,7 @@
       "slug": "publish-pypi",
       "type": "chore",
       "title": "Publish v0.1.0 to PyPI (versioning, release workflow, signed release)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
       "labels": [
@@ -1543,7 +1543,7 @@
       "estimate": null,
       "created_at": "2026-05-12",
       "updated_at": "2026-05-15",
-      "closed_at": null
+      "closed_at": "2026-05-15"
     },
     {
       "id": "AJ-57",
