@@ -1093,15 +1093,15 @@
       "slug": "cli-doctor",
       "type": "feature",
       "title": "ajolopy doctor (system + project + env + connectivity diagnostic)",
-      "status": "ready",
+      "status": "in_progress",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "cli",
         "v0.1"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "feature/cli-doctor",
       "pr": null,
       "spec": "specs/cli-doctor.md",
       "blocks": [],
