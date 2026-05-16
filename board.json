@@ -2,7 +2,7 @@
   "$schema": "./.board-schema.json",
   "version": 1,
   "updated_at": "2026-05-15",
-  "next_id": 73,
+  "next_id": 74,
   "items": [
     {
       "id": "AJ-1",
@@ -1926,6 +1926,29 @@
       "branch": "docs/example-ollama-cross-provider-fallback",
       "pr": "https://github.com/jcocano/Ajolopy/pull/121",
       "spec": "specs/example-ollama-cross-provider-fallback.md",
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-15",
+      "updated_at": "2026-05-15",
+      "closed_at": "2026-05-15"
+    },
+    {
+      "id": "AJ-73",
+      "slug": "examples-index-readme",
+      "type": "docs",
+      "title": "Add examples/README.md index with production use cases",
+      "status": "done",
+      "priority": "p2",
+      "milestone": "v0.1.x",
+      "labels": [
+        "docs",
+        "examples"
+      ],
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "docs/examples-index-readme",
+      "pr": "https://github.com/jcocano/Ajolopy/pull/122",
+      "spec": "specs/examples-index-readme.md",
       "blocks": [],
       "blocked_by": [],
       "estimate": null,
