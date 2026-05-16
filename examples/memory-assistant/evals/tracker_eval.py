@@ -42,7 +42,7 @@ class TrackerEval:
                 "criterion",
                 "Addresses the user's request accurately and concisely.",
             ),
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             cache=True,
         )
 

@@ -199,7 +199,7 @@ example module is imported.
       that loads `data/index.jsonl` at construction and scores via
       `0.4 * keyword_jaccard + 0.6 * embedding_hash_similarity`.
 - [ ] `src/contextual_rag/agents/researcher.py` defines
-      `ResearcherAgent` (`@Agent(model="claude-sonnet-4-7",
+      `ResearcherAgent` (`@Agent(model="claude-opus-4-7",
       fallback="claude-haiku-4-5")`) with two `@Tool` methods
       (`retrieve_with_context`, `format_answer_with_citations`) and a
       `@Stream("/chat")` endpoint.

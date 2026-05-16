@@ -47,13 +47,13 @@ class _FakeAgent:
         def __init__(self, model: str) -> None:
             self._models: list[tuple[str, object]] = [(model, object())]
 
-    _agent_runtime = _Runtime("claude-sonnet-4-7")
+    _agent_runtime = _Runtime("claude-opus-4-7")
 
 
 def make_suite_class(
     name: str,
     *,
-    model: str = "claude-sonnet-4-7",
+    model: str = "claude-opus-4-7",
     threshold: float = 0.5,
     metric_names: tuple[str, ...] = ("helpful",),
     async_metric: bool = False,

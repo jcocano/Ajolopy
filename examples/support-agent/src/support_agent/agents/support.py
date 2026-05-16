@@ -32,7 +32,7 @@ class ChatRequest(BaseModel):
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You are Acme Support. Be concise, friendly, and accurate.",
     fallback="claude-haiku-4-5",
 )

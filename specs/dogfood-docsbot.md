@@ -138,7 +138,7 @@ embeddings at index time).
 
 ```python
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system=(
         "You are the Ajolopy docs assistant. "
         "Always call retrieve_docs(...) before answering. "
@@ -171,7 +171,7 @@ dataset="evals/docsbot.jsonl", threshold=0.6)` with two metrics:
 
 - **`addresses_intent`** — LLM-as-judge via
   `ajolopy.eval.metrics.llm_judge(output.text, criterion="...",
-  model="claude-sonnet-4-7", cache=True)`. The criterion encodes
+  model="claude-opus-4-7", cache=True)`. The criterion encodes
   "answer is grounded in Ajolopy docs and addresses the question".
 - **`cites_docs`** — deterministic. Checks the answer text mentions one
   of the expected doc paths from the dataset row's `expected.paths`
@@ -227,7 +227,7 @@ before any module is imported (same pattern as `examples/support-agent`).
       `InMemoryDocsRetriever(Retriever)` with `index` / `query` /
       `clear` implementations and a `from_jsonl(path)` classmethod.
 - [ ] `src/docsbot/agents/docs.py` declares `DocsAgent` as
-      `@Agent(model="claude-sonnet-4-7", system=..., fallback="claude-haiku-4-5")`
+      `@Agent(model="claude-opus-4-7", system=..., fallback="claude-haiku-4-5")`
       with one `@Tool` (`retrieve_docs`) and one `@Stream("/chat")`
       handler whose body is `Annotated[ChatRequest, Body()]`.
 - [ ] `scripts/build_index.py` walks `../../docs/**/*.md`, chunks each

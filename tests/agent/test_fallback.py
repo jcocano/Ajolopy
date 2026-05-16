@@ -31,7 +31,7 @@ async def test_string_fallback_retries_with_named_model() -> None:
     register_provider("anthropic", _AlwaysFailFirstThenOk)
 
     @Agent(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         system="…",
         fallback="claude-haiku-4-5",
     )
@@ -47,7 +47,7 @@ async def test_list_fallback_tries_in_order() -> None:
     register_provider("anthropic", _AlwaysFailFirstThenOk)
 
     @Agent(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         system="…",
         fallback=["claude-opus-4-1", "claude-haiku-4-5"],
     )
@@ -77,7 +77,7 @@ async def test_callable_fallback_receives_payload_and_return_is_surfaced(
         captured.append(message)
         return f"fallback handled: {message}"
 
-    @Agent(model="claude-sonnet-4-7", system="…", fallback=fallback)
+    @Agent(model="claude-opus-4-7", system="…", fallback=fallback)
     class Demo:
         pass
 
@@ -94,7 +94,7 @@ def test_fallback_with_unregistered_provider_fails_at_decoration(
     with pytest.raises(AgentConfigError, match="openai"):
 
         @Agent(
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             system="…",
             fallback="gpt-4o-mini",
         )
@@ -114,7 +114,7 @@ async def test_exhausted_chain_raises_agent_provider_error(
 
     register_provider("anthropic", _AlwaysFails, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 

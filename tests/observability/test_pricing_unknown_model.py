@@ -71,7 +71,7 @@ async def test_unknown_model_does_not_break_span_emission(
     set_default_catalog(Catalog({}))
     register_provider("anthropic", FakeProvider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -83,6 +83,6 @@ async def test_unknown_model_does_not_break_span_emission(
     # Cost attrs absent.
     assert "gen_ai.cost_usd" not in attrs
     # Standard AJ-28 attrs still present.
-    assert attrs["gen_ai.request.model"] == "claude-sonnet-4-7"
+    assert attrs["gen_ai.request.model"] == "claude-opus-4-7"
     assert attrs["gen_ai.usage.input_tokens"] == 1
     assert attrs["gen_ai.usage.output_tokens"] == 2

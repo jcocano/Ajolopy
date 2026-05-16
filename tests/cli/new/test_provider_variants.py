@@ -11,7 +11,7 @@ from tests.cli.new.conftest import invoke_new
 @pytest.mark.parametrize(
     ("llm", "model", "env_var"),
     [
-        ("anthropic", "claude-sonnet-4-7", "ANTHROPIC_API_KEY"),
+        ("anthropic", "claude-opus-4-7", "ANTHROPIC_API_KEY"),
         ("openai", "gpt-4o", "OPENAI_API_KEY"),
         ("gemini", "gemini-2.0-flash-exp", "GOOGLE_API_KEY"),
     ],

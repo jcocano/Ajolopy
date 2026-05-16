@@ -35,7 +35,7 @@ async def test_stream_yields_text_chunks_then_finish_reason() -> None:
     chunks = [
         chunk
         async for chunk in provider.stream(
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             messages=[Message(role="user", content="hi")],
         )
     ]
@@ -65,7 +65,7 @@ async def test_stream_tool_use_start_emits_tool_call_delta_with_name() -> None:
     chunks = [
         chunk
         async for chunk in provider.stream(
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             messages=[Message(role="user", content="hi")],
         )
     ]
@@ -95,7 +95,7 @@ async def test_stream_cancellation_does_not_raise() -> None:
     client = make_async_client(stream_events=events)
     provider = AnthropicProvider(client=client)
     iterator = provider.stream(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         messages=[Message(role="user", content="hi")],
     )
     first = await iterator.__anext__()

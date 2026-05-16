@@ -2,7 +2,7 @@
   "$schema": "./.board-schema.json",
   "version": 1,
   "updated_at": "2026-05-15",
-  "next_id": 75,
+  "next_id": 76,
   "items": [
     {
       "id": "AJ-1",
@@ -1980,6 +1980,30 @@
       "created_at": "2026-05-15",
       "updated_at": "2026-05-15",
       "closed_at": null
+    },
+    {
+      "id": "AJ-75",
+      "slug": "v0-1-1-readme-classifier-models",
+      "type": "fix",
+      "title": "v0.1.1: fix README/docs model strings, classifier, multi-provider list",
+      "status": "done",
+      "priority": "p1",
+      "milestone": "v0.1.x",
+      "labels": [
+        "fix",
+        "docs",
+        "release"
+      ],
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "fix/v0-1-1-readme-classifier-models",
+      "pr": null,
+      "spec": "specs/v0-1-1-readme-classifier-models.md",
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-15",
+      "updated_at": "2026-05-15",
+      "closed_at": "2026-05-15"
     }
   ]
 }

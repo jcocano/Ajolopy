@@ -34,7 +34,7 @@ class ChatRequest(BaseModel):
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You are Acme Support. Be concise, friendly, and accurate.",
     fallback="claude-haiku-4-5",
 )
@@ -65,7 +65,7 @@ A handful of real lines (without imports). Each token has a job:
 
 | Token                                | What it does                                                                                       | What it replaces                                                                 |
 | ------------------------------------ | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `@Agent(model="claude-sonnet-4-7")`  | Picks the provider (Anthropic) by prefix, validates the model, wires the SDK at boot.              | ~5 lines of SDK init + provider selection logic.                                 |
+| `@Agent(model="claude-opus-4-7")`  | Picks the provider (Anthropic) by prefix, validates the model, wires the SDK at boot.              | ~5 lines of SDK init + provider selection logic.                                 |
 | `system="You are Acme Support..."`   | Sets the system prompt once. Static strings unlock prompt caching when you opt in with `cache=`.   | A `messages=[{"role": "system", ...}]` dance on every call.                      |
 | OpenTelemetry always-on              | Emits one span per `run` / `stream` with `gen_ai.*` attributes and `gen_ai.cost_usd`. No kwarg — install `ajolopy[otel]` and point standard OTel env vars at your backend. | ~20 lines: tracer setup, manual span boundaries, token/cost accounting wrappers. |
 | `fallback="claude-haiku-4-5"`        | On retriable provider failure, transparently retries on the named model.                            | ~40 lines: retry policy, alternate client, error classification.                  |
@@ -140,7 +140,7 @@ You have a `Support` agent that:
 1. Validates its provider env var **before** accepting traffic.
 2. Streams responses over SSE with heartbeats and disconnect cancellation.
 3. Runs a tool-calling loop without any JSON Schema you had to write.
-4. Falls back to `claude-haiku-4-5` automatically if Sonnet returns a
+4. Falls back to `claude-haiku-4-5` automatically if Opus returns a
    retriable error.
 5. Emits one OpenTelemetry span per request — ready to land in
    [Langfuse / Sentry / Grafana / Honeycomb / Datadog](../recipes/observability/index.md)

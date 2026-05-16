@@ -59,7 +59,7 @@ async def test_single_tool_call_executes_and_response_returns_text() -> None:
 
     invocations: list[str] = []
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool
         async def echo(self, value: str) -> str:
@@ -87,7 +87,7 @@ async def test_second_complete_receives_tool_result_message() -> None:
 
     _register(Prov)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool
         async def echo(self, value: str) -> str:
@@ -131,7 +131,7 @@ async def test_multiple_tool_calls_in_one_response_all_dispatch() -> None:
 
     seen: list[str] = []
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool
         async def echo(self, value: str) -> str:
@@ -159,7 +159,7 @@ async def test_sync_tool_dispatched_via_to_thread() -> None:
 
     _register(Prov)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool
         def upper(self, value: str) -> str:
@@ -188,7 +188,7 @@ async def test_tool_raises_surfaces_as_error_tool_result_and_loop_continues() ->
 
     _register(Prov)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool
         async def boom(self) -> str:
@@ -225,7 +225,7 @@ async def test_max_tool_iterations_caps_the_loop() -> None:
 
     _register(Prov)
 
-    @Agent(model="claude-sonnet-4-7", system="…", max_tool_iterations=2)
+    @Agent(model="claude-opus-4-7", system="…", max_tool_iterations=2)
     class Demo:
         @Tool
         async def echo(self, value: str) -> str:
@@ -252,7 +252,7 @@ async def test_unknown_tool_call_returns_error_result_to_model() -> None:
 
     _register(Prov)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool
         async def echo(self, value: str) -> str:
@@ -283,7 +283,7 @@ async def test_non_string_tool_result_is_json_stringified() -> None:
 
     _register(Prov)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool
         async def meta(self) -> dict[str, int]:
@@ -341,7 +341,7 @@ async def test_stream_executes_tool_and_continues_streaming() -> None:
 
     _register(Prov)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool
         async def echo(self, value: str) -> str:
@@ -385,7 +385,7 @@ async def test_stream_cap_raises_agent_tool_loop_error() -> None:
 
     _register(Prov)
 
-    @Agent(model="claude-sonnet-4-7", system="…", max_tool_iterations=2)
+    @Agent(model="claude-opus-4-7", system="…", max_tool_iterations=2)
     class Demo:
         @Tool
         async def echo(self, value: str) -> str:

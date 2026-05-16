@@ -44,7 +44,7 @@ def reset_active_catalog() -> Iterator[None]:
 def sonnet_catalog() -> Catalog:
     return Catalog(
         {
-            "claude-sonnet-4-7": ModelPrice(
+            "claude-opus-4-7": ModelPrice(
                 input_cost_per_token=3e-6,
                 output_cost_per_token=15e-6,
                 cache_creation_input_token_cost=3.75e-6,
@@ -106,7 +106,7 @@ async def test_chat_span_gets_five_cost_attrs_for_known_model(
     set_default_catalog(sonnet_catalog)
     register_provider("anthropic", _CacheUsageFake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -165,7 +165,7 @@ async def test_streaming_chat_span_gets_five_cost_attrs(
     set_default_catalog(sonnet_catalog)
     register_provider("anthropic", _StreamingCacheFake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -194,7 +194,7 @@ async def test_unknown_model_omits_cost_attrs(
     set_default_catalog(Catalog({}))  # empty — every model is unknown
     register_provider("anthropic", FakeProvider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -241,7 +241,7 @@ async def test_streaming_without_usage_omits_cost_attrs(
 
     register_provider("anthropic", _NoUsageStreamFake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 

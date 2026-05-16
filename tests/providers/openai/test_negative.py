@@ -20,9 +20,9 @@ from .conftest import make_async_client, make_chat_completion
 @pytest.mark.asyncio
 async def test_complete_rejects_non_openai_model() -> None:
     provider = OpenAIProvider(client=make_async_client())
-    with pytest.raises(OpenAIProviderError, match="claude-sonnet-4-7"):
+    with pytest.raises(OpenAIProviderError, match="claude-opus-4-7"):
         await provider.complete(
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             messages=[Message(role="user", content="hi")],
         )
 
@@ -30,11 +30,11 @@ async def test_complete_rejects_non_openai_model() -> None:
 @pytest.mark.asyncio
 async def test_stream_rejects_non_openai_model() -> None:
     provider = OpenAIProvider(client=make_async_client())
-    with pytest.raises(OpenAIProviderError, match="claude-sonnet-4-7"):
+    with pytest.raises(OpenAIProviderError, match="claude-opus-4-7"):
         # Build the iterator — the model check raises eagerly before any
         # generator is created.
         provider.stream(
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             messages=[Message(role="user", content="hi")],
         )
 
@@ -43,7 +43,7 @@ async def test_stream_rejects_non_openai_model() -> None:
 async def test_embed_rejects_non_openai_model() -> None:
     provider = OpenAIProvider(client=make_async_client())
     with pytest.raises(OpenAIProviderError, match="claude"):
-        await provider.embed(model="claude-sonnet-4-7", text="hi")
+        await provider.embed(model="claude-opus-4-7", text="hi")
 
 
 @pytest.mark.parametrize("legacy_reason", ["function_call", "content_filter"])

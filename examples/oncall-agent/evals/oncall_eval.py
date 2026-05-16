@@ -48,7 +48,7 @@ class OnCallEval:
                 "step. Penalise generic responses, off-topic answers, "
                 "severity mismatches, and refusals to triage."
             ),
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             cache=True,
         )
 

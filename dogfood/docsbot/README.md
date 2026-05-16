@@ -62,7 +62,7 @@ curl -N -X POST http://127.0.0.1:8000/chat \
 
 The response streams back token by token. Under the hood:
 
-- **`@Agent`** is wired to `claude-sonnet-4-7` with a fallback to
+- **`@Agent`** is wired to `claude-opus-4-7` with a fallback to
   `claude-haiku-4-5`. The system prompt instructs the model to always
   call `retrieve_docs(...)` first, ground every claim in the snippets,
   and quote source paths.

@@ -97,7 +97,7 @@ class SupportEval:
             output,
             expected=expected.get("ideal"),
             criterion="Does the response correctly address the user's question?",
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             cache=True,
         )
 ```

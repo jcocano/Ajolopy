@@ -52,7 +52,7 @@ hand-write a retry/append/re-call loop for every agent would defeat the
 from ajolopy import Agent, Tool
 
 
-@Agent(model="claude-sonnet-4-7", system="You help customers.")
+@Agent(model="claude-opus-4-7", system="You help customers.")
 class Support:
     """Top-level support agent for the demo."""
 
@@ -76,7 +76,7 @@ class RefundArgs(BaseModel):
     reason: Literal["damaged", "wrong_item", "no_longer_needed"]
 
 
-@Agent(model="claude-sonnet-4-7", system="…")
+@Agent(model="claude-opus-4-7", system="…")
 class Billing:
     @Tool(schema=RefundArgs)
     async def refund(self, order_id: str, reason: str) -> dict[str, str]:
@@ -123,7 +123,7 @@ agents without forcing inheritance.
 
 ```python
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="…",
     max_tool_iterations=10,  # default
 )

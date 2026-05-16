@@ -64,7 +64,7 @@ my-agent/
 
 
     @Agent(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         system="You are MyAgent, a helpful assistant.",
     )
     class Support:
@@ -154,7 +154,7 @@ That is the round trip:
 1. `@Agent` registered `Support` with the DI container.
 2. `@Stream("/chat")` exposed `respond()` as an ASGI route.
 3. `self.stream(message)` ran the prompt against
-   `claude-sonnet-4-7` and yielded chunks as the model produced them.
+   `claude-opus-4-7` and yielded chunks as the model produced them.
 4. The framework serialised the async generator into a streaming HTTP
    response.
 
@@ -171,7 +171,7 @@ behaviour for free:
 | `@Tool` | A method decorated with `@Tool` | Auto-derived JSON schema, dispatch into the agent loop |
 | `@Stream("/chat")` | An async generator method | ASGI route, streaming response, content-negotiation |
 
-The same `model="claude-sonnet-4-7"` string works with `openai`,
+The same `model="claude-opus-4-7"` string works with `openai`,
 `gemini`, and any OpenAI-compatible provider — switch by passing
 `--llm` to `ajolopy new`, or by editing `model=` directly.
 

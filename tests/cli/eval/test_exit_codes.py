@@ -96,7 +96,7 @@ class TestExitCodes:
         set_default_catalog(
             Catalog(
                 {
-                    "claude-sonnet-4-7": ModelPrice(
+                    "claude-opus-4-7": ModelPrice(
                         input_cost_per_token=0.0,
                         output_cost_per_token=0.0,
                     )

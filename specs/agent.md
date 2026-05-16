@@ -37,7 +37,7 @@ spans, env-variable validation, fallback when the primary model is degraded.
 from ajolopy import Agent
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You are a helpful assistant.",
     memory="redis://localhost:6379",
     trace=True,
@@ -118,7 +118,7 @@ transition to `done`.
 
 ### Magical-default path
 
-- [x] `@Agent(model="claude-sonnet-4-7", system="...")` on a class makes
+- [x] `@Agent(model="claude-opus-4-7", system="...")` on a class makes
       instances callable via `await instance.run("...")` and produces a `str`.
 - [x] The decorator preserves the class type so pyright sees the original
       class methods (decorator returns `type[T]`, not `Any`).

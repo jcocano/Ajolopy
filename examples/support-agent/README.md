@@ -147,7 +147,7 @@ data: {"type": "done"}
 
 What is happening on the server side:
 
-- **`@Workflow(coordinator="claude-sonnet-4-7", ...)`** built a routing LLM
+- **`@Workflow(coordinator="claude-opus-4-7", ...)`** built a routing LLM
   that exposes `Triage`, `Billing`, and `Technical` as tools. The
   coordinator picks one, hands off, and the chosen specialist answers.
 - **`@MCP`** (the `Integrations` class) declared the GitHub MCP server

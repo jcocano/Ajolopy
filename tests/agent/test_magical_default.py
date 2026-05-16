@@ -20,14 +20,14 @@ async def test_decorator_makes_instances_callable_via_run(
 ) -> None:
     _ = register_fake_anthropic
 
-    @Agent(model="claude-sonnet-4-7", system="You are a test agent.")
+    @Agent(model="claude-opus-4-7", system="You are a test agent.")
     class Demo:
         pass
 
     instance = Demo()
     answer = await instance.run("hello world")  # type: ignore[attr-defined]
     assert isinstance(answer, str)
-    assert "claude-sonnet-4-7" in answer  # FakeProvider echoes the model
+    assert "claude-opus-4-7" in answer  # FakeProvider echoes the model
 
 
 def test_decorator_returns_same_class_object(
@@ -38,7 +38,7 @@ def test_decorator_returns_same_class_object(
     class Demo:
         custom = "preserved"
 
-    decorated = Agent(model="claude-sonnet-4-7", system="…")(Demo)
+    decorated = Agent(model="claude-opus-4-7", system="…")(Demo)
     # The decorator must monkey-patch in place, not wrap the class.
     assert decorated is Demo
     assert decorated.custom == "preserved"

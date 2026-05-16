@@ -14,7 +14,7 @@ def sonnet_catalog() -> Catalog:
     """A tiny catalog with the real Sonnet 4.7 rates for math assertions."""
     return Catalog(
         {
-            "claude-sonnet-4-7": ModelPrice(
+            "claude-opus-4-7": ModelPrice(
                 input_cost_per_token=3e-6,
                 output_cost_per_token=15e-6,
                 cache_creation_input_token_cost=3.75e-6,
@@ -30,19 +30,19 @@ def test_returns_none_for_unknown_model() -> None:
 
 
 def test_returns_zero_when_known_model_has_no_tokens(sonnet_catalog: Catalog) -> None:
-    assert compute_cost_usd("claude-sonnet-4-7", catalog=sonnet_catalog) == 0.0
+    assert compute_cost_usd("claude-opus-4-7", catalog=sonnet_catalog) == 0.0
 
 
 def test_input_tier_sonnet_baseline(sonnet_catalog: Catalog) -> None:
     # 1000 input tokens * $3.00 / 1M = $0.003.
-    cost = compute_cost_usd("claude-sonnet-4-7", input_tokens=1000, catalog=sonnet_catalog)
+    cost = compute_cost_usd("claude-opus-4-7", input_tokens=1000, catalog=sonnet_catalog)
     assert cost == pytest.approx(0.003)
 
 
 def test_cache_read_tier_sonnet_baseline(sonnet_catalog: Catalog) -> None:
     # 1000 cache-read tokens * $0.30 / 1M = $0.0003.
     cost = compute_cost_usd(
-        "claude-sonnet-4-7",
+        "claude-opus-4-7",
         cache_read_input_tokens=1000,
         catalog=sonnet_catalog,
     )
@@ -51,7 +51,7 @@ def test_cache_read_tier_sonnet_baseline(sonnet_catalog: Catalog) -> None:
 
 def test_all_tiers_sum_independently(sonnet_catalog: Catalog) -> None:
     cost = compute_cost_usd(
-        "claude-sonnet-4-7",
+        "claude-opus-4-7",
         input_tokens=1000,
         output_tokens=500,
         cache_creation_input_tokens=200,
@@ -85,7 +85,7 @@ def test_missing_tier_contributes_zero_not_none() -> None:
 
 def test_float_precision_billion_input_tokens(sonnet_catalog: Catalog) -> None:
     # 1 billion tokens * $3 / 1M = $3000.0 exactly in IEEE-754.
-    cost = compute_cost_usd("claude-sonnet-4-7", input_tokens=1_000_000_000, catalog=sonnet_catalog)
+    cost = compute_cost_usd("claude-opus-4-7", input_tokens=1_000_000_000, catalog=sonnet_catalog)
     assert cost == 3000.0
 
 

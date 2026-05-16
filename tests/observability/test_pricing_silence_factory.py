@@ -104,7 +104,7 @@ async def test_factory_pricing_silence_combined_with_overrides(
     from ajolopy.factory import AjolopyFactory
 
     overrides = {
-        "claude-sonnet-4-7": ModelPrice(input_cost_per_token=1e-6, output_cost_per_token=2e-6)
+        "claude-opus-4-7": ModelPrice(input_cost_per_token=1e-6, output_cost_per_token=2e-6)
     }
     await AjolopyFactory.create(
         RootModule,
@@ -116,7 +116,7 @@ async def test_factory_pricing_silence_combined_with_overrides(
     # The override applies (catalog math), the silence applies (warning
     # gate for an unrelated prefix).
     catalog = get_active_catalog()
-    price = catalog.get("claude-sonnet-4-7")
+    price = catalog.get("claude-opus-4-7")
     assert price is not None
     assert price.input_cost_per_token == 1e-6
     assert "vllm" in catalog._silence_models

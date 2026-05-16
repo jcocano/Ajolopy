@@ -38,7 +38,7 @@ Surveyed every example + `dogfood/docsbot/` for migration touchpoints.
 
 - **local-ollama**: real changes (this item).
 - **support-agent / web-research / oncall-agent / memory-assistant /
-  contextual-rag**: each uses `model="claude-sonnet-4-7"` as the
+  contextual-rag**: each uses `model="claude-opus-4-7"` as the
   *primary*. The `ANTHROPIC_API_KEY=test-dummy` setter in their
   `tests/conftest.py` validates the **primary** at decoration time and
   must stay — AJ-69 made the *fallback* lazy, not the primary. No

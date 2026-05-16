@@ -29,7 +29,7 @@ async def test_all_seven_helpers_compose_in_an_eval_suite(
 ) -> None:
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -91,7 +91,7 @@ async def test_tool_called_reads_runner_captured_tool_calls(
     """
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 

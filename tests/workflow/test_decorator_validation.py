@@ -28,11 +28,11 @@ def _register_anthropic() -> None:
 def _make_agents() -> tuple[type[object], type[object]]:
     _register_anthropic()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class _A:
         """Specialist A."""
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class _B:
         """Specialist B."""
 
@@ -42,7 +42,7 @@ def _make_agents() -> tuple[type[object], type[object]]:
 def test_decorated_class_exposes_run_and_stream() -> None:
     agent_a, agent_b = _make_agents()
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[agent_a, agent_b])
+    @Workflow(coordinator="claude-opus-4-7", agents=[agent_a, agent_b])
     class Team:
         """Demo team."""
 
@@ -54,7 +54,7 @@ def test_decorated_class_exposes_run_and_stream() -> None:
 def test_empty_agents_list_raises() -> None:
     with pytest.raises(WorkflowConfigError, match="at least one"):
 
-        @Workflow(coordinator="claude-sonnet-4-7", agents=[])
+        @Workflow(coordinator="claude-opus-4-7", agents=[])
         class _Team:
             pass
 
@@ -67,7 +67,7 @@ def test_non_agent_entry_raises_naming_the_class() -> None:
 
     with pytest.raises(WorkflowConfigError, match="NotAgent"):
 
-        @Workflow(coordinator="claude-sonnet-4-7", agents=[agent_a, NotAgent])
+        @Workflow(coordinator="claude-opus-4-7", agents=[agent_a, NotAgent])
         class _Team:
             pass
 
@@ -86,7 +86,7 @@ def test_max_steps_zero_raises() -> None:
     agent_a, _ = _make_agents()
     with pytest.raises(WorkflowConfigError, match=">= 1"):
 
-        @Workflow(coordinator="claude-sonnet-4-7", agents=[agent_a], max_steps=0)
+        @Workflow(coordinator="claude-opus-4-7", agents=[agent_a], max_steps=0)
         class _Team:
             pass
 
@@ -95,7 +95,7 @@ def test_max_steps_negative_raises() -> None:
     agent_a, _ = _make_agents()
     with pytest.raises(WorkflowConfigError, match=">= 1"):
 
-        @Workflow(coordinator="claude-sonnet-4-7", agents=[agent_a], max_steps=-1)
+        @Workflow(coordinator="claude-opus-4-7", agents=[agent_a], max_steps=-1)
         class _Team:
             pass
 
@@ -116,7 +116,7 @@ def test_route_override_shadows_coordinator_logs_info(
 
     caplog.set_level(logging.INFO, logger="ajolopy.workflow")
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[agent_a, agent_b])
+    @Workflow(coordinator="claude-opus-4-7", agents=[agent_a, agent_b])
     class _Team:
         async def route(self, message: str, context: dict[str, object]) -> type[object]:
             _ = (message, context)
@@ -146,6 +146,6 @@ def test_duplicate_agent_entries_raise() -> None:
     agent_a, _ = _make_agents()
     with pytest.raises(WorkflowConfigError, match="duplicate"):
 
-        @Workflow(coordinator="claude-sonnet-4-7", agents=[agent_a, agent_a])
+        @Workflow(coordinator="claude-opus-4-7", agents=[agent_a, agent_a])
         class _Team:
             pass

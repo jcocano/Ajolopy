@@ -41,7 +41,7 @@ class Triage:
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You handle billing: refunds, invoices, subscriptions.",
 )
 class Billing:
@@ -54,7 +54,7 @@ class Billing:
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You handle technical issues: bugs, errors, integration help.",
 )
 class Technical:
@@ -133,7 +133,7 @@ class ChatRequest(BaseModel):
 
 
 @Workflow(
-    coordinator="claude-sonnet-4-7",
+    coordinator="claude-opus-4-7",
     agents=[Triage, Billing, Technical],
     integrations=[Integrations],
     max_steps=8,
@@ -230,7 +230,7 @@ class TeamEval:
                 "The answer must address it directly with concrete next steps. "
                 "Penalise generic responses, off-topic answers, and refusals."
             ),
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             cache=True,
         )
 

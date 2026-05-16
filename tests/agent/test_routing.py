@@ -23,7 +23,7 @@ def test_claude_model_resolves_to_anthropic_provider(
 ) -> None:
     _ = register_fake_anthropic
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 

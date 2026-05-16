@@ -22,6 +22,6 @@ def test_provider_constructor_failure_raises_agent_config_error(
     _ = register_config_error_anthropic
     with pytest.raises(AgentConfigError, match="ANTHROPIC_API_KEY"):
 
-        @Agent(model="claude-sonnet-4-7", system="…")
+        @Agent(model="claude-opus-4-7", system="…")
         class _Demo:
             pass

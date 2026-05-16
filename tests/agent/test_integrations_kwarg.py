@@ -34,7 +34,7 @@ def test_class_attribute_form_is_accepted(
     class I:  # noqa: E742
         pass
 
-    @Agent(model="claude-sonnet-4-7", system="hi")
+    @Agent(model="claude-opus-4-7", system="hi")
     class W:
         integrations = [I]
 
@@ -50,7 +50,7 @@ def test_kwarg_form_is_accepted(register_fake_anthropic: type[FakeProvider]) -> 
     class I:  # noqa: E742
         pass
 
-    @Agent(model="claude-sonnet-4-7", system="hi", integrations=[I])
+    @Agent(model="claude-opus-4-7", system="hi", integrations=[I])
     class W:
         pass
 
@@ -71,7 +71,7 @@ def test_kwarg_wins_and_logs(register_fake_anthropic: type[FakeProvider], caplog
 
     with caplog.at_level(logging.INFO, logger="ajolopy.agent.runtime"):
 
-        @Agent(model="claude-sonnet-4-7", system="hi", integrations=[I2])
+        @Agent(model="claude-opus-4-7", system="hi", integrations=[I2])
         class W:
             integrations = [I1]
 
@@ -93,7 +93,7 @@ async def test_kwarg_drives_tool_wiring(
     class I:  # noqa: E742
         pass
 
-    @Agent(model="claude-sonnet-4-7", system="hi", integrations=[I])
+    @Agent(model="claude-opus-4-7", system="hi", integrations=[I])
     class W:
         pass
 

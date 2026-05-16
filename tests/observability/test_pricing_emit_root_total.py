@@ -43,7 +43,7 @@ def reset_active_catalog() -> Iterator[None]:
 def sonnet_catalog() -> Catalog:
     return Catalog(
         {
-            "claude-sonnet-4-7": ModelPrice(
+            "claude-opus-4-7": ModelPrice(
                 input_cost_per_token=3e-6,
                 output_cost_per_token=15e-6,
             ),
@@ -100,7 +100,7 @@ async def test_single_chat_call_roll_up(
     set_default_catalog(sonnet_catalog)
     register_provider("anthropic", _BillableFake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -129,7 +129,7 @@ async def test_tool_loop_sums_children_into_root(
     set_default_catalog(sonnet_catalog)
     register_provider("anthropic", _ToolLoopFake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class DemoAgent:
         @ToolDecorator
         def ping(self) -> str:
@@ -192,7 +192,7 @@ async def test_root_total_handles_failed_unknown_child(
     set_default_catalog(sonnet_catalog)
     register_provider("anthropic", _PartialKnownFake, overwrite=True)
 
-    @Agent(model="claude-fail", system="…", fallback="claude-sonnet-4-7")
+    @Agent(model="claude-fail", system="…", fallback="claude-opus-4-7")
     class Demo:
         pass
 
@@ -203,7 +203,7 @@ async def test_root_total_handles_failed_unknown_child(
     success_chat = next(
         c
         for c in _find(spans, "chat ")
-        if _attrs(c).get("gen_ai.request.model") == "claude-sonnet-4-7"
+        if _attrs(c).get("gen_ai.request.model") == "claude-opus-4-7"
     )
     assert _attrs(invoke)["ajolopy.cost_usd.total"] == pytest.approx(
         _attrs(success_chat)["gen_ai.cost_usd"]
@@ -219,7 +219,7 @@ async def test_root_total_omitted_when_every_child_unknown(
     set_default_catalog(Catalog({}))  # empty — every model is unknown
     register_provider("anthropic", FakeProvider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 

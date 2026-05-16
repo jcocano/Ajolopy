@@ -85,7 +85,7 @@ async def test_agent_run_emits_invoke_and_chat_span_tree(
 ) -> None:
     _ = register_fake_anthropic
 
-    @Agent(model="claude-sonnet-4-7", system="…", temperature=0.5, max_tokens=128)
+    @Agent(model="claude-opus-4-7", system="…", temperature=0.5, max_tokens=128)
     class Demo:
         pass
 
@@ -102,10 +102,10 @@ async def test_agent_run_emits_invoke_and_chat_span_tree(
 
     assert len(chats) == 1
     chat_attrs = _attrs(chats[0])
-    assert chats[0].name == "chat claude-sonnet-4-7"
+    assert chats[0].name == "chat claude-opus-4-7"
     assert chat_attrs["gen_ai.system"] == "unknown"  # FakeProvider's default
     assert chat_attrs["gen_ai.operation.name"] == "chat"
-    assert chat_attrs["gen_ai.request.model"] == "claude-sonnet-4-7"
+    assert chat_attrs["gen_ai.request.model"] == "claude-opus-4-7"
     assert chat_attrs["gen_ai.request.temperature"] == pytest.approx(0.5)
     assert chat_attrs["gen_ai.request.max_tokens"] == 128
     # FakeProvider's default Response sets tokens_in=1, tokens_out=2.
@@ -129,14 +129,14 @@ async def test_agent_stream_marks_streaming_attribute(
 ) -> None:
     _ = register_fake_anthropic
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
     out: list[str] = []
     async for delta in Demo().stream("hi"):  # type: ignore[attr-defined]
         out.append(delta)
-    assert "".join(out) == "chunk from claude-sonnet-4-7"
+    assert "".join(out) == "chunk from claude-opus-4-7"
 
     spans = list(tracer_provider.get_finished_spans())
     invoke = _find(spans, "agent.invoke ")[0]
@@ -159,7 +159,7 @@ async def test_provider_gen_ai_system_label_is_recorded_on_chat_span(
 ) -> None:
     register_provider("anthropic", _AnthropicLikeFake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -277,7 +277,7 @@ async def test_tool_exception_marks_execute_tool_span_with_error_status(
 
     from ajolopy import Tool as ToolDecorator
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class DemoAgent:
         @ToolDecorator
         def boom(self) -> str:
@@ -341,7 +341,7 @@ async def test_stream_terminal_chunk_usage_attaches_to_chat_span(
 ) -> None:
     register_provider("anthropic", _StreamingUsageFake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -370,7 +370,7 @@ async def test_content_capture_default_off_omits_prompt_and_completion_attrs(
     monkeypatch.delenv("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", raising=False)
     _ = register_fake_anthropic
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -390,7 +390,7 @@ async def test_content_capture_env_var_enables_prompt_and_completion_attrs(
     monkeypatch.setenv("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true")
     _ = register_fake_anthropic
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -400,7 +400,7 @@ async def test_content_capture_env_var_enables_prompt_and_completion_attrs(
     assert "gen_ai.prompt" in attrs
     assert "gen_ai.completion" in attrs
     assert "hello" in attrs["gen_ai.prompt"]
-    assert "claude-sonnet-4-7" in attrs["gen_ai.completion"]
+    assert "claude-opus-4-7" in attrs["gen_ai.completion"]
 
 
 # ---------------------------------------------------------------------------

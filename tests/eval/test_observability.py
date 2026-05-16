@@ -55,7 +55,7 @@ def reset_active_catalog() -> Iterator[None]:
 def billable_catalog() -> Catalog:
     return Catalog(
         {
-            "claude-sonnet-4-7": ModelPrice(
+            "claude-opus-4-7": ModelPrice(
                 input_cost_per_token=3e-6,
                 output_cost_per_token=15e-6,
             ),
@@ -69,7 +69,7 @@ async def test_eval_run_span_carries_documented_attrs(
 ) -> None:
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -108,7 +108,7 @@ async def test_case_spans_nested_under_run_span(
 ) -> None:
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -143,7 +143,7 @@ async def test_case_spans_have_per_metric_score_attributes(
 ) -> None:
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -180,7 +180,7 @@ async def test_run_span_rolls_up_cost_total(
     _ = (scripted_fake, reset_active_catalog)
     set_default_catalog(billable_catalog)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 

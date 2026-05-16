@@ -22,7 +22,7 @@ async def test_target_failure_isolates_case(
     """A failing target call captures into ``case.error`` and continues."""
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -63,7 +63,7 @@ async def test_metric_exception_captured_per_metric(
     """A metric raising fails only itself for that case; other metrics still run."""
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -100,7 +100,7 @@ async def test_non_numeric_metric_return_is_captured(
 ) -> None:
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -129,7 +129,7 @@ async def test_empty_dataset_raises(scripted_fake: type, tmp_path: Path) -> None
     # build a custom in-memory dataset to exercise the runner's guard.
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 

@@ -73,7 +73,7 @@ async def test_factory_pricing_overrides_flow_through_to_chat_span(
     from ajolopy.factory import AjolopyFactory
 
     overrides = {
-        "claude-sonnet-4-7": ModelPrice(input_cost_per_token=1e-6, output_cost_per_token=2e-6)
+        "claude-opus-4-7": ModelPrice(input_cost_per_token=1e-6, output_cost_per_token=2e-6)
     }
     # Build a small app just to exercise the factory's plumbing — the
     # module graph itself is irrelevant for the catalog assertion.
@@ -85,13 +85,13 @@ async def test_factory_pricing_overrides_flow_through_to_chat_span(
 
     # Active catalog must now resolve the override.
     catalog = get_active_catalog()
-    price = catalog.get("claude-sonnet-4-7")
+    price = catalog.get("claude-opus-4-7")
     assert price is not None
     assert price.input_cost_per_token == 1e-6
 
     # Decorating an agent AFTER the factory bootstrap also picks up the
     # override on first chat-span emission (lazy catalog resolution).
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -114,7 +114,7 @@ async def test_decoration_before_factory_picks_up_overrides_lazily(
     register_provider("anthropic", FakeProvider, overwrite=True)
 
     # 1) Decorate first — no catalog wired yet.
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -130,7 +130,7 @@ async def test_decoration_before_factory_picks_up_overrides_lazily(
         pass
 
     overrides = {
-        "claude-sonnet-4-7": ModelPrice(input_cost_per_token=4e-6, output_cost_per_token=8e-6)
+        "claude-opus-4-7": ModelPrice(input_cost_per_token=4e-6, output_cost_per_token=8e-6)
     }
     await AjolopyFactory.create(RootModule, container=Container(), pricing_overrides=overrides)
 

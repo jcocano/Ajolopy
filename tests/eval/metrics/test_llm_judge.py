@@ -116,7 +116,7 @@ async def test_simple_0_to_1_response() -> None:
     score = await llm_judge(
         "the output",
         criterion="is it helpful?",
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         provider=fake,
     )
     assert score == pytest.approx(0.85)
@@ -130,7 +130,7 @@ async def test_one_to_five_scale_rescaled() -> None:
     score = await llm_judge(
         "the output",
         criterion="rate it",
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         scale="1-5",
         provider=fake,
     )
@@ -142,7 +142,7 @@ async def test_one_to_five_scale_rescaled() -> None:
 async def test_above_range_clamped() -> None:
     fake = FakeLLMProvider()
     fake.responses = ["1.5"]
-    score = await llm_judge("out", criterion="x", model="claude-sonnet-4-7", provider=fake)
+    score = await llm_judge("out", criterion="x", model="claude-opus-4-7", provider=fake)
     assert score == 1.0
 
 
@@ -150,7 +150,7 @@ async def test_above_range_clamped() -> None:
 async def test_below_range_clamped() -> None:
     fake = FakeLLMProvider()
     fake.responses = ["-0.5"]
-    score = await llm_judge("out", criterion="x", model="claude-sonnet-4-7", provider=fake)
+    score = await llm_judge("out", criterion="x", model="claude-opus-4-7", provider=fake)
     assert score == 0.0
 
 
@@ -159,14 +159,14 @@ async def test_no_numeric_raises_metrics_runtime_error() -> None:
     fake = FakeLLMProvider()
     fake.responses = ["I cannot give a number, sorry."]
     with pytest.raises(MetricsRuntimeError, match="could not parse a number"):
-        await llm_judge("out", criterion="x", model="claude-sonnet-4-7", provider=fake)
+        await llm_judge("out", criterion="x", model="claude-opus-4-7", provider=fake)
 
 
 @pytest.mark.asyncio
 async def test_expected_none_omits_block() -> None:
     fake = FakeLLMProvider()
     fake.responses = ["1"]
-    await llm_judge("out", criterion="x", model="claude-sonnet-4-7", provider=fake)
+    await llm_judge("out", criterion="x", model="claude-opus-4-7", provider=fake)
     assert fake.last_prompt is not None
     assert "Expected" not in fake.last_prompt
     assert "Ideal" not in fake.last_prompt
@@ -179,7 +179,7 @@ async def test_expected_string_includes_block() -> None:
     await llm_judge(
         "out",
         criterion="x",
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         expected="the ideal answer",
         provider=fake,
     )
@@ -195,10 +195,10 @@ async def test_cache_true_short_circuits() -> None:
     fake = FakeLLMProvider()
     fake.responses = ["0.8", "0.1"]
     score1 = await llm_judge(
-        "out", criterion="x", model="claude-sonnet-4-7", cache=True, provider=fake
+        "out", criterion="x", model="claude-opus-4-7", cache=True, provider=fake
     )
     score2 = await llm_judge(
-        "out", criterion="x", model="claude-sonnet-4-7", cache=True, provider=fake
+        "out", criterion="x", model="claude-opus-4-7", cache=True, provider=fake
     )
     assert score1 == score2 == pytest.approx(0.8)
     assert fake.call_count == 1
@@ -208,8 +208,8 @@ async def test_cache_true_short_circuits() -> None:
 async def test_cache_false_invokes_every_time() -> None:
     fake = FakeLLMProvider()
     fake.responses = ["0.8", "0.1"]
-    s1 = await llm_judge("out", criterion="x", model="claude-sonnet-4-7", provider=fake)
-    s2 = await llm_judge("out", criterion="x", model="claude-sonnet-4-7", provider=fake)
+    s1 = await llm_judge("out", criterion="x", model="claude-opus-4-7", provider=fake)
+    s2 = await llm_judge("out", criterion="x", model="claude-opus-4-7", provider=fake)
     assert s1 == pytest.approx(0.8)
     assert s2 == pytest.approx(0.1)
     assert fake.call_count == 2
@@ -220,12 +220,8 @@ async def test_shared_judge_cache_survives_calls() -> None:
     fake = FakeLLMProvider()
     fake.responses = ["0.4", "0.9"]
     cache = JudgeCache()
-    s1 = await llm_judge(
-        "out", criterion="x", model="claude-sonnet-4-7", cache=cache, provider=fake
-    )
-    s2 = await llm_judge(
-        "out", criterion="x", model="claude-sonnet-4-7", cache=cache, provider=fake
-    )
+    s1 = await llm_judge("out", criterion="x", model="claude-opus-4-7", cache=cache, provider=fake)
+    s2 = await llm_judge("out", criterion="x", model="claude-opus-4-7", cache=cache, provider=fake)
     assert s1 == s2 == pytest.approx(0.4)
     assert fake.call_count == 1
     assert len(cache) == 1
@@ -236,7 +232,7 @@ async def test_provider_error_bubbles_unwrapped() -> None:
     fake = FakeLLMProvider()
     fake.raise_on_complete = LLMProviderError("transport boom")
     with pytest.raises(LLMProviderError, match="transport boom"):
-        await llm_judge("out", criterion="x", model="claude-sonnet-4-7", provider=fake)
+        await llm_judge("out", criterion="x", model="claude-opus-4-7", provider=fake)
 
 
 @pytest.mark.asyncio
@@ -246,7 +242,7 @@ async def test_eval_output_reduced_to_text() -> None:
     await llm_judge(
         _eval_output("the actual output text"),
         criterion="x",
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         provider=fake,
     )
     assert fake.last_prompt is not None
@@ -260,7 +256,7 @@ async def test_plain_str_used_verbatim() -> None:
     await llm_judge(
         "this exact text",
         criterion="x",
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         provider=fake,
     )
     assert fake.last_prompt is not None
@@ -285,7 +281,7 @@ async def test_cache_key_includes_model() -> None:
 async def test_judge_calls_provider_with_temperature_zero_and_short_max_tokens() -> None:
     fake = FakeLLMProvider()
     fake.responses = ["1.0"]
-    await llm_judge("out", criterion="x", model="claude-sonnet-4-7", provider=fake)
+    await llm_judge("out", criterion="x", model="claude-opus-4-7", provider=fake)
     assert fake.last_kwargs["temperature"] == 0.0
     assert fake.last_kwargs["max_tokens"] == 50
     assert fake.last_kwargs["cache"] is False
@@ -299,6 +295,6 @@ async def test_invalid_output_type_raises_config_error() -> None:
         await llm_judge(
             42,
             criterion="x",
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             provider=fake,
         )

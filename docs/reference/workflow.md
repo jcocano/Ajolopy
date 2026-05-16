@@ -41,18 +41,18 @@ class Triage:
     """Classify the user's message: billing, technical, or general."""
 
 
-@Agent(model="claude-sonnet-4-7", system="You handle billing.")
+@Agent(model="claude-opus-4-7", system="You handle billing.")
 class Billing:
     """Refunds, invoices, subscriptions."""
 
 
-@Agent(model="claude-sonnet-4-7", system="You handle technical issues.")
+@Agent(model="claude-opus-4-7", system="You handle technical issues.")
 class Technical:
     """Bugs, errors, integration help."""
 
 
 @Workflow(
-    coordinator="claude-sonnet-4-7",
+    coordinator="claude-opus-4-7",
     agents=[Triage, Billing, Technical],
 )
 class SupportTeam:

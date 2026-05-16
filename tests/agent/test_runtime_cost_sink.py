@@ -42,7 +42,7 @@ def reset_active_catalog() -> Iterator[None]:
 def billable_catalog() -> Catalog:
     return Catalog(
         {
-            "claude-sonnet-4-7": ModelPrice(
+            "claude-opus-4-7": ModelPrice(
                 input_cost_per_token=3e-6,
                 output_cost_per_token=15e-6,
             ),
@@ -64,7 +64,7 @@ async def test_run_appends_chat_cost_to_external_sink(
     set_default_catalog(billable_catalog)
     register_provider("anthropic", _BillableFake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -89,7 +89,7 @@ async def test_run_default_cost_sink_is_optional() -> None:
     """Omitting the kwarg keeps the public contract unchanged."""
     register_provider("anthropic", FakeProvider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -122,7 +122,7 @@ async def test_stream_appends_chat_cost_to_external_sink(
 
     register_provider("anthropic", _StreamFake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 

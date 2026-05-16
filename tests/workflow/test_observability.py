@@ -54,7 +54,7 @@ def reset_active_catalog() -> Iterator[None]:
 def billable_catalog() -> Catalog:
     return Catalog(
         {
-            "claude-sonnet-4-7": ModelPrice(
+            "claude-opus-4-7": ModelPrice(
                 input_cost_per_token=3e-6,
                 output_cost_per_token=15e-6,
             ),
@@ -111,11 +111,11 @@ async def test_workflow_run_emits_root_span_with_full_attribute_set(
     _ = reset_active_catalog
     register_provider("anthropic", _BillableStreamProvider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing], max_steps=3)
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing], max_steps=3)
     class Team:
         pass
 
@@ -134,7 +134,7 @@ async def test_workflow_run_emits_root_span_with_full_attribute_set(
     a = _attrs(invoke)
     assert a["ajolopy.workflow.name"] == "Team"
     assert a["ajolopy.workflow.operation"] == "run"
-    assert a["ajolopy.workflow.coordinator.model"] == "claude-sonnet-4-7"
+    assert a["ajolopy.workflow.coordinator.model"] == "claude-opus-4-7"
     assert a["ajolopy.workflow.max_steps"] == 3
     assert a["ajolopy.workflow.step_count"] == 1
     assert a["ajolopy.workflow.handoff.count"] == 0
@@ -148,11 +148,11 @@ async def test_default_path_span_tree(
     _ = reset_active_catalog
     register_provider("anthropic", _BillableStreamProvider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 
@@ -202,7 +202,7 @@ async def test_route_path_emits_no_coordinator_chat_span(
     _ = reset_active_catalog
     register_provider("anthropic", _BillableStreamProvider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
@@ -238,11 +238,11 @@ async def test_cost_roll_up_sums_all_descendant_chat_costs(
     set_default_catalog(billable_catalog)
     register_provider("anthropic", _BillableStreamProvider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 
@@ -272,11 +272,11 @@ async def test_handoff_breadcrumbs_on_default_path(
     _ = reset_active_catalog
     register_provider("anthropic", _BillableStreamProvider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 
@@ -324,7 +324,7 @@ async def test_handoff_breadcrumbs_on_route_path(
     _ = reset_active_catalog
     register_provider("anthropic", _BillableStreamProvider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 

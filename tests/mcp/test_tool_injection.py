@@ -43,7 +43,7 @@ async def test_namespaced_names_use_double_underscore(
     class Integrations:
         pass
 
-    @Agent(model="claude-sonnet-4-7", system="hi", integrations=[Integrations])
+    @Agent(model="claude-opus-4-7", system="hi", integrations=[Integrations])
     class Worker:
         pass
 
@@ -71,7 +71,7 @@ async def test_schemas_are_copied_verbatim(
     class I:  # noqa: E742 - test class
         pass
 
-    @Agent(model="claude-sonnet-4-7", system="hi", integrations=[I])
+    @Agent(model="claude-opus-4-7", system="hi", integrations=[I])
     class W:
         pass
 
@@ -97,7 +97,7 @@ async def test_local_tool_wins_over_mcp_collision(
     class I:  # noqa: E742
         pass
 
-    @Agent(model="claude-sonnet-4-7", system="hi", integrations=[I])
+    @Agent(model="claude-opus-4-7", system="hi", integrations=[I])
     class W:
         @Tool
         def github__x(self) -> str:
@@ -160,7 +160,7 @@ async def test_mcp_tool_dispatch_routes_through_registry(
     class I:  # noqa: E742
         pass
 
-    @Agent(model="claude-sonnet-4-7", system="hi", integrations=[I])
+    @Agent(model="claude-opus-4-7", system="hi", integrations=[I])
     class W:
         pass
 

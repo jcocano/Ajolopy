@@ -40,7 +40,7 @@ class ResearchRequest(BaseModel):
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system=(
         "You research and cite web sources. Always quote URLs. "
         "When the user asks a question that needs up-to-date information, "

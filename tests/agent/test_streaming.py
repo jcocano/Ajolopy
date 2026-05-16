@@ -25,7 +25,7 @@ class _StreamingProvider(FakeProvider):
 async def test_stream_yields_str_chunks() -> None:
     register_provider("anthropic", _StreamingProvider)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -40,7 +40,7 @@ async def test_stream_yields_str_chunks() -> None:
 async def test_stream_cancellation_does_not_raise() -> None:
     register_provider("anthropic", _StreamingProvider)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 

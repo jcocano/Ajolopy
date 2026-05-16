@@ -22,7 +22,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 def _make_agent(name: str = "Support") -> type:
     register_provider("anthropic", FakeProvider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="you are helpful")
+    @Agent(model="claude-opus-4-7", system="you are helpful")
     class _Agent:
         pass
 
@@ -34,7 +34,7 @@ def _make_workflow() -> type:
     register_provider("anthropic", FakeProvider, overwrite=True)
     agent = _make_agent("Specialist")
 
-    @Workflow(agents=[agent], coordinator="claude-sonnet-4-7")
+    @Workflow(agents=[agent], coordinator="claude-opus-4-7")
     class Team:
         pass
 

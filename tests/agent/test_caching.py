@@ -21,7 +21,7 @@ async def test_cache_prompt_with_static_system_forwards_flag(
     _ = register_fake_anthropic
 
     @Agent(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         system="You are concise.",
         cache="prompt",
     )
@@ -45,7 +45,7 @@ def test_cache_prompt_with_callable_system_raises_config_error(
     with pytest.raises(AgentConfigError, match="static system prompt"):
 
         @Agent(
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             system=dynamic_system,
             cache="prompt",
         )

@@ -19,7 +19,7 @@ async def test_basic_complete_round_trip() -> None:
     client = make_async_client(create_return=make_anthropic_message(text="hi there"))
     provider = AnthropicProvider(client=client)
     response = await provider.complete(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         messages=[Message(role="user", content="hello")],
     )
     assert response.text == "hi there"
@@ -34,7 +34,7 @@ async def test_system_role_extracted_to_top_level_param() -> None:
     client = make_async_client()
     provider = AnthropicProvider(client=client)
     await provider.complete(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         messages=[
             Message(role="system", content="You are concise."),
             Message(role="user", content="hi"),
@@ -60,7 +60,7 @@ async def test_tools_converted_to_anthropic_schema() -> None:
     )
     provider = AnthropicProvider(client=client)
     response = await provider.complete(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         messages=[Message(role="user", content="find order X-9")],
         tools=[
             Tool(
@@ -89,7 +89,7 @@ async def test_temperature_and_max_tokens_forwarded() -> None:
     client = make_async_client()
     provider = AnthropicProvider(client=client)
     await provider.complete(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         messages=[Message(role="user", content="hi")],
         temperature=0.2,
         max_tokens=64,
@@ -104,7 +104,7 @@ async def test_default_max_tokens_set_when_not_provided() -> None:
     client = make_async_client()
     provider = AnthropicProvider(client=client)
     await provider.complete(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         messages=[Message(role="user", content="hi")],
     )
     # Anthropic requires max_tokens; we always send a default.
@@ -116,7 +116,7 @@ async def test_cache_true_annotates_system_block_with_cache_control() -> None:
     client = make_async_client()
     provider = AnthropicProvider(client=client)
     await provider.complete(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         messages=[
             Message(role="system", content="You are concise."),
             Message(role="user", content="hi"),
@@ -139,7 +139,7 @@ async def test_retriable_sdk_error_surfaces_as_anthropic_provider_error() -> Non
     provider = AnthropicProvider(client=client)
     with pytest.raises(AnthropicProviderError, match="Anthropic SDK error"):
         await provider.complete(
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             messages=[Message(role="user", content="hi")],
         )
 
@@ -149,7 +149,7 @@ async def test_tool_role_messages_become_tool_result_blocks() -> None:
     client = make_async_client()
     provider = AnthropicProvider(client=client)
     await provider.complete(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         messages=[
             Message(role="user", content="find order X-9"),
             Message(

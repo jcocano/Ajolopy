@@ -36,7 +36,7 @@ class TeamEval:
                 "The answer must address it directly with concrete next steps. "
                 "Penalise generic responses, off-topic answers, and refusals."
             ),
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             cache=True,
         )
 

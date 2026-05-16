@@ -62,14 +62,14 @@ def _register_anthropic() -> None:
 def test_unknown_model_in_fallback_chain_raises_at_decoration() -> None:
     _register_anthropic()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Spec:
         """Specialist."""
 
     with pytest.raises(WorkflowConfigError, match="totally-unknown"):
 
         @Workflow(
-            coordinator="claude-sonnet-4-7",
+            coordinator="claude-opus-4-7",
             coordinator_fallback=["totally-unknown"],
             agents=[Spec],
         )
@@ -80,14 +80,14 @@ def test_unknown_model_in_fallback_chain_raises_at_decoration() -> None:
 def test_non_list_coordinator_fallback_raises() -> None:
     _register_anthropic()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Spec:
         """Specialist."""
 
     with pytest.raises(WorkflowConfigError, match="list of model strings"):
 
         @Workflow(
-            coordinator="claude-sonnet-4-7",
+            coordinator="claude-opus-4-7",
             coordinator_fallback="claude-haiku-4-5",  # type: ignore[arg-type]
             agents=[Spec],
         )
@@ -98,14 +98,14 @@ def test_non_list_coordinator_fallback_raises() -> None:
 def test_non_string_entry_in_coordinator_fallback_raises() -> None:
     _register_anthropic()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Spec:
         """Specialist."""
 
     with pytest.raises(WorkflowConfigError, match="model strings"):
 
         @Workflow(
-            coordinator="claude-sonnet-4-7",
+            coordinator="claude-opus-4-7",
             coordinator_fallback=[123],  # type: ignore[list-item]
             agents=[Spec],
         )
@@ -116,12 +116,12 @@ def test_non_string_entry_in_coordinator_fallback_raises() -> None:
 def test_coordinator_fallback_ignored_when_route_overrides() -> None:
     _register_anthropic()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Spec:
         """Specialist."""
 
     @Workflow(
-        coordinator="claude-sonnet-4-7",
+        coordinator="claude-opus-4-7",
         coordinator_fallback=["claude-haiku-4-5"],
         agents=[Spec],
     )
@@ -202,12 +202,12 @@ async def test_coordinator_fallback_advances_through_chain_and_emits_event(
 
     register_provider("anthropic", _Provider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Spec:
         """Specialist."""
 
     @Workflow(
-        coordinator="claude-sonnet-4-7",
+        coordinator="claude-opus-4-7",
         coordinator_fallback=["claude-haiku-4-5"],
         agents=[Spec],
     )
@@ -226,14 +226,14 @@ async def test_coordinator_fallback_advances_through_chain_and_emits_event(
 
     chat_spans = _find(list(tracer_provider.get_finished_spans()), "chat ")
     assert {s.name for s in chat_spans} == {
-        "chat claude-sonnet-4-7",
+        "chat claude-opus-4-7",
         "chat claude-haiku-4-5",
     }
     fallback_span = next(s for s in chat_spans if s.name == "chat claude-haiku-4-5")
     events = [e for e in fallback_span.events if e.name == GEN_AI_CHAT_FALLBACK_EVENT]
     assert len(events) == 1
     attrs = dict(events[0].attributes or {})
-    assert attrs[AJOLOPY_FALLBACK_FROM] == "claude-sonnet-4-7"
+    assert attrs[AJOLOPY_FALLBACK_FROM] == "claude-opus-4-7"
     assert attrs[AJOLOPY_FALLBACK_FROM_PROVIDER] == "anthropic"
     assert attrs[AJOLOPY_FALLBACK_TO] == "claude-haiku-4-5"
     assert attrs[AJOLOPY_FALLBACK_TO_PROVIDER] == "anthropic"
@@ -276,12 +276,12 @@ async def test_exhausting_coordinator_chain_raises_workflow_error() -> None:
 
     register_provider("anthropic", _AlwaysFail, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Spec:
         """Specialist."""
 
     @Workflow(
-        coordinator="claude-sonnet-4-7",
+        coordinator="claude-opus-4-7",
         coordinator_fallback=["claude-haiku-4-5"],
         agents=[Spec],
     )
@@ -298,12 +298,12 @@ async def test_coordinator_provider_cache_reuses_instance_per_provider_key() -> 
 
     _register_anthropic()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Spec:
         """Specialist."""
 
     @Workflow(
-        coordinator="claude-sonnet-4-7",
+        coordinator="claude-opus-4-7",
         coordinator_fallback=["claude-opus-4-1", "claude-haiku-4-5"],
         agents=[Spec],
     )

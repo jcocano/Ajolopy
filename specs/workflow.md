@@ -43,7 +43,7 @@ fitting in one prompt.
 
 The "default mágico + escape hatch" rule applies:
 
-- **Default mágico**: pass `coordinator="claude-sonnet-4-7"` and a list of
+- **Default mágico**: pass `coordinator="claude-opus-4-7"` and a list of
   `@Agent` classes; the framework presents each agent to the coordinator as
   a synthetic tool and runs a function-calling loop until the coordinator
   stops delegating.
@@ -65,12 +65,12 @@ class Triage:
     """Classify the user's message: billing, technical, or general."""
 
 
-@Agent(model="claude-sonnet-4-7", system="You handle billing questions.")
+@Agent(model="claude-opus-4-7", system="You handle billing questions.")
 class Billing:
     """Refunds, invoices, subscription changes, payment failures."""
 
 
-@Agent(model="claude-sonnet-4-7", system="You handle technical issues.")
+@Agent(model="claude-opus-4-7", system="You handle technical issues.")
 class Technical:
     """Bugs, errors, integration help, API questions."""
 
@@ -80,7 +80,7 @@ class ChatRequest(BaseModel):
 
 
 @Workflow(
-    coordinator="claude-sonnet-4-7",
+    coordinator="claude-opus-4-7",
     agents=[Triage, Billing, Technical],
 )
 class SupportTeam:
@@ -124,7 +124,7 @@ def Workflow(
 Either:
 
 ```python
-@Workflow(coordinator="claude-sonnet-4-7", agents=[Triage, Billing])
+@Workflow(coordinator="claude-opus-4-7", agents=[Triage, Billing])
 class Team:
     """Class docstring becomes the workflow description for traces."""
 ```
@@ -375,21 +375,21 @@ transition to `done`. All LLM provider interactions are mocked at the
 
 ### Decoration-time validation
 
-- [x] `@Workflow(coordinator="claude-sonnet-4-7", agents=[A, B])` on a
+- [x] `@Workflow(coordinator="claude-opus-4-7", agents=[A, B])` on a
       class produces a class whose instances have `run` and `stream`
       methods and whose type is preserved (pyright sees the original
       class).
 - [x] `@Workflow(agents=[])` raises `WorkflowConfigError` at decoration
       time with a message naming the workflow class.
-- [x] `@Workflow(coordinator="claude-sonnet-4-7", agents=[A, NotAgent])`
+- [x] `@Workflow(coordinator="claude-opus-4-7", agents=[A, NotAgent])`
       where `NotAgent` is not `@Agent`-decorated raises
       `WorkflowConfigError` with a message naming `NotAgent`.
 - [x] `@Workflow(agents=[A, B])` on a class that does NOT override
       `route()` raises `WorkflowConfigError` with a message pointing the
       user at the two options: pass `coordinator=` or implement `route()`.
-- [x] `@Workflow(coordinator="claude-sonnet-4-7", agents=[A], integrations=[I])`
+- [x] `@Workflow(coordinator="claude-opus-4-7", agents=[A], integrations=[I])`
       raises `WorkflowConfigError` referencing AJ-7 (`@MCP`).
-- [x] `@Workflow(coordinator="claude-sonnet-4-7", agents=[A], max_steps=0)`
+- [x] `@Workflow(coordinator="claude-opus-4-7", agents=[A], max_steps=0)`
       raises `WorkflowConfigError`. `max_steps=-1` too.
 - [x] `@Workflow(coordinator="not-a-real-model", agents=[A])` raises
       `WorkflowConfigError` referencing the provider registry (same error

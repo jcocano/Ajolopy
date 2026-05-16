@@ -43,7 +43,7 @@ class DocsbotEval:
                 "answers, refusals to use the retrieve_docs tool, and hallucinated "
                 "facts that are not present in the documentation."
             ),
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             cache=True,
         )
 

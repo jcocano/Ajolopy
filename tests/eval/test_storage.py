@@ -20,7 +20,7 @@ from ajolopy.providers import Response
 async def _run_simple(scripted_fake: type, fixtures_dir: Path) -> EvalRun:
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
