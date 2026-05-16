@@ -28,6 +28,19 @@ pip install ajolopy           # or: uv pip install ajolopy
 Requires Python 3.14+. Optional extras documented under [Install](https://jcocano.github.io/Ajolopy/install/):
 `otel`, `mcp`, `redis`, `postgres`, `mongo`, `qdrant`, `pgvector`.
 
+## Why Python 3.14+
+
+- **PEP 649** — deferred evaluation of annotations is native, so
+  `from __future__ import annotations` is forbidden in this codebase
+  (it would hide real typing errors at runtime).
+- **Pyright strict pays off** — runtime introspection of type hints
+  (`inspect.get_annotations`) works without the lazy-eval workarounds
+  older Pythons need.
+- **DI by type-hints** — Ajolopy resolves `@Injectable` providers via
+  real annotation objects; PEP 649 makes that cheap and correct.
+- **Modern stdlib** — `asyncio.TaskGroup`, structural pattern matching,
+  and the new error-message machinery are assumed everywhere.
+
 ## The killer demo
 
 Twelve real lines (plus imports). Each token has a job — see the
