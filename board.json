@@ -2010,7 +2010,7 @@
       "slug": "readme-why-python-314",
       "type": "docs",
       "title": "README: explain Python 3.14+ requirement",
-      "status": "in_progress",
+      "status": "done",
       "priority": "p2",
       "milestone": "v0.1.x",
       "labels": [
@@ -2026,7 +2026,7 @@
       "estimate": null,
       "created_at": "2026-05-16",
       "updated_at": "2026-05-16",
-      "closed_at": null
+      "closed_at": "2026-05-16"
     }
   ]
 }
