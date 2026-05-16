@@ -48,11 +48,11 @@ def _final_round(text: str) -> list[Chunk]:
 async def test_stream_yields_dict_objects_only() -> None:
     _register()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 
@@ -70,11 +70,11 @@ async def test_stream_yields_dict_objects_only() -> None:
 async def test_default_path_orders_events_handoff_agent_result_token_done() -> None:
     _register()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 
@@ -103,7 +103,7 @@ async def test_default_path_orders_events_handoff_agent_result_token_done() -> N
 async def test_override_path_event_sequence_is_handoff_agent_result_done() -> None:
     _register()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
@@ -128,11 +128,11 @@ async def test_override_path_event_sequence_is_handoff_agent_result_done() -> No
 async def test_done_text_matches_run_result() -> None:
     _register()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 
@@ -159,11 +159,11 @@ async def test_run_consumes_stream_internally() -> None:
     """Confirm run() drives the same provider calls as stream() does."""
     _register()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 
@@ -181,11 +181,11 @@ async def test_run_consumes_stream_internally() -> None:
 async def test_token_events_only_emitted_on_final_turn() -> None:
     _register()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 

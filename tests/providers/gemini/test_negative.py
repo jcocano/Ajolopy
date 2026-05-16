@@ -27,11 +27,11 @@ async def test_complete_rejects_non_gemini_model() -> None:
 @pytest.mark.asyncio
 async def test_stream_rejects_non_gemini_model() -> None:
     provider = GeminiProvider(client=make_async_client())
-    with pytest.raises(GeminiProviderError, match="claude-sonnet-4-7"):
+    with pytest.raises(GeminiProviderError, match="claude-opus-4-7"):
         # Build the iterator — the model check raises eagerly before any
         # generator is created.
         provider.stream(
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             messages=[Message(role="user", content="hi")],
         )
 
@@ -42,4 +42,4 @@ async def test_embed_rejects_non_gemini_model() -> None:
     # An OpenAI embedding model is not a Gemini embedding model; the
     # embed-only allowlist rejects it.
     with pytest.raises(GeminiProviderError, match="claude"):
-        await provider.embed(model="claude-sonnet-4-7", text="hi")
+        await provider.embed(model="claude-opus-4-7", text="hi")

@@ -4,7 +4,7 @@ Mirrors the code blocks in
 [`docs/tutorial/step-3-team.md`](../../../../docs/tutorial/step-3-team.md):
 
 - Three specialists (``Triage`` / ``Billing`` / ``Technical``) — two of them
-  on Sonnet, the cheap classifier on Haiku.
+  on Opus, the cheap classifier on Haiku.
 - One ``@MCP`` block (``Integrations``) declaring the GitHub MCP server.
 - One ``@Workflow`` (``SupportTeam``) wired with an LLM ``coordinator=``,
   the three specialists, and the integrations.
@@ -45,7 +45,7 @@ class Triage:
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You handle billing: refunds, invoices, subscriptions.",
 )
 class Billing:
@@ -63,7 +63,7 @@ class Billing:
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You handle technical issues: bugs, errors, integration help.",
 )
 class Technical:
@@ -100,7 +100,7 @@ class ChatRequest(BaseModel):
 
 
 @Workflow(
-    coordinator="claude-sonnet-4-7",
+    coordinator="claude-opus-4-7",
     agents=[Triage, Billing, Technical],
     integrations=[Integrations],
     max_steps=8,

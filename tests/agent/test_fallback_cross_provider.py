@@ -131,7 +131,7 @@ async def test_anthropic_to_openai_cross_provider_fallback(
     register_provider("openai", _OpenAIOk, overwrite=True)
 
     @Agent(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         system="…",
         fallback="gpt-4o-mini",
     )
@@ -143,7 +143,7 @@ async def test_anthropic_to_openai_cross_provider_fallback(
 
     chat_spans = _find(list(tracer_provider.get_finished_spans()), "chat ")
     assert {s.name for s in chat_spans} == {
-        "chat claude-sonnet-4-7",
+        "chat claude-opus-4-7",
         "chat gpt-4o-mini",
     }
     secondary = next(s for s in chat_spans if s.name == "chat gpt-4o-mini")
@@ -208,7 +208,7 @@ async def test_two_models_same_provider_share_one_instance() -> None:
     register_provider("anthropic", _AnthropicFails, overwrite=True)
 
     @Agent(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         system="…",
         fallback=["gpt-4o-mini", "gpt-4o"],
     )

@@ -88,7 +88,7 @@ async def test_single_fallback_emits_one_event_on_secondary_chat_span(
     register_provider("anthropic", _Provider, overwrite=True)
 
     @Agent(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         system="…",
         fallback="claude-haiku-4-5",
     )
@@ -99,7 +99,7 @@ async def test_single_fallback_emits_one_event_on_secondary_chat_span(
 
     chat_spans = _find(list(tracer_provider.get_finished_spans()), "chat ")
     assert len(chat_spans) == 2
-    primary = next(s for s in chat_spans if s.name == "chat claude-sonnet-4-7")
+    primary = next(s for s in chat_spans if s.name == "chat claude-opus-4-7")
     secondary = next(s for s in chat_spans if s.name == "chat claude-haiku-4-5")
 
     primary_events = [e for e in primary.events if e.name == GEN_AI_CHAT_FALLBACK_EVENT]
@@ -107,7 +107,7 @@ async def test_single_fallback_emits_one_event_on_secondary_chat_span(
     assert primary_events == []
     assert len(secondary_events) == 1
     attrs = dict(secondary_events[0].attributes or {})
-    assert attrs[AJOLOPY_FALLBACK_FROM] == "claude-sonnet-4-7"
+    assert attrs[AJOLOPY_FALLBACK_FROM] == "claude-opus-4-7"
     assert attrs[AJOLOPY_FALLBACK_FROM_PROVIDER] == "anthropic"
     assert attrs[AJOLOPY_FALLBACK_TO] == "claude-haiku-4-5"
     assert attrs[AJOLOPY_FALLBACK_TO_PROVIDER] == "anthropic"
@@ -124,7 +124,7 @@ async def test_double_fallback_emits_two_events_on_tertiary_chat_span(
     register_provider("anthropic", _Provider, overwrite=True)
 
     @Agent(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         system="…",
         fallback=["claude-opus-4-1", "claude-haiku-4-5"],
     )
@@ -135,13 +135,13 @@ async def test_double_fallback_emits_two_events_on_tertiary_chat_span(
 
     chat_spans = _find(list(tracer_provider.get_finished_spans()), "chat ")
     assert {s.name for s in chat_spans} == {
-        "chat claude-sonnet-4-7",
+        "chat claude-opus-4-7",
         "chat claude-opus-4-1",
         "chat claude-haiku-4-5",
     }
     tertiary = next(s for s in chat_spans if s.name == "chat claude-haiku-4-5")
     secondary = next(s for s in chat_spans if s.name == "chat claude-opus-4-1")
-    primary = next(s for s in chat_spans if s.name == "chat claude-sonnet-4-7")
+    primary = next(s for s in chat_spans if s.name == "chat claude-opus-4-7")
 
     # Per spec: both transitions land on the tertiary's chat span (the
     # first chat span that actually responded).
@@ -154,7 +154,7 @@ async def test_double_fallback_emits_two_events_on_tertiary_chat_span(
 
     first_attrs = dict(tertiary_events[0].attributes or {})
     second_attrs = dict(tertiary_events[1].attributes or {})
-    assert first_attrs[AJOLOPY_FALLBACK_FROM] == "claude-sonnet-4-7"
+    assert first_attrs[AJOLOPY_FALLBACK_FROM] == "claude-opus-4-7"
     assert first_attrs[AJOLOPY_FALLBACK_TO] == "claude-opus-4-1"
     assert second_attrs[AJOLOPY_FALLBACK_FROM] == "claude-opus-4-1"
     assert second_attrs[AJOLOPY_FALLBACK_TO] == "claude-haiku-4-5"
@@ -191,7 +191,7 @@ async def test_reason_attribute_truncated_to_200_chars(
 
     register_provider("anthropic", _Provider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…", fallback="claude-haiku-4-5")
+    @Agent(model="claude-opus-4-7", system="…", fallback="claude-haiku-4-5")
     class Demo:
         pass
 
@@ -213,7 +213,7 @@ async def test_successful_primary_emits_no_fallback_events(
 ) -> None:
     _ = register_fake_anthropic
 
-    @Agent(model="claude-sonnet-4-7", system="…", fallback="claude-haiku-4-5")
+    @Agent(model="claude-opus-4-7", system="…", fallback="claude-haiku-4-5")
     class Demo:
         pass
 
@@ -268,7 +268,7 @@ async def test_stream_path_emits_fallback_event(
 
     register_provider("anthropic", _Provider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…", fallback="claude-haiku-4-5")
+    @Agent(model="claude-opus-4-7", system="…", fallback="claude-haiku-4-5")
     class Demo:
         pass
 
@@ -282,5 +282,5 @@ async def test_stream_path_emits_fallback_event(
     events = [e for e in secondary.events if e.name == GEN_AI_CHAT_FALLBACK_EVENT]
     assert len(events) == 1
     attrs: dict[str, Any] = dict(events[0].attributes or {})
-    assert attrs[AJOLOPY_FALLBACK_FROM] == "claude-sonnet-4-7"
+    assert attrs[AJOLOPY_FALLBACK_FROM] == "claude-opus-4-7"
     assert attrs[AJOLOPY_FALLBACK_TO] == "claude-haiku-4-5"

@@ -261,7 +261,7 @@ docker run -p 3000:3000 --env-file .env local-ollama:latest
 >    `groq:llama-3.3-70b-versatile`,
 >    `together:meta-llama/Llama-3.3-70B-Instruct-Turbo`, etc. — and
 >    set that provider's API key in `.env`.
-> 3. **Swap to a cloud provider entirely** (`claude-sonnet-4-7`,
+> 3. **Swap to a cloud provider entirely** (`claude-opus-4-7`,
 >    `gpt-4o`, `gemini-1.5-pro`). Ajolopy's multi-provider design
 >    means swapping is a one-line change to the `model` kwarg.
 

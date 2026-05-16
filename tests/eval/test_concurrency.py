@@ -70,7 +70,7 @@ async def test_concurrency_cap_limits_in_flight_cases(
     """6 cases with concurrency=2 take ~3 waves of CASE_SLEEP_S each."""
     _ = slow_provider
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Slow:
         pass
 
@@ -97,7 +97,7 @@ async def test_case_ordering_preserved_under_concurrency(
 ) -> None:
     _ = slow_provider
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Slow:
         pass
 

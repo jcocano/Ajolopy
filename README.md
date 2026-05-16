@@ -48,7 +48,7 @@ class ChatRequest(BaseModel):
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You are Acme Support. Be concise, friendly, and accurate.",
     fallback="claude-haiku-4-5",
 )
@@ -124,7 +124,8 @@ that would require an eleventh decorator goes to v0.2+.
 
 - **Multi-provider LLM** — Anthropic, OpenAI, Gemini, and a universal
   OpenAI-compatible client that covers Ollama / Together / Groq /
-  Mistral / DeepSeek / OpenRouter / Bedrock / Azure.
+  Mistral / DeepSeek / OpenRouter, plus any other OpenAI-compatible
+  endpoint via the `base_urls=` constructor escape hatch.
 - **`ajolopy deploy <target>`** — generates `fly.toml`, `railway.json`,
   `render.yaml`, `vercel.json` (with warnings), or a universal
   `Dockerfile.prod` for k8s / VPS / ECS.

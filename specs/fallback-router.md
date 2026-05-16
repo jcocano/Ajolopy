@@ -38,7 +38,7 @@ unchanged, observability richer.
 
 ```python
 @Workflow(
-    coordinator="claude-sonnet-4-7",
+    coordinator="claude-opus-4-7",
     coordinator_fallback=["claude-haiku-4-5", "gpt-4o-mini"],
     agents=[Triage, Billing],
 )
@@ -58,7 +58,7 @@ chat span:
 
 - Event name: `gen_ai.chat.fallback`
 - Attributes:
-  - `ajolopy.fallback.from`: the failing model string (`"claude-sonnet-4-7"`)
+  - `ajolopy.fallback.from`: the failing model string (`"claude-opus-4-7"`)
   - `ajolopy.fallback.from_provider`: the provider key (`"anthropic"`)
   - `ajolopy.fallback.to`: the next model string (`"gpt-4o-mini"`)
   - `ajolopy.fallback.to_provider`: the next provider key (`"openai"`)

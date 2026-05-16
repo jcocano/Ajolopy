@@ -39,7 +39,7 @@ runnable example so the wedge user can see the pattern end-to-end.
 - Cross-provider fallback for the OTHER examples (`support-agent`,
   `web-research`, `oncall-agent`, `memory-assistant`,
   `contextual-rag`). They all use a same-vendor fallback today
-  (`claude-sonnet-4-7` → `claude-haiku-4-5`), which is its own
+  (`claude-opus-4-7` → `claude-haiku-4-5`), which is its own
   legitimate pattern and worth keeping.
 - Adding a third-tier fallback (`fallback=["claude-haiku-4-5",
   "gpt-4o-mini"]`). The example is meant to be readable; one fallback

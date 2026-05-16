@@ -12,7 +12,7 @@ from ajolopy.providers import UnknownModelError, register_route, resolve_provide
 @pytest.mark.parametrize(
     ("model", "expected_key"),
     [
-        ("claude-sonnet-4-7", "anthropic"),
+        ("claude-opus-4-7", "anthropic"),
         ("claude-haiku-4-5", "anthropic"),
         ("claude-opus-4-1", "anthropic"),
         ("gpt-4o-mini", "openai"),
@@ -55,4 +55,4 @@ def test_register_route_adds_new_pattern() -> None:
 
 def test_register_route_most_recent_wins_for_overlapping_patterns() -> None:
     register_route("claude-*", "custom-claude")
-    assert resolve_provider("claude-sonnet-4-7") == "custom-claude"
+    assert resolve_provider("claude-opus-4-7") == "custom-claude"

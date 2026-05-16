@@ -67,7 +67,7 @@ curl -N -X POST http://127.0.0.1:8000/chat \
 
 The response streams back token by token. Under the hood:
 
-- **`@Agent`** is wired to `claude-sonnet-4-7`. The system prompt
+- **`@Agent`** is wired to `claude-opus-4-7`. The system prompt
   instructs the model to call `search_web(...)` first whenever a
   question needs up-to-date information, then optionally fold the
   results into a Markdown-cited answer through `format_citations(...)`.

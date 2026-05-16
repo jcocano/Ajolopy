@@ -48,7 +48,7 @@ from ajolopy import Agent
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You are a concise, friendly support assistant.",
 )
 class Support:

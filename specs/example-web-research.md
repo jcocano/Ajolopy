@@ -125,7 +125,7 @@ class ResearchRequest(BaseModel):
     question: str
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You research and cite web sources. Always quote URLs.",
 )
 class Researcher:
@@ -177,7 +177,7 @@ readers see both the "play with it" path and the "regression suite" path.
 
 - [ ] `examples/web-research/` exists with the structure documented above.
 - [ ] `examples/web-research/src/web_research/agents/researcher.py` defines a
-      `Researcher` `@Agent` with `claude-sonnet-4-7`, a `search_web` `@Tool`,
+      `Researcher` `@Agent` with `claude-opus-4-7`, a `search_web` `@Tool`,
       a `format_citations` `@Tool`, and a `@Stream("/chat")` handler bound
       to `Annotated[ResearchRequest, Body()]`.
 - [ ] `examples/web-research/src/web_research/tavily.py` ships a thin

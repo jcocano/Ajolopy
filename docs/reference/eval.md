@@ -53,7 +53,7 @@ from ajolopy import Agent
 from ajolopy.eval import Eval, EvalRunner, Metric
 
 
-@Agent(model="claude-sonnet-4-7", system="You are Acme Support.")
+@Agent(model="claude-opus-4-7", system="You are Acme Support.")
 class Support:
     """Top-level support agent."""
 

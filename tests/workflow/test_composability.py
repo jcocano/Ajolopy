@@ -86,11 +86,11 @@ def _parse_sse_data_events(body: bytes) -> list[Any]:
 async def test_workflow_stream_yields_same_dicts_as_sse_body() -> None:
     _register()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         @Stream("/chat", heartbeat_seconds=None)
         async def handle(
@@ -131,11 +131,11 @@ async def test_workflow_stream_yields_same_dicts_as_sse_body() -> None:
 async def test_workflow_run_equals_done_text_from_stream() -> None:
     _register()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 

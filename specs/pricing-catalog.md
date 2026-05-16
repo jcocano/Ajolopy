@@ -26,8 +26,8 @@ they never wait on a release.
 Pricing is **tiered**: input, output, cache-creation input (Anthropic prompt
 caching writes), and cache-read input (cache hits). Without the cache tiers,
 an agent with prompt caching on would have its cost undercounted by up to
-10× when most of its input lands on cache reads (~$0.30/MTok vs $3.00/MTok for
-Sonnet 4.7).
+10× when most of its input lands on cache reads (~$0.50/MTok vs $5.00/MTok for
+Opus 4.7).
 
 The instrumentation auto-emits on the `chat` span (and aggregates the total on
 the `agent.invoke` root). The math is also exposed as a public helper —
@@ -199,8 +199,8 @@ Every item ships behind at least one passing test.
       branch in the emitter).
 - [x] Returns `0.0` only when the model is known AND every token count is 0.
 - [x] Math: `cost = sum_over_tiers(tokens × price_per_token)`. Asserted with
-      two real-world numbers (Sonnet 4.7 input 1000 tokens × $3/MTok = $0.003;
-      Sonnet 4.7 cache read 1000 tokens at $0.30/MTok = $0.0003).
+      two real-world numbers (Opus 4.7 input 1000 tokens × $5/MTok = $0.005;
+      Opus 4.7 cache read 1000 tokens at $0.50/MTok = $0.0005).
 - [x] When a tier price is missing in the snapshot (e.g. OpenAI models without
       `cache_creation_input_token_cost`), the missing tier contributes 0 to
       the total (does NOT make the whole call return None).

@@ -18,7 +18,7 @@ from ajolopy.providers import Response, ToolCall
 async def test_single_metric_returns_score_1(scripted_fake: type, fixtures_dir: Path) -> None:
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -52,7 +52,7 @@ async def test_threshold_check_fails_when_score_below(
 ) -> None:
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -76,7 +76,7 @@ async def test_threshold_check_fails_when_score_below(
 async def test_weighted_aggregate_formula(scripted_fake: type, fixtures_dir: Path) -> None:
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -106,7 +106,7 @@ async def test_six_aggregators_via_runner(scripted_fake: type, fixtures_dir: Pat
     """Verify every aggregator runs end-to-end on a fixed per-case sequence."""
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -158,7 +158,7 @@ async def test_six_aggregators_via_runner(scripted_fake: type, fixtures_dir: Pat
 async def test_case_ordering_matches_dataset(scripted_fake: type, fixtures_dir: Path) -> None:
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -181,7 +181,7 @@ async def test_case_ordering_matches_dataset(scripted_fake: type, fixtures_dir: 
 async def test_async_metric_is_awaited(scripted_fake: type, fixtures_dir: Path) -> None:
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -204,7 +204,7 @@ async def test_async_metric_is_awaited(scripted_fake: type, fixtures_dir: Path) 
 async def test_target_invoked_with_case_input(scripted_fake: type, fixtures_dir: Path) -> None:
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         pass
 
@@ -246,7 +246,7 @@ async def test_tool_calls_captured_into_eval_output(
     """
     _ = scripted_fake
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Support:
         @Tool(description="Look up an order")
         def lookup_order(self) -> str:

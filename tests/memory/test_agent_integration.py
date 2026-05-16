@@ -17,7 +17,7 @@ async def test_memory_url_short_form_attaches_in_memory(
 ) -> None:
     _ = register_fake_anthropic
 
-    @Agent(model="claude-sonnet-4-7", system="…", memory="memory://")
+    @Agent(model="claude-opus-4-7", system="…", memory="memory://")
     class Demo:
         pass
 
@@ -31,7 +31,7 @@ async def test_second_turn_sees_first_turn_in_history(
 ) -> None:
     _ = register_fake_anthropic
 
-    @Agent(model="claude-sonnet-4-7", system="…", memory="memory://")
+    @Agent(model="claude-opus-4-7", system="…", memory="memory://")
     class Demo:
         pass
 
@@ -58,11 +58,11 @@ async def test_shared_instance_lets_two_agents_share_history(
 
     shared = InMemoryMemory()
 
-    @Agent(model="claude-sonnet-4-7", system="…", memory=shared)
+    @Agent(model="claude-opus-4-7", system="…", memory=shared)
     class A:
         pass
 
-    @Agent(model="claude-sonnet-4-7", system="…", memory=shared)
+    @Agent(model="claude-opus-4-7", system="…", memory=shared)
     class B:
         pass
 

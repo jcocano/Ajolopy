@@ -82,7 +82,7 @@ _SYSTEM_PROMPT = (
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system=_SYSTEM_PROMPT,
     fallback="claude-haiku-4-5",
 )

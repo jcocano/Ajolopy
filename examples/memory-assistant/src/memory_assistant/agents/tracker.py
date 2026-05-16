@@ -79,7 +79,7 @@ class ChatRequest(BaseModel):
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system=(
         "You are a personal task tracker. "
         "When the user asks you to add a task, call the record_task tool. "

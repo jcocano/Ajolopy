@@ -40,7 +40,7 @@ def _make_metadata(suite_cls: type, target_cls: type) -> EvalMetadata:
 
 class _PkgAgent:
     class _Runtime:
-        _models: list[tuple[str, object]] = [("claude-sonnet-4-7", object())]
+        _models: list[tuple[str, object]] = [("claude-opus-4-7", object())]
 
     _agent_runtime = _Runtime()
 

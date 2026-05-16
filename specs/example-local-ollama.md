@@ -236,7 +236,7 @@ The README has a prominent caveat block:
 >    `together:meta-llama/Llama-3.3-70B-Instruct-Turbo`, etc. — and add
 >    that provider's API key to `.env`.
 > 3. Replace the universal-provider model string with a cloud provider
->    (`claude-sonnet-4-7`, `gpt-4o`, `gemini-1.5-pro`) — Ajolopy's
+>    (`claude-opus-4-7`, `gpt-4o`, `gemini-1.5-pro`) — Ajolopy's
 >    multi-provider design means swapping is a one-line change.
 
 The `Dockerfile.prod` itself is unchanged from the standard Ajolopy

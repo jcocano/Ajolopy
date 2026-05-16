@@ -63,7 +63,7 @@ def test_methods_without_tool_are_not_exposed(
 ) -> None:
     _ = register_fake_anthropic
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool
         def used(self, x: int) -> int:
@@ -230,7 +230,7 @@ def test_agent_exposes_tools_to_provider_on_complete(
 ) -> None:
     _ = register_fake_anthropic
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool
         def echo(self, value: str) -> str:
@@ -246,7 +246,7 @@ def test_agent_without_tools_forwards_none(
 ) -> None:
     _ = register_fake_anthropic
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -265,7 +265,7 @@ def test_external_tools_class_is_discovered(
             """Shared."""
             return x * 2
 
-    @Agent(model="claude-sonnet-4-7", system="…", tools=[Toolbox])
+    @Agent(model="claude-opus-4-7", system="…", tools=[Toolbox])
     class Demo:
         @Tool
         def local(self, x: int) -> int:
@@ -289,7 +289,7 @@ def test_tool_name_collision_raises_at_decoration(
 
     with pytest.raises((AgentConfigError, ToolDefinitionError), match="echo"):
 
-        @Agent(model="claude-sonnet-4-7", system="…", tools=[Toolbox])
+        @Agent(model="claude-opus-4-7", system="…", tools=[Toolbox])
         class _Demo:
             @Tool
             def echo(self, x: int) -> int:

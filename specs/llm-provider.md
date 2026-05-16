@@ -90,7 +90,7 @@ class LLMProvider(ABC):
 # Registration & resolution
 
 register_provider("anthropic", AnthropicProvider)  # used by AJ-19
-provider: LLMProvider = resolve_provider("claude-sonnet-4-7")
+provider: LLMProvider = resolve_provider("claude-opus-4-7")
 ```
 
 ### Message / Tool / Response / Chunk types
@@ -184,7 +184,7 @@ transition to `done`.
 
 ### Routing
 
-- [x] `resolve_provider("claude-sonnet-4-7")` returns `"anthropic"`.
+- [x] `resolve_provider("claude-opus-4-7")` returns `"anthropic"`.
 - [x] `resolve_provider("gpt-4o-mini")` returns `"openai"`.
 - [x] `resolve_provider("o1-preview")` returns `"openai"`.
 - [x] `resolve_provider("gemini-2.5-pro")` returns `"gemini"`.

@@ -67,11 +67,11 @@ async def test_single_delegation_returns_coordinator_final_text(
 ) -> None:
     _ = scripted_stream_provider
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing specialist."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 
@@ -101,15 +101,15 @@ async def test_synthetic_tools_use_lower_classname(
 ) -> None:
     _ = scripted_stream_provider
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Triage:
         """Classify incoming requests."""
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Technical:
         """Bugs and integration help."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Triage, Technical])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Triage, Technical])
     class Team:
         pass
 
@@ -130,11 +130,11 @@ async def test_synthetic_tool_description_uses_docstring(
 ) -> None:
     _ = scripted_stream_provider
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Refunds, invoices and subscriptions."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 
@@ -152,11 +152,11 @@ async def test_synthetic_tool_description_falls_back_for_empty_docstring(
 ) -> None:
     _ = scripted_stream_provider
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Plain:
         pass
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Plain])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Plain])
     class Team:
         pass
 
@@ -173,11 +173,11 @@ async def test_coordinator_can_delegate_to_same_agent_twice(
 ) -> None:
     _ = scripted_stream_provider
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing specialist."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 
@@ -208,15 +208,15 @@ async def test_parallel_tool_calls_run_sequentially_in_arrival_order(
 ) -> None:
     _ = scripted_stream_provider
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Technical:
         """Technical."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing, Technical])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing, Technical])
     class Team:
         pass
 
@@ -273,11 +273,11 @@ async def test_max_steps_cap_raises_workflow_max_steps_error(
 ) -> None:
     _ = scripted_stream_provider
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing], max_steps=2)
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing], max_steps=2)
     class Team:
         pass
 
@@ -301,11 +301,11 @@ async def test_delegated_agent_error_surfaces_as_agent_result_and_recovers(
 ) -> None:
     _ = scripted_stream_provider
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Flaky:
         """Sometimes fails."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Flaky])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Flaky])
     class Team:
         pass
 
@@ -351,11 +351,11 @@ async def test_delegated_agent_error_surfaces_as_agent_result_and_recovers(
 
     # Rebuild Flaky after registering the failing provider so the agent
     # binds to it. We can do that by re-decorating a fresh class.
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class FlakyReal:
         """Sometimes fails."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[FlakyReal])
+    @Workflow(coordinator="claude-opus-4-7", agents=[FlakyReal])
     class TeamReal:
         pass
 
@@ -389,11 +389,11 @@ async def test_coordinator_llm_provider_error_propagates_out(
 ) -> None:
     _ = scripted_stream_provider
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 
@@ -415,11 +415,11 @@ async def test_unknown_tool_name_pushes_error_result_back_to_coordinator(
 ) -> None:
     _ = scripted_stream_provider
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[Billing])
+    @Workflow(coordinator="claude-opus-4-7", agents=[Billing])
     class Team:
         pass
 

@@ -41,7 +41,7 @@ class SupportEval:
                 "Penalise hallucinated facts, verbose preambles, and "
                 "refusals to use the available tools when relevant."
             ),
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             cache=True,
         )
 

@@ -68,7 +68,7 @@ class ChatRequest(BaseModel):
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You are Acme Support.",
 )
 class Support:

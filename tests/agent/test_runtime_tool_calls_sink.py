@@ -22,7 +22,7 @@ async def test_run_appends_successful_tool_name() -> None:
 
     register_provider("anthropic", _Fake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool(description="Look up an order by id")
         def lookup_order(self, order_id: str) -> str:
@@ -53,7 +53,7 @@ async def test_run_appends_successful_tool_name() -> None:
 async def test_run_default_sink_is_optional() -> None:
     register_provider("anthropic", FakeProvider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 
@@ -70,7 +70,7 @@ async def test_validation_failure_does_not_append() -> None:
 
     register_provider("anthropic", _Fake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool(description="Need an int arg")
         def needs_int(self, value: int) -> str:
@@ -108,7 +108,7 @@ async def test_tool_exception_does_not_append() -> None:
 
     register_provider("anthropic", _Fake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool(description="Always raises")
         def broken(self) -> str:
@@ -142,7 +142,7 @@ async def test_multiple_tools_dispatch_order_preserved() -> None:
 
     register_provider("anthropic", _Fake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool(description="Tool A")
         def tool_a(self) -> str:
@@ -182,7 +182,7 @@ async def test_async_tool_also_appends() -> None:
 
     register_provider("anthropic", _Fake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool(description="Async tool")
         async def fetch(self, key: str) -> str:
@@ -215,7 +215,7 @@ async def test_unknown_tool_name_does_not_append() -> None:
 
     register_provider("anthropic", _Fake, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         @Tool(description="Existing tool")
         def real_tool(self) -> str:

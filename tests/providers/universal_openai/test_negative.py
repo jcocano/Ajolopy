@@ -37,7 +37,7 @@ async def test_bare_anthropic_model_raises_universal_provider_error() -> None:
     provider = UniversalOpenAIProvider()
     with pytest.raises(UniversalProviderError, match="Supported prefixes"):
         await provider.complete(
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             messages=[Message(role="user", content="hi")],
         )
 

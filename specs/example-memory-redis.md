@@ -33,7 +33,7 @@ many are open, asks to clear them. The agent keeps the running list in
 Redis so the conversation survives process restarts and scales across
 worker processes.
 
-- One `@Agent` (`Tracker`): `model="claude-sonnet-4-7"`,
+- One `@Agent` (`Tracker`): `model="claude-opus-4-7"`,
   `memory="redis://..."`, `system="You are a personal task tracker."`
 - One `@Tool` (`record_task`): appends a task description to the user's
   session-scoped list and returns the new count.

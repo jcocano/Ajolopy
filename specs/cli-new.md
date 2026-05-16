@@ -116,7 +116,7 @@ substitution variables:
 | `{package_name}`  | `my_agent`                    | snake-case derived              |
 | `{class_prefix}`  | `MyAgent`                     | PascalCase derived              |
 | `{llm_provider}`  | `anthropic` / `openai` / etc. | wizard answer                   |
-| `{llm_model}`     | `claude-sonnet-4-7` / `gpt-4o`/ `gemini-2.0-flash-exp` | derived from provider |
+| `{llm_model}`     | `claude-opus-4-7` / `gpt-4o`/ `gemini-2.0-flash-exp` | derived from provider |
 | `{llm_env_var}`   | `ANTHROPIC_API_KEY` / etc.    | derived from provider           |
 | `{llm_extra}`     | `anthropic` / `openai` / `gemini` | provider extra name        |
 | `{feature}`       | `agent` / `workflow` / `mcp`  | wizard answer                   |
@@ -133,7 +133,7 @@ Per `--feature`:
 
 | Provider   | Default model              | Env var               | Extra      |
 |------------|----------------------------|-----------------------|------------|
-| anthropic  | `claude-sonnet-4-7`        | `ANTHROPIC_API_KEY`   | (none — core dep) |
+| anthropic  | `claude-opus-4-7`        | `ANTHROPIC_API_KEY`   | (none — core dep) |
 | openai     | `gpt-4o`                   | `OPENAI_API_KEY`      | (none — core dep) |
 | gemini     | `gemini-2.0-flash-exp`     | `GOOGLE_API_KEY`      | (none — core dep) |
 
@@ -306,7 +306,7 @@ template generator is not available.
 - [ ] Creates `./my-agent/` with the documented files.
 - [ ] `pyproject.toml` declares `ajolopy>=0.1.0`.
 - [ ] `main.py` references `{package_name}.app_module:AppModule`.
-- [ ] `agents/support.py` uses `claude-sonnet-4-7`.
+- [ ] `agents/support.py` uses `claude-opus-4-7`.
 - [ ] `.env.example` lists `ANTHROPIC_API_KEY`.
 - [ ] `evals/datasets/support.jsonl` has 3 lines.
 - [ ] `Dockerfile` is present.

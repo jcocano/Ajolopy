@@ -130,7 +130,7 @@ async def test_fallback_provider_instantiated_lazily_on_first_fire() -> None:
     register_provider("openai", _CountingOpenAIOk, overwrite=True)
 
     @Agent(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         system="…",
         fallback="gpt-4o-mini",
     )
@@ -173,7 +173,7 @@ async def test_fallback_instantiation_failure_advances_to_next_entry(
     _GeminiOk.instance_count = 0
 
     @Agent(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         system="…",
         fallback=["gpt-4o-mini", "gemini-1.5-flash"],
     )
@@ -215,7 +215,7 @@ async def test_exhausted_chain_lists_every_attempt_and_reason() -> None:
     _CountingOpenAIThatFailsToInit.instance_count = 0
 
     @Agent(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         system="…",
         fallback="gpt-4o-mini",
     )
@@ -227,7 +227,7 @@ async def test_exhausted_chain_lists_every_attempt_and_reason() -> None:
 
     message = str(excinfo.value)
     # Both models named in the message.
-    assert "claude-sonnet-4-7" in message
+    assert "claude-opus-4-7" in message
     assert "gpt-4o-mini" in message
     # Primary's chat error is captured.
     assert "anthropic down" in message

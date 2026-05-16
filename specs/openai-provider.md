@@ -192,7 +192,7 @@ network traffic happens in CI.
 
 ### Negative cases
 
-- [x] A non-OpenAI model string (`model="claude-sonnet-4-7"`) passed to
+- [x] A non-OpenAI model string (`model="claude-opus-4-7"`) passed to
       any method raises `OpenAIProviderError` with the offending model
       in the message. (The router would normally prevent this, but the
       provider double-checks so subclasses cannot silently route the

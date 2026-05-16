@@ -50,7 +50,7 @@ class ResearcherEval:
                 "search_web tool, and hallucinated facts that do not "
                 "appear in any cited source."
             ),
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             cache=True,
         )
 

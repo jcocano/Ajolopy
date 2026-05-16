@@ -24,11 +24,11 @@ from tests.mcp.fakes import FakeMCPClient
 def two_agents() -> tuple[type, type]:
     register_provider("anthropic", FakeProvider, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="A")
+    @Agent(model="claude-opus-4-7", system="A")
     class _A:
         pass
 
-    @Agent(model="claude-sonnet-4-7", system="B")
+    @Agent(model="claude-opus-4-7", system="B")
     class _B:
         pass
 
@@ -50,7 +50,7 @@ def test_integrations_kwarg_no_longer_raises(two_agents: tuple[type, type]) -> N
     class I:  # noqa: E742
         pass
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[a, b], integrations=[I])
+    @Workflow(coordinator="claude-opus-4-7", agents=[a, b], integrations=[I])
     class _Team:
         pass
 
@@ -65,7 +65,7 @@ def test_class_attribute_form_works(two_agents: tuple[type, type]) -> None:
     class I:  # noqa: E742
         pass
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[a, b])
+    @Workflow(coordinator="claude-opus-4-7", agents=[a, b])
     class _Team:
         integrations = [I]
 
@@ -86,7 +86,7 @@ def test_kwarg_wins_with_info_log(two_agents: tuple[type, type], caplog: Any) ->
 
     with caplog.at_level(logging.INFO, logger="ajolopy.workflow"):
 
-        @Workflow(coordinator="claude-sonnet-4-7", agents=[a, b], integrations=[I2])
+        @Workflow(coordinator="claude-opus-4-7", agents=[a, b], integrations=[I2])
         class _Team:
             integrations = [I1]
 
@@ -108,7 +108,7 @@ async def test_mcp_tools_surface_to_coordinator_and_agents(
     class I:  # noqa: E742
         pass
 
-    @Workflow(coordinator="claude-sonnet-4-7", agents=[a, b], integrations=[I])
+    @Workflow(coordinator="claude-opus-4-7", agents=[a, b], integrations=[I])
     class _Team:
         pass
 

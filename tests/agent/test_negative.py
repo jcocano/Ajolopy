@@ -37,7 +37,7 @@ async def test_network_error_after_retries_raises_typed_agent_error() -> None:
 
     register_provider("anthropic", _AlwaysFails, overwrite=True)
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Demo:
         pass
 

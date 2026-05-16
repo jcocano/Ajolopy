@@ -87,7 +87,7 @@ class _ProviderDefaults:
 
 _PROVIDER_DEFAULTS: dict[str, _ProviderDefaults] = {
     "anthropic": _ProviderDefaults(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         env_var="ANTHROPIC_API_KEY",
         extra="anthropic",
     ),

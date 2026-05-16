@@ -38,7 +38,7 @@ from ajolopy import Agent, Tool
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You help customers manage orders and refunds.",
 )
 class Support:

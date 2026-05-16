@@ -31,7 +31,7 @@ async def test_memory_instance_is_attached_verbatim(
     shared = InMemoryMemory()
 
     @Agent(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         system="…",
         memory=shared,
     )
@@ -69,7 +69,7 @@ async def test_memory_subclass_get_and_append_are_called(
             self.store.clear()
 
     @Agent(
-        model="claude-sonnet-4-7",
+        model="claude-opus-4-7",
         system="…",
         memory=RecordingMemory,
     )

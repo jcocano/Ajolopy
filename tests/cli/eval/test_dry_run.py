@@ -27,7 +27,7 @@ def known_catalog() -> Any:
     """Install a tiny catalog so the dry-run estimate is deterministic."""
     catalog = Catalog(
         {
-            "claude-sonnet-4-7": ModelPrice(
+            "claude-opus-4-7": ModelPrice(
                 input_cost_per_token=0.000_003,
                 output_cost_per_token=0.000_015,
             )
@@ -155,7 +155,7 @@ class TestUnknownModel:
         monkeypatch: pytest.MonkeyPatch,
         fake_runner_factory: Any,
     ) -> None:
-        # No catalog override → ``claude-sonnet-4-7`` is in the default
+        # No catalog override → ``claude-opus-4-7`` is in the default
         # snapshot, so to force the unknown branch we install an empty
         # catalog.
         set_default_catalog(Catalog({}))

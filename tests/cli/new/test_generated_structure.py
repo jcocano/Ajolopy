@@ -67,7 +67,7 @@ class TestSupportAgent:
         text = (generated / "src" / "my_agent" / "agents" / "support.py").read_text(
             encoding="utf-8"
         )
-        assert "claude-sonnet-4-7" in text
+        assert "claude-opus-4-7" in text
         assert "@Agent" in text
         assert "@Tool" in text
         assert "class Support" in text

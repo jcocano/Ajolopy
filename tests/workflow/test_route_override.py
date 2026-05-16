@@ -25,15 +25,15 @@ def _register_anthropic() -> None:
 def _make_agents() -> tuple[type[Any], type[Any], type[Any]]:
     _register_anthropic()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Triage:
         """Triage requests."""
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Billing:
         """Billing."""
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Technical:
         """Technical."""
 
@@ -107,7 +107,7 @@ async def test_route_receives_kwargs_as_context_dict() -> None:
 async def test_route_returning_class_not_in_agents_raises() -> None:
     triage, billing, _technical = _make_agents()
 
-    @Agent(model="claude-sonnet-4-7", system="…")
+    @Agent(model="claude-opus-4-7", system="…")
     class Outsider:
         """Not registered with the workflow."""
 

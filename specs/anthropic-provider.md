@@ -118,7 +118,7 @@ network traffic happens in CI.
 
 ### `complete()`
 
-- [x] A simple `complete(model="claude-sonnet-4-7", messages=[…])` call
+- [x] A simple `complete(model="claude-opus-4-7", messages=[…])` call
       proxies to `client.messages.create(...)` and returns a `Response`
       with `text`, `tokens_in`, `tokens_out`, `finish_reason="stop"`.
 - [x] Messages with `role="system"` are forwarded as the Anthropic
@@ -136,7 +136,7 @@ network traffic happens in CI.
 
 ### `stream()`
 
-- [x] `stream(model="claude-sonnet-4-7", messages=[…])` returns an async
+- [x] `stream(model="claude-opus-4-7", messages=[…])` returns an async
       iterator that yields `Chunk(delta=…)` for each text delta.
 - [x] The final `Chunk` carries `finish_reason="stop"` (or the mapped
       equivalent).
@@ -152,7 +152,7 @@ network traffic happens in CI.
 
 ### `count_tokens()`
 
-- [x] `count_tokens(model="claude-sonnet-4-7", text="hello")` returns the
+- [x] `count_tokens(model="claude-opus-4-7", text="hello")` returns the
       value reported by the SDK's count-tokens endpoint when available.
 - [x] If the SDK call fails or the endpoint is unreachable, the method
       falls back to a deterministic 4-chars-per-token estimate and logs

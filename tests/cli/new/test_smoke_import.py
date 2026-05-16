@@ -24,7 +24,7 @@ def _import_command(package_name: str) -> str:
     """Return the Python one-liner the subprocess runs."""
     # Importing the provider package binds ``LLMProvider`` to the
     # ``anthropic`` routing key so the agent decorator can resolve
-    # ``claude-sonnet-4-7`` without raising ``ProviderNotRegisteredError``.
+    # ``claude-opus-4-7`` without raising ``ProviderNotRegisteredError``.
     # ``ANTHROPIC_API_KEY`` is set in the subprocess env so provider
     # instantiation does not require a real key either.
     return f"import ajolopy.providers.anthropic; import {package_name}.main; print({_SENTINEL!r})"

@@ -106,7 +106,7 @@ drains at boot.
 
 ```python
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system=(
         "You are an engineering on-call assistant. "
         "For any incoming request, call summarize_request first to "

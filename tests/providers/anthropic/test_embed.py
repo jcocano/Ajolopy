@@ -19,4 +19,4 @@ async def test_embed_raises_typed_error() -> None:
     client = make_async_client()
     provider = AnthropicProvider(client=client)
     with pytest.raises(AnthropicEmbeddingsNotSupportedError, match="embeddings"):
-        await provider.embed(model="claude-sonnet-4-7", text="hello")
+        await provider.embed(model="claude-opus-4-7", text="hello")

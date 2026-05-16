@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ajolopy"
-version = "0.1.0"
+version = "0.1.1"
 description = "The Python framework for building AI-native applications in production."
 readme = "README.md"
 license = "MIT"
@@ -15,7 +15,7 @@ authors = [
 ]
 keywords = ["ai", "framework", "agents", "llm", "mcp", "python"]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",

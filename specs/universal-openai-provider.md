@@ -24,11 +24,15 @@ for subsequent requests.
 
 ## Why
 
-Brief v4.0 §03 is explicit that the framework must cover Ollama,
-Together, Groq, Mistral, DeepSeek, OpenRouter, Bedrock, and Azure on day
-one, but that all of them share the OpenAI-compatible wire format —
-implementing each as its own provider would multiply duplicate code
-five times over. A single class with a prefix table is the same shape
+Brief v4.0 §03 calls for broad OpenAI-compatible coverage. v0.1 ships
+the six prefixes that share the canonical OpenAI wire format out of
+the box — Ollama, Together, Groq, Mistral, DeepSeek, OpenRouter —
+plus an escape hatch (`base_urls=` constructor kwarg) for any other
+OpenAI-compatible endpoint. Bedrock and Azure are deferred (they need
+distinct client classes — `AsyncAzureOpenAI`, a LiteLLM-style gateway)
+and are scoped separately; see the deferred-items section below.
+Implementing each prefix as its own provider would multiply duplicate
+code five times over. A single class with a prefix table is the same shape
 the doc itself sketches (`AsyncOpenAI(base_url=..., api_key=...)` per
 provider). Each prefix gets its own env var resolution and its own
 default `base_url`; everything else funnels through the official
@@ -270,7 +274,7 @@ no real network traffic happens in CI.
 
 ### Negative cases
 
-- [x] A bare model string (`"gpt-4o-mini"`, `"claude-sonnet-4-7"`)
+- [x] A bare model string (`"gpt-4o-mini"`, `"claude-opus-4-7"`)
       with no universal prefix raises `UniversalProviderError`
       naming the supported prefixes.
 - [x] An `azure:` model raises `UniversalProviderError` referring to

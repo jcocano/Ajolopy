@@ -301,7 +301,7 @@ transition so trace viewers can show "model X failed → model Y handled it"
 without scraping span statuses."""
 
 AJOLOPY_FALLBACK_FROM = "ajolopy.fallback.from"
-"""The failing model string that triggered the fallback (``"claude-sonnet-4-7"``)."""
+"""The failing model string that triggered the fallback (``"claude-opus-4-7"``)."""
 
 AJOLOPY_FALLBACK_FROM_PROVIDER = "ajolopy.fallback.from_provider"
 """Provider key of the failing model (``"anthropic"``)."""

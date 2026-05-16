@@ -54,7 +54,7 @@ class ResearcherEval:
                 "answers that ignore the retrieved chunks. The answer should "
                 "be concise (one or two short paragraphs)."
             ),
-            model="claude-sonnet-4-7",
+            model="claude-opus-4-7",
             cache=True,
         )
 
