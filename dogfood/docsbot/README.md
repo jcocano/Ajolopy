@@ -1,5 +1,10 @@
 # `docsbot` — Ajolopy's own docs bot
 
+> **Live instance**: <https://ajolopy-docsbot.fly.dev/>
+> (POST `/chat` with `{"message": "..."}`, GET `/health` for the
+> liveness probe). Deployed from this directory's `Dockerfile.prod` +
+> `fly.toml` via `flyctl deploy`.
+
 This is the first **dogfood app** for [Ajolopy](../../README.md),
 tracked as [`AJ-54`](../../board.json). The bot answers questions about
 the Ajolopy framework using Ajolopy's own primitives:

@@ -2242,6 +2242,26 @@
       "created_at": "2026-05-18",
       "updated_at": "2026-05-18",
       "closed_at": null
+    },
+    {
+      "id": "AJ-86",
+      "slug": "docsbot-rate-limit",
+      "type": "fix",
+      "title": "Add app-level rate limit to docsbot /chat to cap DoS/budget-drain at the edge",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": null,
+      "labels": [],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-18",
+      "updated_at": "2026-05-18",
+      "closed_at": null
     }
   ]
 }

@@ -9,11 +9,12 @@ constructor-injected retriever in v0.1).
 
 from ajolopy import Module
 from docsbot.agents.docs import DocsAgent
+from docsbot.health import Health
 
 
-@Module(agents=[DocsAgent])
+@Module(agents=[DocsAgent], controllers=[Health])
 class AppModule:
-    """Root module — one agent, one ``@Stream("/chat")`` endpoint."""
+    """Root module — one agent on ``@Stream("/chat")`` + ``GET /health``."""
 
 
 __all__ = ["AppModule"]
