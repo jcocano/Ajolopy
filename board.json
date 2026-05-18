@@ -2056,15 +2056,15 @@
       "slug": "docsbot-corpus-stale-model",
       "type": "fix",
       "title": "docsbot RAG corpus references unreleased `claude-sonnet-4-7` in 15 indexed snippets",
-      "status": "backlog",
+      "status": "in_review",
       "priority": "p2",
       "milestone": "post-v0.1",
       "labels": [
         "dogfood",
         "rag"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "fix/docsbot-corpus-stale-model",
       "pr": null,
       "spec": "specs/docsbot-corpus-stale-model.md",
       "blocks": [],
