@@ -67,6 +67,8 @@ from typing import IO, TYPE_CHECKING, ClassVar, Literal, Protocol, cast, runtime
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from ajolopy.config import BaseConfig
+
 
 __all__ = [
     "EXIT_FAIL",
@@ -284,21 +286,54 @@ class EnvFilePresentCheck:
 class EnvValidationCheck:
     """Check 7 — ``BaseConfig`` instantiates with no error.
 
-    The doctor cannot know which subclass of :class:`BaseConfig` the
-    project defines, so the default check instantiates the framework's
-    own bare ``BaseConfig`` (which forbids extra keys and validates
-    case-sensitively). A failure here means the ``.env`` file or the
-    process env contains values that would fail to validate against
-    *any* config subclass — i.e. a broken file shape.
+    Prefers the project's own :class:`BaseConfig` subclass — same
+    discovery walk ``env:show`` / ``env:validate`` use (see
+    :func:`ajolopy.cli.commands.env._discover_config`). Falls back to
+    the framework's bare ``BaseConfig`` when the project has not
+    declared one yet.
+
+    The fallback is intentionally lenient — instantiating the bare
+    ``BaseConfig`` (``extra="forbid"``) against a ``.env`` populated
+    with project-level keys would always fail and turn the doctor into
+    a false-positive machine on every fresh install (AJ-94). Surfacing
+    a "no project subclass" warning instead of a hard fail tells the
+    user what is missing without misreporting their env-file shape.
     """
 
     name = "env_validation"
+
+    def __init__(self, *, cwd: Path) -> None:
+        self._cwd = cwd
 
     async def run(self) -> tuple[bool | None, str]:
         try:
             from ajolopy.config import BaseConfig
         except ImportError as exc:  # pragma: no cover - defensive
             return False, f"could not import BaseConfig: {exc}"
+
+        project_cls = self._discover_project_config(cwd=self._cwd)
+        if project_cls is not None:
+            try:
+                project_cls()
+            except Exception as exc:
+                return (
+                    False,
+                    f"{project_cls.__name__}() raised {type(exc).__name__}: {exc}",
+                )
+            field_count = len(project_cls.model_fields)
+            return True, f"{project_cls.__name__}: {field_count} fields OK"
+
+        # No project subclass — instantiate the bare framework
+        # BaseConfig only when the cwd's ``.env`` has zero entries the
+        # bare class would reject. Otherwise surface a warning so the
+        # user knows to declare a project-level subclass instead of
+        # being told their env file is broken.
+        if self._dotenv_has_keys(cwd=self._cwd):
+            return (
+                None,
+                "no project BaseConfig subclass; declare one in src/<pkg>/config.py "
+                "so doctor can validate the .env shape.",
+            )
         try:
             config = BaseConfig()
         except Exception as exc:
@@ -310,6 +345,56 @@ class EnvValidationCheck:
         del config
         env_var_count = len(os.environ)
         return True, f"{env_var_count} vars OK"
+
+    @staticmethod
+    def _discover_project_config(*, cwd: Path) -> type[BaseConfig] | None:
+        """Return the project's :class:`BaseConfig` subclass or ``None``.
+
+        Wraps :func:`ajolopy.cli.commands.env._discover_config` so the
+        doctor stays decoupled from its sibling subcommand. The helper
+        is imported lazily so a circular-import or partial install
+        cannot break the doctor's other checks; on any failure the
+        check falls through to the framework-level bare ``BaseConfig``.
+        """
+        try:
+            # ``_discover_config`` is private to the env subcommand but
+            # shared deliberately as the canonical project-config walk —
+            # the alternative is duplicating the ``src/<pkg>/app_module``
+            # introspection in this module, which guarantees the two
+            # implementations drift over time.
+            from ajolopy.cli.commands.env import (
+                _discover_config as discover,  # pyright: ignore[reportPrivateUsage]
+            )
+        except ImportError:  # pragma: no cover - defensive
+            return None
+        # The discovery helper writes "no BaseConfig subclass" diagnostics
+        # to a stderr stream when missing. The doctor renders its own
+        # diagnostics, so drop those messages into an in-memory buffer
+        # so they never leak into the doctor's report.
+        import io
+
+        sink = io.StringIO()
+        return discover(cwd=cwd, stderr=sink)
+
+    @staticmethod
+    def _dotenv_has_keys(*, cwd: Path) -> bool:
+        """Return ``True`` when ``cwd/.env`` declares at least one entry.
+
+        Uses the same lenient parser shape ``env:show`` / ``env:diff``
+        rely on so a malformed line cannot crash the doctor.
+        """
+        env_path = cwd / ".env"
+        if not env_path.is_file():
+            return False
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if stripped.startswith("export "):
+                stripped = stripped[len("export ") :].lstrip()
+            if "=" in stripped:
+                return True
+        return False
 
 
 class ProviderHealthCheck:
@@ -559,7 +644,7 @@ def _build_checks(*, cwd: Path) -> list[Check]:
         PyprojectPresentCheck(cwd=cwd),
         ProjectStructureCheck(cwd=cwd),
         EnvFilePresentCheck(cwd=cwd),
-        EnvValidationCheck(),
+        EnvValidationCheck(cwd=cwd),
         ProviderHealthCheck(
             name="anthropic_api_key",
             env_var="ANTHROPIC_API_KEY",

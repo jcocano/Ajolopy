@@ -1,0 +1,19 @@
+"""Project config — typed view over the variables declared in ``.env.example``.
+
+Subclass of :class:`ajolopy.config.BaseConfig` so the framework's typed
+env loader validates every variable on boot. The default-magic shape
+covers the keys the scaffold's own ``.env.example`` ships; widen the
+class as the project grows.
+
+Registered on ``AppModule`` via ``providers=[AppConfig]`` so the DI
+container resolves it for any consumer that asks for ``AppConfig`` and
+so ``ajolopy env:show`` / ``env:validate`` can discover it.
+"""
+
+from ajolopy.config import BaseConfig
+
+
+class AppConfig(BaseConfig):
+    """Typed env-var view for the {project_name} project."""
+
+{app_config_fields}

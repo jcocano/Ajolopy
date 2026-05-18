@@ -195,11 +195,59 @@ class TestEnvFilePresentCheck:
 
 
 class TestEnvValidationCheck:
-    async def test_pass_against_bare_baseconfig(self) -> None:
-        check = EnvValidationCheck()
+    async def test_pass_against_bare_baseconfig(self, tmp_path: Path) -> None:
+        # Empty cwd → no project subclass, no ``.env`` to clash with
+        # the bare framework BaseConfig. Falls through to the framework
+        # path which reports the process env-var count.
+        check = EnvValidationCheck(cwd=tmp_path)
         passed, message = await check.run()
         assert passed is True
         assert "vars OK" in message
+
+    async def test_warn_when_dotenv_has_keys_but_no_project_subclass(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        # Drop a non-empty ``.env`` so the bare framework BaseConfig
+        # would reject every key as ``extra_forbidden``. The check now
+        # surfaces a warning (not a fail) so a fresh-scaffold install
+        # without a project-level subclass does not falsely flag the
+        # env file as broken (AJ-94).
+        (tmp_path / ".env").write_text("FOO=bar\n", encoding="utf-8")
+        check = EnvValidationCheck(cwd=tmp_path)
+        passed, message = await check.run()
+        assert passed is None
+        assert "no project BaseConfig subclass" in message
+
+    async def test_pass_when_project_subclass_validates(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        # Build a minimal scaffold tree so ``_discover_config`` finds a
+        # project-level ``AppConfig`` and the check instantiates it
+        # against the cwd's ``.env``.
+        from ajolopy.config import BaseConfig
+
+        src_dir = tmp_path / "src" / "pkg"
+        src_dir.mkdir(parents=True)
+        (src_dir / "__init__.py").write_text("", encoding="utf-8")
+        (src_dir / "app_module.py").write_text(
+            "from ajolopy.config import BaseConfig\n\n"
+            "class AppConfig(BaseConfig):\n"
+            '    FOO: str = ""\n',
+            encoding="utf-8",
+        )
+        (tmp_path / ".env").write_text("FOO=hello\n", encoding="utf-8")
+        monkeypatch.chdir(tmp_path)
+
+        check = EnvValidationCheck(cwd=tmp_path)
+        passed, message = await check.run()
+        assert passed is True
+        assert "AppConfig" in message
+        assert "fields OK" in message
+        # Touch BaseConfig so the import stays meaningful to typecheck.
+        assert BaseConfig is not None
 
 
 # ---------------------------------------------------------------------------
