@@ -199,8 +199,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     mode = "write" if args.write else "check"
+    # Resolve module-level names here (not via parameter defaults) so that
+    # tests can monkeypatch ``_fetch_upstream`` and ``SNAPSHOT_PATH`` on the
+    # module and have ``main`` honor the replacements.
     try:
-        return run(mode=mode, head_sha=args.head_sha)
+        return run(
+            mode=mode,
+            fetcher=_fetch_upstream,
+            snapshot_path=SNAPSHOT_PATH,
+            head_sha=args.head_sha,
+        )
     except RuntimeError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
