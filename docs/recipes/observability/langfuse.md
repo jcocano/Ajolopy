@@ -146,4 +146,4 @@ After a single `curl` against your `@Stream` endpoint:
 - [Recipes overview](index.md) — pick a different backend.
 - [Install — `otel` extra](../../install.md#optional-extras).
 - [Langfuse docs · OpenTelemetry](https://langfuse.com/docs/opentelemetry/get-started)
-- [Langfuse docs · GenAI semantic conventions](https://langfuse.com/docs/opentelemetry/gen-ai)
+- [OpenTelemetry spec · GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/)

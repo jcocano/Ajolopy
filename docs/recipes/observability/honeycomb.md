@@ -164,4 +164,4 @@ request gets the attribute automatically.
 - [Recipes overview](index.md) — pick a different backend.
 - [Install — `otel` extra](../../install.md#optional-extras).
 - [Honeycomb docs · OpenTelemetry](https://docs.honeycomb.io/send-data/opentelemetry/).
-- [Honeycomb docs · BubbleUp](https://docs.honeycomb.io/investigate/bubbleup/).
+- [Honeycomb docs · BubbleUp (Identify Outliers)](https://docs.honeycomb.io/investigate/analyze/identify-outliers).
