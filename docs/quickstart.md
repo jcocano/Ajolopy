@@ -14,6 +14,16 @@ pseudo-code.
 
 ## 1. Install Ajolopy (30 seconds)
 
+First, create and activate a Python 3.14 virtual environment so `uv pip
+install` has a target to write into:
+
+```bash
+uv venv --python 3.14 .venv
+source .venv/bin/activate
+```
+
+Then install the framework:
+
 ```bash
 uv pip install ajolopy
 ```
@@ -21,6 +31,11 @@ uv pip install ajolopy
 This pulls the core framework only. Optional extras (observability, MCP,
 memory backends) are opt-in — see [Install](install.md) for the full
 matrix.
+
+!!! note "Why `--python 3.14`"
+    Ajolopy requires Python 3.14+ (it relies on PEP 649 deferred
+    annotations). Pinning the interpreter at `uv venv` time avoids
+    picking up an older default on your machine.
 
 ## 2. Create a project (1 minute)
 
