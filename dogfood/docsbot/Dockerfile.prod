@@ -11,7 +11,15 @@ RUN pip install --no-cache-dir uv
 
 # Copy only dependency manifests so this layer caches well.
 COPY pyproject.toml uv.lock* ./
-RUN uv sync --frozen --no-dev
+# ``--no-sources`` makes uv ignore ``[tool.uv.sources]`` (the editable
+# path-mounted ajolopy used for local dev) and resolve ajolopy from PyPI
+# instead. The docker build context is ``dogfood/docsbot/`` only, so
+# ``../..`` would not exist inside the build and the sync would fail.
+# ``--frozen`` is intentionally omitted: uv rejects ``--frozen`` together
+# with ``--no-sources`` because dropping sources invalidates the lock's
+# source pinning. The lock stays as the source of truth for local dev;
+# the docker build resolves fresh against PyPI on each rebuild.
+RUN uv sync --no-dev --no-sources
 
 # ──────────────────────────────────────────────────────────────
 # Stage 2: development (hot reload)
@@ -19,7 +27,7 @@ RUN uv sync --frozen --no-dev
 FROM deps AS development
 
 # Re-install with dev dependencies for tests + tooling.
-RUN uv sync --frozen
+RUN uv sync --no-sources
 COPY . .
 
 EXPOSE 3000

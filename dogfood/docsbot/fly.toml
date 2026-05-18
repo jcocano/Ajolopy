@@ -1,8 +1,8 @@
-app = "docsbot"
+app = "ajolopy-docsbot"
 primary_region = "iad"
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = "Dockerfile.prod"
 
 [env]
   APP_ENV = "production"
