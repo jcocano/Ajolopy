@@ -2,7 +2,7 @@
   "$schema": "./.board-schema.json",
   "version": 1,
   "updated_at": "2026-05-18",
-  "next_id": 93,
+  "next_id": 94,
   "items": [
     {
       "id": "AJ-1",
@@ -2371,6 +2371,29 @@
       "branch": "fix/aj-92-scaffold-main-pre-build",
       "pr": null,
       "spec": "specs/scaffold-main-pre-build-asgi.md",
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-18",
+      "updated_at": "2026-05-18",
+      "closed_at": "2026-05-18"
+    },
+    {
+      "id": "AJ-93",
+      "slug": "dispatcher-dotenv",
+      "type": "fix",
+      "title": "ajolopy dispatcher should auto-load .env so every subcommand sees env vars",
+      "status": "done",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "launch-readiness"
+      ],
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "fix/aj-93-dispatcher-dotenv",
+      "pr": null,
+      "spec": "specs/dispatcher-dotenv.md",
       "blocks": [],
       "blocked_by": [],
       "estimate": null,
