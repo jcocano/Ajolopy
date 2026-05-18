@@ -9,7 +9,7 @@ from ajolopy import Agent, Tool, Workflow
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You are the triage agent for {class_name}. Classify the incoming request.",
 )
 class {class_name}Triage:
@@ -22,7 +22,7 @@ class {class_name}Triage:
 
 
 @Agent(
-    model="claude-sonnet-4-7",
+    model="claude-opus-4-7",
     system="You are the worker agent for {class_name}.",
 )
 class {class_name}Worker:
@@ -36,7 +36,7 @@ class {class_name}Worker:
 
 @Workflow(
     agents=[{class_name}Triage, {class_name}Worker],
-    coordinator="claude-sonnet-4-7",
+    coordinator="claude-opus-4-7",
 )
 class {class_name}:
     """Multi-agent coordinator for the ``{snake_name}`` workflow."""
