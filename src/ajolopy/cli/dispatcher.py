@@ -22,6 +22,8 @@ import argparse
 import sys
 from typing import TYPE_CHECKING
 
+from ajolopy import __version__
+
 from .commands import register_subcommands
 
 if TYPE_CHECKING:
@@ -60,6 +62,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="ajolopy",
         description="Ajolopy command-line interface.",
+    )
+    # ``--version`` is a top-level argparse action so ``ajolopy --version``
+    # prints the package version and exits cleanly without requiring a
+    # subcommand (regression: AJ-83).
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
     sub = parser.add_subparsers(dest="cmd", required=True, metavar="subcommand")
     register_subcommands(sub)

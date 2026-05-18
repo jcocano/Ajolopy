@@ -104,7 +104,7 @@ async def bootstrap() -> None:
 - **Privacy.** `gen_ai.prompt` / `gen_ai.completion` are off by default.
   Set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true` to opt in
   per request — and double-check Sentry's
-  [PII scrubbing](https://docs.sentry.io/data-management-concepts/scrubbing/)
+  [PII scrubbing](https://docs.sentry.io/security-legal-pii/scrubbing/)
   rules before doing so on prod.
 - **Two ingest paths.** If you also init `sentry_sdk` and leave
   `traces_sample_rate>0`, the SDK installs its own `TracerProvider` and

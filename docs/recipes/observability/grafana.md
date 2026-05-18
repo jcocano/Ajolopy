@@ -185,5 +185,5 @@ async def bootstrap() -> None:
   spans land in Tempo.
 - [Recipes overview](index.md) — pick a different backend.
 - [Install — `otel` extra](../../install.md#optional-extras).
-- [Grafana Tempo docs · OpenTelemetry](https://grafana.com/docs/tempo/latest/send-data/otlp/).
+- [Grafana Tempo docs · Configuration (OTLP receiver)](https://grafana.com/docs/tempo/latest/configuration/).
 - [Grafana docs · TraceQL](https://grafana.com/docs/tempo/latest/traceql/).
