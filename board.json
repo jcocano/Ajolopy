@@ -2033,15 +2033,15 @@
       "slug": "drop-redundant-mcp-type-ignore",
       "type": "chore",
       "title": "Drop redundant `# type: ignore[import-not-found]` on mcp import in mcp/client.py",
-      "status": "ready",
+      "status": "in_review",
       "priority": "p1",
       "milestone": "post-v0.1",
       "labels": [
         "typing",
         "tech-debt"
       ],
-      "owner": null,
-      "branch": null,
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "chore/drop-redundant-mcp-type-ignore",
       "pr": null,
       "spec": "specs/drop-redundant-mcp-type-ignore.md",
       "blocks": [],
