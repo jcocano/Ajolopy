@@ -14,8 +14,10 @@ asserts:
 
 import pytest
 from memory_assistant.agents.tracker import ChatRequest, Tracker
+from memory_assistant.app_module import AppModule
 from memory_assistant.memory import SessionScopedMemory, session_scope
 
+from ajolopy import AjolopyFactory
 from ajolopy.memory import InMemoryMemory, Memory
 from ajolopy.providers import Message
 
@@ -55,6 +57,27 @@ def test_tracker_memory_is_session_scoped() -> None:
     memory = runtime._memory  # type: ignore[attr-defined]
     assert isinstance(memory, SessionScopedMemory)
     assert isinstance(memory.inner, InMemoryMemory)
+
+
+@pytest.mark.asyncio
+async def test_app_boots_and_mounts_chat_route() -> None:
+    """AJ-98 regression: ``AjolopyFactory.create`` must boot + mount ``/chat``.
+
+    Drives the agent's ``@Stream("/chat")`` handler — whose
+    ``AsyncGenerator`` return annotation is the one that previously
+    crashed under PEP 649 — through the framework's ``mount_streams``
+    path. The assertion is that the route lands on ``app.http``;
+    without the AJ-98 fix the factory raises ``NameError`` before we
+    ever get here.
+    """
+    app = await AjolopyFactory.create(AppModule)
+    try:
+        paths = {getattr(route, "path", "") for route in app.http.routes}
+        assert "/chat" in paths, (
+            f"Expected /chat mounted on memory-assistant app; got {sorted(p for p in paths if p)}"
+        )
+    finally:
+        await app.aclose()
 
 
 async def test_session_scope_partitions_history() -> None:
