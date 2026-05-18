@@ -2033,7 +2033,7 @@
       "slug": "drop-redundant-mcp-type-ignore",
       "type": "chore",
       "title": "Drop redundant `# type: ignore[import-not-found]` on mcp import in mcp/client.py",
-      "status": "in_review",
+      "status": "done",
       "priority": "p1",
       "milestone": "post-v0.1",
       "labels": [
@@ -2049,7 +2049,7 @@
       "estimate": null,
       "created_at": "2026-05-18",
       "updated_at": "2026-05-18",
-      "closed_at": null
+      "closed_at": "2026-05-18"
     }
   ]
 }
