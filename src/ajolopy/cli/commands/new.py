@@ -96,7 +96,8 @@ class _ProviderDefaults:
     via ``fallback=`` -- a same-family cheaper / faster sibling of
     ``model``. The README "killer demo" pairs ``claude-opus-4-7`` with
     ``claude-haiku-4-5``; the other providers follow the same pattern
-    (e.g. ``gpt-4o`` -> ``gpt-4o-mini``).
+    (e.g. ``gpt-5`` -> ``gpt-5-mini``, ``gemini-2.5-flash`` ->
+    ``gemini-2.5-flash-lite``).
     """
 
     model: str
@@ -113,17 +114,30 @@ _PROVIDER_DEFAULTS: dict[str, _ProviderDefaults] = {
         fallback="claude-haiku-4-5",
     ),
     "openai": _ProviderDefaults(
-        model="gpt-4o",
+        # GPT-5 is OpenAI's current flagship, pinned without dated /
+        # ``-preview`` suffixes so the scaffold survives the next
+        # snapshot rotation. ``gpt-4o`` is still served but OpenAI lists
+        # it as a legacy model; new users hitting a deprecation warning
+        # on their first request was the AJ-96 first-impression bug.
+        model="gpt-5",
         env_var="OPENAI_API_KEY",
         extra="openai",
-        fallback="gpt-4o-mini",
+        # Same-family slimmer sibling — matches the
+        # opus/haiku flagship + fast-fallback pairing from the killer demo.
+        fallback="gpt-5-mini",
     ),
     "gemini": _ProviderDefaults(
-        model="gemini-2.0-flash-exp",
+        # 2.5 Flash is the current stable Gemini Flash GA. The previous
+        # default (``gemini-2.0-flash-exp``) carried Google's
+        # research-only ``-exp`` suffix and was superseded by 2.5 well
+        # before launch -- scaffolding it shipped users a guaranteed
+        # deprecation warning on their first request (AJ-96).
+        model="gemini-2.5-flash",
         env_var="GOOGLE_API_KEY",
         extra="gemini",
-        # Sibling Gemini Flash model — same family, slimmer cost profile.
-        fallback="gemini-2.0-flash",
+        # Sibling Gemini Flash Lite -- same 2.5 family, slimmer cost /
+        # latency profile for the cheap-fallback half of the demo pair.
+        fallback="gemini-2.5-flash-lite",
     ),
     # Universal placeholder — the real model + env var are resolved
     # per-prefix by ``_universal_defaults_for`` once the wizard knows
