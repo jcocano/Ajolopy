@@ -33,8 +33,13 @@ def test_run_starts_and_handles_sigint() -> None:
     module_source = "@Module()\nclass AppModule: ...\n"
     proc = _run_in_subprocess(module_source, port=0)
     try:
-        # Give the server time to bind + start serving.
-        time.sleep(1.0)
+        # Give the server time to bind + start serving. AJ-80 bumped this
+        # from 1.0s to 3.0s: eager-registering all four built-in providers
+        # at ``import ajolopy`` time made package import slower (the Gemini
+        # SDK's ``from google import genai`` alone takes ~1-2s on CI), so
+        # a 1s window let SIGINT race the import phase and the process
+        # died with -2 instead of the clean 0 from uvicorn's handler.
+        time.sleep(3.0)
         # Server should still be running.
         assert proc.poll() is None, (
             f"Server exited prematurely: code={proc.returncode}, "
