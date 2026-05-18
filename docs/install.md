@@ -10,9 +10,24 @@
 
 ## Core install
 
+First, create and activate a Python 3.14 virtual environment so `uv pip
+install` has a target to write into:
+
+```bash
+uv venv --python 3.14 .venv
+source .venv/bin/activate
+```
+
+Then install the framework:
+
 ```bash
 uv pip install ajolopy
 ```
+
+!!! note "Why `--python 3.14`"
+    Ajolopy requires Python 3.14+ (it relies on PEP 649 deferred
+    annotations). Pinning the interpreter at `uv venv` time avoids
+    picking up an older default on your machine.
 
 This pulls a focused dependency set: the multi-provider LLM core
 (`anthropic`, `openai`, `google-genai`), the ASGI runtime (`starlette`,
@@ -54,6 +69,16 @@ depends on the missing SDK.
     the framework itself.
 
 ## Verifying the install
+
+If you are in a fresh shell (no `.venv` yet), create and activate one
+first so `uv pip install` has a target to write into:
+
+```bash
+uv venv --python 3.14 .venv
+source .venv/bin/activate
+```
+
+Then install and import the framework:
 
 ```bash
 uv pip install ajolopy
