@@ -64,8 +64,20 @@ EXIT_INTERRUPTED: Final = 130  # Shell convention for SIGINT (Ctrl+C).
 # Validation regex + answer vocabularies.
 # ---------------------------------------------------------------------------
 _NAME_RE = re.compile(r"^[a-z][a-z0-9-]{1,40}$")
-_VALID_LLM = ("anthropic", "openai", "gemini")
+_VALID_LLM = ("anthropic", "openai", "gemini", "universal")
 _VALID_FEATURE = ("agent", "workflow", "mcp")
+# Prefixes accepted by ``--universal-prefix``. Mirrors
+# :data:`ajolopy.providers.universal_openai.provider._PREFIX_DEFAULTS`
+# but lives here so the wizard never imports the heavyweight provider
+# module just to validate a flag.
+_VALID_UNIVERSAL_PREFIX = (
+    "ollama",
+    "groq",
+    "together",
+    "mistral",
+    "deepseek",
+    "openrouter",
+)
 
 # Maximum number of times a single interactive prompt is retried before
 # the wizard gives up. The cap matches the documented UX in the spec
@@ -101,6 +113,51 @@ _PROVIDER_DEFAULTS: dict[str, _ProviderDefaults] = {
         env_var="GOOGLE_API_KEY",
         extra="gemini",
     ),
+    # Universal placeholder — the real model + env var are resolved
+    # per-prefix by ``_universal_defaults_for`` once the wizard knows
+    # which prefix the user picked. The model literal here is the
+    # ``--llm universal`` default if no ``--universal-prefix`` /
+    # ``--universal-model`` overrides are supplied (i.e. zero-config
+    # local Ollama, no API key required).
+    "universal": _ProviderDefaults(
+        model="ollama:llama3.3",
+        env_var="OLLAMA_BASE_URL",
+        extra="universal",
+    ),
+}
+
+
+@dataclass(frozen=True, slots=True)
+class _UniversalPrefixDefaults:
+    """Per-prefix scaffold defaults for ``--llm universal``.
+
+    ``model`` is the suffix appended after ``"<prefix>:"`` — the wizard
+    emits ``model="<prefix>:<model>"`` into the generated ``@Agent``.
+
+    ``env_var`` is the variable the user must populate in ``.env``
+    before the generated app boots. For the ``ollama`` prefix the
+    provider requires no API key, so we document ``OLLAMA_BASE_URL`` as
+    the relevant escape hatch instead (matches the
+    ``examples/local-ollama/.env.example`` pattern).
+    """
+
+    model: str
+    env_var: str
+
+
+_UNIVERSAL_PREFIX_DEFAULTS: dict[str, _UniversalPrefixDefaults] = {
+    # Local Ollama is the zero-cost default — no API key, no account.
+    "ollama": _UniversalPrefixDefaults(model="llama3.3", env_var="OLLAMA_BASE_URL"),
+    # Cloud OpenAI-compatible endpoints — each ships an API key env var.
+    "groq": _UniversalPrefixDefaults(model="llama-3.3-70b-versatile", env_var="GROQ_API_KEY"),
+    "together": _UniversalPrefixDefaults(
+        model="meta-llama/Llama-3.3-70B-Instruct-Turbo", env_var="TOGETHER_API_KEY"
+    ),
+    "mistral": _UniversalPrefixDefaults(model="mistral-large-latest", env_var="MISTRAL_API_KEY"),
+    "deepseek": _UniversalPrefixDefaults(model="deepseek-chat", env_var="DEEPSEEK_API_KEY"),
+    "openrouter": _UniversalPrefixDefaults(
+        model="meta-llama/llama-3.3-70b-instruct", env_var="OPENROUTER_API_KEY"
+    ),
 }
 
 
@@ -109,12 +166,22 @@ _PROVIDER_DEFAULTS: dict[str, _ProviderDefaults] = {
 # ---------------------------------------------------------------------------
 @dataclass(frozen=True, slots=True)
 class _WizardAnswers:
-    """Resolved answers from the four wizard questions."""
+    """Resolved answers from the four wizard questions.
+
+    ``universal_prefix`` / ``universal_model`` are only consulted when
+    ``llm == "universal"`` — the universal provider routes by a
+    ``"<prefix>:<model>"`` model string (see
+    :class:`ajolopy.providers.universal_openai.UniversalOpenAIProvider`),
+    so the wizard captures the two halves here and joins them in
+    :func:`_resolved_provider_defaults`.
+    """
 
     llm: str
     feature: str
     include_docker: bool
     include_eval: bool
+    universal_prefix: str | None = None
+    universal_model: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -156,7 +223,34 @@ def register(
         "--llm",
         choices=_VALID_LLM,
         default=None,
-        help="Pre-answer for the primary LLM provider question.",
+        help=(
+            "Pre-answer for the primary LLM provider question. "
+            "'universal' routes to the OpenAI-compatible provider "
+            "(Ollama / Groq / Together / Mistral / DeepSeek / OpenRouter); "
+            "pair it with --universal-prefix to pick the upstream."
+        ),
+    )
+    parser.add_argument(
+        "--universal-prefix",
+        dest="universal_prefix",
+        choices=_VALID_UNIVERSAL_PREFIX,
+        default=None,
+        help=(
+            "Only meaningful with --llm universal. Selects the upstream "
+            "the OpenAI-compatible provider talks to. Defaults to 'ollama' "
+            "(zero-config local). Each prefix has a baked-in default model "
+            "name; override with --universal-model."
+        ),
+    )
+    parser.add_argument(
+        "--universal-model",
+        dest="universal_model",
+        default=None,
+        help=(
+            "Only meaningful with --llm universal. Overrides the per-prefix "
+            "default model name (e.g. 'llama3.3' for ollama, "
+            "'llama-3.3-70b-versatile' for groq)."
+        ),
     )
     parser.add_argument(
         "--feature",
@@ -248,7 +342,7 @@ def _command(
         project_name=project_name,
         written=written,
         destination=destination,
-        env_var=_PROVIDER_DEFAULTS[answers.llm].env_var,
+        env_var=context["llm_env_var"],
         stdout=stdout,
     )
     return EXIT_OK
@@ -288,12 +382,17 @@ def _resolve_answers(
     stderr: IO[str],
 ) -> _WizardAnswers:
     """Return the resolved wizard answers (interactive or via flags)."""
+    universal_prefix_arg: str | None = getattr(args, "universal_prefix", None)
+    universal_model_arg: str | None = getattr(args, "universal_model", None)
     if args.yes:
+        llm = args.llm or _VALID_LLM[0]
         return _WizardAnswers(
-            llm=args.llm or _VALID_LLM[0],
+            llm=llm,
             feature=args.feature or _VALID_FEATURE[0],
             include_docker=not bool(args.no_docker),
             include_eval=not bool(args.no_eval),
+            universal_prefix=(universal_prefix_arg if llm == "universal" else None),
+            universal_model=(universal_model_arg if llm == "universal" else None),
         )
 
     llm = _prompt_choice(
@@ -302,6 +401,19 @@ def _resolve_answers(
         preset=args.llm,
         stderr=stderr,
     )
+    # Ask the universal-only follow-ups right after the LLM question so
+    # the user only sees them when they apply.
+    if llm == "universal":
+        universal_prefix = _prompt_choice(
+            question="Universal upstream prefix?",
+            choices=_VALID_UNIVERSAL_PREFIX,
+            preset=universal_prefix_arg,
+            stderr=stderr,
+        )
+        universal_model = universal_model_arg
+    else:
+        universal_prefix = None
+        universal_model = None
     feature = _prompt_choice(
         question="Example feature?",
         choices=_VALID_FEATURE,
@@ -329,6 +441,8 @@ def _resolve_answers(
         feature=feature,
         include_docker=include_docker,
         include_eval=include_eval,
+        universal_prefix=universal_prefix,
+        universal_model=universal_model,
     )
 
 
@@ -390,7 +504,7 @@ def _prompt_yes_no(
 # ---------------------------------------------------------------------------
 def _build_context(project_name: str, answers: _WizardAnswers) -> dict[str, str]:
     """Return the ``str.format`` substitution map for the template tree."""
-    provider = _PROVIDER_DEFAULTS[answers.llm]
+    model, env_var, extra = _resolved_provider_defaults(answers)
     package_name = project_name.replace("-", "_")
     class_prefix = "".join(part.capitalize() for part in project_name.split("-"))
     return {
@@ -398,14 +512,14 @@ def _build_context(project_name: str, answers: _WizardAnswers) -> dict[str, str]
         "package_name": package_name,
         "class_prefix": class_prefix,
         "llm_provider": answers.llm,
-        "llm_model": provider.model,
-        "llm_env_var": provider.env_var,
-        "llm_extra": provider.extra,
+        "llm_model": model,
+        "llm_env_var": env_var,
+        "llm_extra": extra,
         "feature": answers.feature,
         # Extra lines appended at the bottom of ``.env.example``. The
         # base template injects this verbatim so feature-specific
         # secrets stay in one file without forking the template tree.
-        "extra_env_lines": _extra_env_lines(answers.feature),
+        "extra_env_lines": _extra_env_lines(answers),
         # ``@Eval`` accepts ``agent=`` OR ``workflow=`` -- never both.
         # Templates render the kwarg dynamically so a workflow scaffold
         # gets ``workflow=Support`` without forking the eval tree.
@@ -413,18 +527,72 @@ def _build_context(project_name: str, answers: _WizardAnswers) -> dict[str, str]
     }
 
 
-def _extra_env_lines(feature: str) -> str:
-    """Return additional ``.env.example`` lines for the chosen feature.
+def _resolved_provider_defaults(answers: _WizardAnswers) -> tuple[str, str, str]:
+    """Return ``(model, env_var, extra)`` for the resolved LLM choice.
+
+    For the three single-provider choices (anthropic / openai / gemini)
+    this is a straight lookup in :data:`_PROVIDER_DEFAULTS`. For
+    ``"universal"`` the model is the ``"<prefix>:<model>"`` shape the
+    universal provider expects, and the env var is the prefix's API key
+    env (or ``OLLAMA_BASE_URL`` for the no-API-key local Ollama case).
+    """
+    provider = _PROVIDER_DEFAULTS[answers.llm]
+    if answers.llm != "universal":
+        return provider.model, provider.env_var, provider.extra
+    prefix = answers.universal_prefix or "ollama"
+    prefix_defaults = _UNIVERSAL_PREFIX_DEFAULTS[prefix]
+    model_suffix = answers.universal_model or prefix_defaults.model
+    return f"{prefix}:{model_suffix}", prefix_defaults.env_var, provider.extra
+
+
+def _extra_env_lines(answers: _WizardAnswers) -> str:
+    """Return additional ``.env.example`` lines for the chosen answers.
 
     ``mcp`` ships a commented-out ``GITHUB_PERSONAL_ACCESS_TOKEN`` so the
     user can plug the sample GitHub MCP server without re-reading the
-    docs. Other features add nothing.
+    docs. ``universal`` adds a documentation block explaining the
+    ``"<prefix>:<model>"`` model contract and the per-prefix base-URL /
+    API-key env vars the provider reads on first request.
     """
-    if feature == "mcp":
-        return (
+    chunks: list[str] = []
+    if answers.feature == "mcp":
+        chunks.append(
             "\n# Required by the example GitHub MCP integration.\n# GITHUB_PERSONAL_ACCESS_TOKEN=\n"
         )
-    return ""
+    if answers.llm == "universal":
+        chunks.append(_universal_env_doc(answers.universal_prefix or "ollama"))
+    return "".join(chunks)
+
+
+def _universal_env_doc(prefix: str) -> str:
+    """Return ``.env.example`` documentation specific to a universal prefix.
+
+    For ``ollama``: explains the ``OLLAMA_BASE_URL`` escape hatch (no
+    API key needed by default) and lists the cross-provider env vars
+    the framework reads when the prefix changes.
+
+    For every other prefix: confirms the API key env var the user must
+    populate, and lists the matching ``${PREFIX}_BASE_URL`` escape hatch
+    documented on
+    :class:`ajolopy.providers.universal_openai.UniversalOpenAIProvider`.
+    """
+    if prefix == "ollama":
+        return (
+            "\n# Universal provider — local Ollama upstream.\n"
+            "# No API key is required: the universal provider treats the\n"
+            "# ``ollama:`` prefix as a no-auth route. Set OLLAMA_BASE_URL\n"
+            "# only when pointing at a non-default Ollama endpoint\n"
+            "# (default: http://localhost:11434/v1).\n"
+            "# OLLAMA_BASE_URL=http://localhost:11434/v1\n"
+        )
+    upper = prefix.upper()
+    return (
+        f"\n# Universal provider — '{prefix}:' upstream.\n"
+        f"# Model strings follow the '{prefix}:<model>' shape (see\n"
+        "# UniversalOpenAIProvider in the Ajolopy docs).\n"
+        f"# Optional base-URL override for the '{prefix}' upstream:\n"
+        f"# {upper}_BASE_URL=\n"
+    )
 
 
 # ---------------------------------------------------------------------------

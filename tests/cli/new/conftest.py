@@ -58,6 +58,8 @@ def make_namespace(**overrides: object) -> argparse.Namespace:
         "feature": None,
         "no_docker": False,
         "no_eval": False,
+        "universal_prefix": None,
+        "universal_model": None,
     }
     defaults.update(overrides)
     return argparse.Namespace(**defaults)

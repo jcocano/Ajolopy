@@ -14,6 +14,10 @@ from tests.cli.new.conftest import invoke_new
         ("anthropic", "claude-opus-4-7", "ANTHROPIC_API_KEY"),
         ("openai", "gpt-4o", "OPENAI_API_KEY"),
         ("gemini", "gemini-2.0-flash-exp", "GOOGLE_API_KEY"),
+        # Universal defaults to ``ollama:llama3.3`` with no API key
+        # required; the documented env var is the ``OLLAMA_BASE_URL``
+        # escape hatch (see ``examples/local-ollama/.env.example``).
+        ("universal", "ollama:llama3.3", "OLLAMA_BASE_URL"),
     ],
 )
 def test_provider_model_and_env_var_match_spec(
