@@ -2202,7 +2202,7 @@
       "slug": "install-uv-venv-prereq",
       "type": "fix",
       "title": "Install docs missing uv venv prerequisite before uv pip install (same gap as AJ-82)",
-      "status": "in_review",
+      "status": "done",
       "priority": "p1",
       "milestone": "v0.1",
       "labels": [
@@ -2218,7 +2218,7 @@
       "estimate": null,
       "created_at": "2026-05-18",
       "updated_at": "2026-05-18",
-      "closed_at": null
+      "closed_at": "2026-05-18"
     }
   ]
 }
