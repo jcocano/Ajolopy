@@ -82,16 +82,16 @@ Three viable fixes, ranked:
 
 ## Acceptance criteria
 
-- [ ] `src/ajolopy/mcp/client.py:113` no longer triggers
+- [x] `src/ajolopy/mcp/client.py:113` no longer triggers
       `reportUnnecessaryTypeIgnoreComment` under the full-extras CI
       pyright invocation.
-- [ ] `uv run pyright` reports no errors and no warnings for the
+- [x] `uv run pyright` reports no errors and no warnings for the
       `mcp/` package — or, if other unrelated warnings remain, the
       total warning count drops by exactly the one this item targets.
-- [ ] The existing test suite (`tests/mcp/`) stays green without
+- [x] The existing test suite (`tests/mcp/`) stays green without
       modification — this is a typing-only change, no behavioural
       impact.
-- [ ] `uv run ruff check` / `ruff format --check` clean.
+- [x] `uv run ruff check` / `ruff format --check` clean.
 - [ ] If approach 1 is chosen, the inline comment still names the
       reason (`optional extra, guarded at call time`) so future readers
       do not delete it as cruft.
@@ -106,5 +106,24 @@ Three viable fixes, ranked:
 
 ## Implementation notes
 
-<!-- Filled when this item ships. Record which approach was taken and
-why, plus the pyright version against which the warning disappeared. -->
+**Approach taken: 3 (importlib refactor)**, not 1 as originally
+recommended. The spec's option 1 turned out to be wrong: pyright also
+flags an unnecessary `# pyright: ignore[...]` directive with the same
+`reportUnnecessaryTypeIgnoreComment` warning when the import resolves,
+so swapping `# type: ignore[import-not-found]` for
+`# pyright: ignore[reportMissingImports]` just renames the noise — the
+warning persists under the full-extras CI footprint.
+
+`importlib.import_module("mcp")` sidesteps the entire ignore-comment
+arms race: the import target is a runtime string, so pyright has no
+import line to resolve and no ignore directive to second-guess. The
+function already returned `Any` (callers pick the SDK subpath
+dynamically), so the typing loss the spec warned about for option 3 is
+nil in practice — there was nothing for pyright to narrow at this
+boundary anyway.
+
+Result against pyright 1.1.x (whatever ships pinned in `pyproject.toml`
+when this lands): zero errors and zero warnings reported by
+`uv run pyright`. Full suite stays at `1951 passed, 25 skipped` with
+no test modifications. The `importlib` import is the only added line
+outside the function body.

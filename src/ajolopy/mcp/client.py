@@ -14,6 +14,7 @@ and pooling.
 """
 
 import abc
+import importlib
 import logging
 import os
 from contextlib import AsyncExitStack
@@ -107,13 +108,17 @@ def _load_mcp() -> Any:
     Centralising the import here keeps every concrete client's connect
     path identical. The function returns the module so callers can
     pick the specific transport helper they need without paying for a
-    second import.
+    second import. ``importlib.import_module`` is used instead of a
+    bare ``import mcp`` so the optional dependency stays invisible to
+    static analysers under both the full-extras CI footprint and the
+    minimal-install dev footprint — neither needs a ``# pyright: ignore``
+    or ``# type: ignore`` directive that would itself become a warning
+    in one of the two configurations.
     """
     try:
-        import mcp  # type: ignore[import-not-found]  # optional extra, guarded at call time
+        return importlib.import_module("mcp")
     except ImportError as exc:
         raise MCPDependencyError(_DEPENDENCY_HINT) from exc
-    return mcp
 
 
 class _BaseSDKMCPClient(MCPClient):
