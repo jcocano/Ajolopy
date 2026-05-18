@@ -4,9 +4,25 @@ The :class:`Integrations` class binds the GitHub MCP server (stdio
 transport) into the @Agent's tool list. The token is read from
 ``GITHUB_PERSONAL_ACCESS_TOKEN`` -- fill it in via ``.env`` before
 the first run.
+
+The ``@Stream("/chat")`` handler on :class:`Support` exposes the agent
+over HTTP so ``ajolopy dev`` produces a curl-able endpoint with the
+same wire shape as the ``--feature agent`` scaffold. The shape mirrors
+``examples/oncall-agent/src/oncall_agent/agents/oncall.py``.
 """
 
-from ajolopy import MCP, Agent, Tool
+from typing import Annotated
+
+from pydantic import BaseModel
+
+from ajolopy import MCP, Agent, Stream, Tool
+from ajolopy.http import Body
+
+
+class ChatRequest(BaseModel):
+    """Inbound chat payload posted to ``/chat``."""
+
+    message: str
 
 
 @MCP(servers={{"github": "stdio:uvx mcp-server-github"}})
@@ -26,3 +42,13 @@ class Support:
     def echo(self, text: str) -> str:
         """Local fallback tool. Replace with real logic."""
         return text
+
+    @Stream("/chat")
+    async def respond(self, body: Annotated[ChatRequest, Body()]):
+        """Stream a reply for ``body.message`` over the ``/chat`` endpoint."""
+        # ``self.stream`` is injected by ``@Agent`` at decoration time;
+        # static analysers cannot see the attribute, so we silence the
+        # missing-attribute warning here. Same pattern as
+        # ``examples/oncall-agent/src/oncall_agent/agents/oncall.py``.
+        async for chunk in self.stream(body.message):  # type: ignore[attr-defined]
+            yield chunk

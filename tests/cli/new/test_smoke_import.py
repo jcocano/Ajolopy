@@ -18,16 +18,29 @@ from ajolopy.cli.commands import new as new_cmd
 from tests.cli.new.conftest import invoke_new
 
 _SENTINEL = "SMOKE_IMPORT_OK"
+_CHAT_SENTINEL = "CHAT_ROUTE_MOUNTED"
 
 
 def _import_command(package_name: str) -> str:
-    """Return the Python one-liner the subprocess runs."""
-    # Importing the provider package binds ``LLMProvider`` to the
-    # ``anthropic`` routing key so the agent decorator can resolve
-    # ``claude-opus-4-7`` without raising ``ProviderNotRegisteredError``.
-    # ``ANTHROPIC_API_KEY`` is set in the subprocess env so provider
-    # instantiation does not require a real key either.
-    return f"import ajolopy.providers.anthropic; import {package_name}.main; print({_SENTINEL!r})"
+    """Return the Python one-liner the subprocess runs.
+
+    Importing the provider package binds ``LLMProvider`` to the
+    ``anthropic`` routing key so the agent decorator can resolve
+    ``claude-opus-4-7`` without raising ``ProviderNotRegisteredError``.
+    ``ANTHROPIC_API_KEY`` is set in the subprocess env so provider
+    instantiation does not require a real key either. After the import
+    we walk the Starlette router and assert ``/chat`` is mounted (AJ-95
+    regression — workflow + mcp scaffolds previously omitted ``@Stream``
+    so ``ajolopy dev`` started but ``curl /chat`` returned 404).
+    """
+    return (
+        f"import ajolopy.providers.anthropic; "
+        f"from {package_name} import main as _m; "
+        f"paths = [getattr(r, 'path', None) for r in _m.app.router.routes]; "
+        f"assert '/chat' in paths, f'expected /chat route, got: {{paths!r}}'; "
+        f"print({_CHAT_SENTINEL!r}); "
+        f"print({_SENTINEL!r})"
+    )
 
 
 @pytest.mark.parametrize("feature", ["agent", "workflow", "mcp"])
