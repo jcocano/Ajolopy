@@ -29,6 +29,7 @@ class TestExpectedFiles:
             "src/my_agent/__init__.py",
             "src/my_agent/main.py",
             "src/my_agent/app_module.py",
+            "src/my_agent/config.py",
             "src/my_agent/agents/__init__.py",
             "src/my_agent/agents/support.py",
             "evals/__init__.py",

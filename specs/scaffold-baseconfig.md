@@ -73,15 +73,19 @@ extending `AppConfig` as their project grows.
 
 - Updating the framework's own bare `BaseConfig` (still
   `extra=forbid`; users opting out subclass with `extra="ignore"`).
-- Updating the `EnvValidationCheck` in `doctor.py` to discover the
-  project's subclass — the scaffold-side fix is enough because the
-  bare check is documented as "framework-level only" and the
-  user-facing failure mode (the scaffold's own keys rejected by the
-  bare class) goes away once the project declares its own subclass
-  via `providers=[AppConfig]`. If the doctor still flags extras on
-  the cwd's `.env` after the scaffold fix, a follow-up may extend
-  the doctor to project-aware discovery.
 - Multi-tenancy / RBAC config layers (post-v0.1).
+
+## Doctor-side change (paired with the scaffold fix)
+
+`EnvValidationCheck` (in `src/ajolopy/cli/commands/doctor.py`) now
+prefers the project's `BaseConfig` subclass via the same
+`_discover_config` walk `env:*` already uses. When no project
+subclass exists AND the cwd's `.env` has at least one key, the check
+surfaces a warning ("declare a project-level subclass") instead of
+hard-failing — the bare `BaseConfig` (`extra=forbid`) would otherwise
+reject every key on the next user's machine even after their `cp
+.env.example .env`, turning the doctor into a false-positive machine
+on every fresh install.
 
 ## Implementation notes
 

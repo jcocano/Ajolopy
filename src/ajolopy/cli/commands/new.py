@@ -541,6 +541,13 @@ def _build_context(project_name: str, answers: _WizardAnswers) -> dict[str, str]
         # Templates render the kwarg dynamically so a workflow scaffold
         # gets ``workflow=Support`` without forking the eval tree.
         "eval_target_kwarg": "workflow" if answers.feature == "workflow" else "agent",
+        # Body of the generated ``AppConfig`` class — one
+        # ``UPPER_SNAKE: str = ""`` line per env var declared in the
+        # scaffold's own ``.env.example``. Keeps the typed view in sync
+        # with the keys the user actually pastes into ``.env`` so
+        # ``ajolopy doctor`` / ``env:show`` / ``env:validate`` all
+        # surface the same shape (AJ-94).
+        "app_config_fields": _app_config_fields(answers, env_var=env_var),
     }
 
 
@@ -614,6 +621,59 @@ def _universal_env_doc(prefix: str) -> str:
         f"# Optional base-URL override for the '{prefix}' upstream:\n"
         f"# {upper}_BASE_URL=\n"
     )
+
+
+# Field-body indentation for the generated ``AppConfig`` class. Stored
+# as a module constant so the rendering helper and any future test that
+# wants to assert layout stay aligned on a single value.
+_APP_CONFIG_INDENT = " " * 4
+
+
+def _app_config_fields(answers: _WizardAnswers, *, env_var: str) -> str:
+    """Return the indented ``AppConfig`` body for the resolved provider.
+
+    Each line is one pydantic field ``UPPER_SNAKE: str = ""`` matching
+    a key the scaffold's own ``.env.example`` writes. Using ``""`` as
+    the default keeps every field optional at instantiation time so
+    ``ajolopy env:validate`` exits ``0`` on a fresh ``cp .env.example
+    .env`` even before the user fills any value in — the framework
+    surfaces the missing-value cost when the provider actually tries
+    to authenticate, not at boot.
+
+    The set of fields tracks the scaffold's ``.env.example`` exactly:
+
+    - The provider env var (``ANTHROPIC_API_KEY`` for anthropic,
+      ``OPENAI_API_KEY`` for openai, ``GOOGLE_API_KEY`` for gemini,
+      or the universal prefix's key / ``OLLAMA_BASE_URL`` escape
+      hatch for the ``ollama`` no-API-key case).
+    - ``APP_ENV`` (default ``"development"``).
+    - ``LOG_LEVEL`` (default ``"debug"``).
+
+    The shape mirrors the ``.env.example`` keys 1:1 because
+    ``BaseConfig`` is ``extra="forbid"``: any key in ``.env`` that is
+    not declared here raises ``ValidationError`` at boot.
+    """
+    lines: list[str] = []
+    indent = _APP_CONFIG_INDENT
+    lines.append(f"{indent}# Primary LLM provider — populated from .env.")
+    lines.append(f'{indent}{env_var}: str = ""')
+    # Blank separator line — emitted as an empty string (not ``"    "``)
+    # so ``ruff format`` / pre-commit's trailing-whitespace hook are
+    # both happy with the generated file.
+    lines.append("")
+    lines.append(f"{indent}# App config — sane defaults so a fresh ``.env`` validates.")
+    lines.append(f'{indent}APP_ENV: str = "development"')
+    lines.append(f'{indent}LOG_LEVEL: str = "debug"')
+    if answers.feature == "mcp":
+        # Mirrors the commented-out ``GITHUB_PERSONAL_ACCESS_TOKEN``
+        # line ``.env.example`` ships for the GitHub MCP integration —
+        # declared here so the user can simply uncomment + paste the
+        # token in ``.env`` without ``BaseConfig`` rejecting it as
+        # ``extra_forbidden``.
+        lines.append("")
+        lines.append(f"{indent}# Optional — set when running the GitHub MCP integration.")
+        lines.append(f'{indent}GITHUB_PERSONAL_ACCESS_TOKEN: str = ""')
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
