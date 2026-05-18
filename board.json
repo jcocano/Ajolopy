@@ -2056,7 +2056,7 @@
       "slug": "docsbot-corpus-stale-model",
       "type": "fix",
       "title": "docsbot RAG corpus references unreleased `claude-sonnet-4-7` in 15 indexed snippets",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p2",
       "milestone": "post-v0.1",
       "labels": [
