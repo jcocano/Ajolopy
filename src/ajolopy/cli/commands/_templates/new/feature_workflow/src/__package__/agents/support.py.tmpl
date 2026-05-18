@@ -4,9 +4,29 @@ Two specialist :class:`Agent`s (``Triage``, ``Billing``) are coordinated
 by a :class:`Workflow` whose ``coordinator=`` is the default LLM model.
 The workflow class is exported as ``Support`` so the rest of the
 scaffold (``app_module``, tests) stays variant-agnostic.
+
+The ``@Stream("/chat")`` handler lives on the ``@Workflow`` orchestrator
+(not on a specialist) so the HTTP wire contract stays identical to the
+``--feature agent`` scaffold: clients ``POST /chat`` with
+``{{"message": "..."}}`` and consume an SSE stream. The orchestrator
+yields :class:`WorkflowEvent` dicts (``handoff``, ``agent_result``,
+``token``, ``done``) instead of raw strings; clients must ignore
+unknown event ``type`` values. The shape mirrors
+``examples/support-agent/src/support_agent/agents/team.py``.
 """
 
-from ajolopy import Agent, Tool, Workflow
+from typing import Annotated
+
+from pydantic import BaseModel
+
+from ajolopy import Agent, Stream, Tool, Workflow
+from ajolopy.http import Body
+
+
+class ChatRequest(BaseModel):
+    """Inbound chat payload posted to ``/chat``."""
+
+    message: str
 
 
 @Agent(
@@ -41,3 +61,13 @@ class Billing:
 )
 class Support:
     """Multi-agent coordinator for {class_prefix} support requests."""
+
+    @Stream("/chat")
+    async def respond(self, body: Annotated[ChatRequest, Body()]):
+        """Stream the team's response for ``body.message`` as SSE events."""
+        # ``self.stream`` is injected by ``@Workflow`` at decoration time;
+        # static analysers cannot see the attribute, so we silence the
+        # missing-attribute warning here. Same pattern as
+        # ``examples/support-agent/src/support_agent/agents/team.py``.
+        async for event in self.stream(body.message):  # type: ignore[attr-defined]
+            yield event
