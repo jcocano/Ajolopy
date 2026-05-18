@@ -48,6 +48,18 @@ class TestFeatureWorkflow:
         # Workflow coordinator is the Support class.
         assert "class Support" in text
 
+    def test_workflow_variant_exposes_stream_chat(self, tmp_cwd: Path) -> None:
+        """AJ-95 regression: the workflow scaffold must mount ``/chat``.
+
+        Before AJ-95 the ``@Workflow`` orchestrator had no HTTP surface,
+        so ``ajolopy dev`` started but ``curl /chat`` returned 404.
+        """
+        project = _generate(tmp_cwd, "workflow")
+        text = (project / "src" / "my_agent" / "agents" / "support.py").read_text(encoding="utf-8")
+        assert '@Stream("/chat")' in text
+        assert "Annotated[ChatRequest, Body()]" in text
+        assert "class ChatRequest(BaseModel)" in text
+
 
 class TestFeatureMCP:
     """``--feature mcp`` emits an ``@MCP`` integrations class + agent.
@@ -67,6 +79,18 @@ class TestFeatureMCP:
         project = _generate(tmp_cwd, "mcp")
         text = (project / ".env.example").read_text(encoding="utf-8")
         assert "# GITHUB_PERSONAL_ACCESS_TOKEN=" in text
+
+    def test_mcp_variant_exposes_stream_chat(self, tmp_cwd: Path) -> None:
+        """AJ-95 regression: the mcp scaffold must mount ``/chat``.
+
+        Before AJ-95 the MCP-flavoured ``@Agent`` had no HTTP surface,
+        so ``ajolopy dev`` started but ``curl /chat`` returned 404.
+        """
+        project = _generate(tmp_cwd, "mcp")
+        text = (project / "src" / "my_agent" / "agents" / "support.py").read_text(encoding="utf-8")
+        assert '@Stream("/chat")' in text
+        assert "Annotated[ChatRequest, Body()]" in text
+        assert "class ChatRequest(BaseModel)" in text
 
 
 class TestEvalKwargPerFeature:
