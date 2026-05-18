@@ -12,8 +12,11 @@ from tests.cli.new.conftest import invoke_new
     ("llm", "model", "env_var"),
     [
         ("anthropic", "claude-opus-4-7", "ANTHROPIC_API_KEY"),
-        ("openai", "gpt-4o", "OPENAI_API_KEY"),
-        ("gemini", "gemini-2.0-flash-exp", "GOOGLE_API_KEY"),
+        # OpenAI + Gemini defaults refreshed in AJ-96 -- the prior
+        # ``gpt-4o`` / ``gemini-2.0-flash-exp`` pair shipped users a
+        # deprecation warning on the very first request.
+        ("openai", "gpt-5", "OPENAI_API_KEY"),
+        ("gemini", "gemini-2.5-flash", "GOOGLE_API_KEY"),
         # Universal defaults to ``ollama:llama3.3`` with no API key
         # required; the documented env var is the ``OLLAMA_BASE_URL``
         # escape hatch (see ``examples/local-ollama/.env.example``).
