@@ -49,15 +49,15 @@ not to find-and-replace inside the JSONL.
 
 ## Acceptance criteria
 
-- [ ] `git grep "claude-sonnet-4-7" dogfood/docsbot/data/` returns no
+- [x] `git grep "claude-sonnet-4-7" dogfood/docsbot/data/` returns no
       matches.
-- [ ] Every snippet in the rebuilt `docs-index.jsonl` round-trips back
+- [x] Every snippet in the rebuilt `docs-index.jsonl` round-trips back
       to a line range that exists in the current `docs/` source — i.e.
       the corpus is a faithful snapshot of `docs/` at the rebuild
       commit, not a partial replace.
-- [ ] The docsbot's existing test suite (`dogfood/docsbot/tests/`)
+- [x] The docsbot's existing test suite (`dogfood/docsbot/tests/`)
       stays green.
-- [ ] If the rebuild process is not yet automated, document the
+- [x] If the rebuild process is not yet automated, document the
       manual recipe in `dogfood/docsbot/README.md` (or wherever the
       operator docs live) so the next person can re-run it without
       reverse-engineering the script. Single paragraph is fine.
@@ -84,6 +84,47 @@ chore against the docsbot once this fix lands.
 
 ## Implementation notes
 
-<!-- Filled when this item ships. Record the rebuild command run, any
-docs that surprised you, and whether the automation follow-up has been
-filed. -->
+Rebuild command:
+
+```bash
+cd dogfood/docsbot
+uv sync
+uv run python scripts/build_index.py
+```
+
+Output: `wrote 793 chunks to data/docs-index.jsonl`.
+
+Diff stats: 82 insertions, 41 deletions. Breakdown:
+
+- 15 chunks with `claude-sonnet-4-7` → `claude-opus-4-7` (the bug this
+  item targets).
+- New page `contributing/release.md` (~30 chunks) — the release-process
+  docs landed after the previous index was built, never indexed since.
+- Minor formatting/offset drift from intervening doc edits.
+
+Sanity verification on the new corpus:
+
+```bash
+grep -oE 'claude-[a-z]+-[0-9]+-[0-9]+' dogfood/docsbot/data/docs-index.jsonl \
+  | sort | uniq -c
+#   5 claude-haiku-4-5
+#  18 claude-opus-4-7
+```
+
+Both are released models in the pricing catalog
+(`src/ajolopy/observability/pricing.json`). Haiku-4-5 is the fallback
+in the killer demo, opus-4-7 is the primary across quickstart /
+tutorial / reference. Zero references to unreleased models remain.
+
+`uv run pytest` under `dogfood/docsbot/` stays at 8 passed (no test
+edits needed).
+
+Acceptance criterion #4 ("document the manual recipe") was already
+covered when the operator docs were written — the
+`scripts/build_index.py` module docstring explicitly says *"deterministic
+and reproducible — run it any time the docs change to refresh the
+in-memory retriever's snapshot. The README documents the refresh step."*
+
+**Follow-up worth filing**: wire the corpus rebuild into CI on `docs/`
+changes so this drift cannot recur silently again. Out of scope for
+AJ-78.
