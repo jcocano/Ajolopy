@@ -90,11 +90,19 @@ _MAX_PROMPT_RETRIES: Final = 3
 # ---------------------------------------------------------------------------
 @dataclass(frozen=True, slots=True)
 class _ProviderDefaults:
-    """Default config emitted into the generated scaffold per provider."""
+    """Default config emitted into the generated scaffold per provider.
+
+    ``fallback`` is the secondary model the scaffolded ``@Agent`` lists
+    via ``fallback=`` -- a same-family cheaper / faster sibling of
+    ``model``. The README "killer demo" pairs ``claude-opus-4-7`` with
+    ``claude-haiku-4-5``; the other providers follow the same pattern
+    (e.g. ``gpt-4o`` -> ``gpt-4o-mini``).
+    """
 
     model: str
     env_var: str
     extra: str
+    fallback: str
 
 
 _PROVIDER_DEFAULTS: dict[str, _ProviderDefaults] = {
@@ -102,27 +110,35 @@ _PROVIDER_DEFAULTS: dict[str, _ProviderDefaults] = {
         model="claude-opus-4-7",
         env_var="ANTHROPIC_API_KEY",
         extra="anthropic",
+        fallback="claude-haiku-4-5",
     ),
     "openai": _ProviderDefaults(
         model="gpt-4o",
         env_var="OPENAI_API_KEY",
         extra="openai",
+        fallback="gpt-4o-mini",
     ),
     "gemini": _ProviderDefaults(
         model="gemini-2.0-flash-exp",
         env_var="GOOGLE_API_KEY",
         extra="gemini",
+        # Sibling Gemini Flash model — same family, slimmer cost profile.
+        fallback="gemini-2.0-flash",
     ),
     # Universal placeholder — the real model + env var are resolved
     # per-prefix by ``_universal_defaults_for`` once the wizard knows
     # which prefix the user picked. The model literal here is the
     # ``--llm universal`` default if no ``--universal-prefix`` /
     # ``--universal-model`` overrides are supplied (i.e. zero-config
-    # local Ollama, no API key required).
+    # local Ollama, no API key required). The fallback mirrors the
+    # primary so the universal scaffold stays runnable with whatever
+    # single endpoint the user is pointing at -- swap to a different
+    # ``"<prefix>:<model>"`` if you want a cross-provider safety net.
     "universal": _ProviderDefaults(
         model="ollama:llama3.3",
         env_var="OLLAMA_BASE_URL",
         extra="universal",
+        fallback="ollama:llama3.3",
     ),
 }
 
@@ -504,7 +520,7 @@ def _prompt_yes_no(
 # ---------------------------------------------------------------------------
 def _build_context(project_name: str, answers: _WizardAnswers) -> dict[str, str]:
     """Return the ``str.format`` substitution map for the template tree."""
-    model, env_var, extra = _resolved_provider_defaults(answers)
+    model, env_var, extra, fallback = _resolved_provider_defaults(answers)
     package_name = project_name.replace("-", "_")
     class_prefix = "".join(part.capitalize() for part in project_name.split("-"))
     return {
@@ -513,6 +529,7 @@ def _build_context(project_name: str, answers: _WizardAnswers) -> dict[str, str]
         "class_prefix": class_prefix,
         "llm_provider": answers.llm,
         "llm_model": model,
+        "llm_fallback": fallback,
         "llm_env_var": env_var,
         "llm_extra": extra,
         "feature": answers.feature,
@@ -527,22 +544,26 @@ def _build_context(project_name: str, answers: _WizardAnswers) -> dict[str, str]
     }
 
 
-def _resolved_provider_defaults(answers: _WizardAnswers) -> tuple[str, str, str]:
-    """Return ``(model, env_var, extra)`` for the resolved LLM choice.
+def _resolved_provider_defaults(answers: _WizardAnswers) -> tuple[str, str, str, str]:
+    """Return ``(model, env_var, extra, fallback)`` for the resolved LLM choice.
 
     For the three single-provider choices (anthropic / openai / gemini)
     this is a straight lookup in :data:`_PROVIDER_DEFAULTS`. For
     ``"universal"`` the model is the ``"<prefix>:<model>"`` shape the
     universal provider expects, and the env var is the prefix's API key
     env (or ``OLLAMA_BASE_URL`` for the no-API-key local Ollama case).
+    The fallback for ``universal`` mirrors the primary so the scaffold
+    keeps a runnable ``fallback=`` string for the user's single endpoint
+    (they can swap it for a different ``"<prefix>:<model>"`` later).
     """
     provider = _PROVIDER_DEFAULTS[answers.llm]
     if answers.llm != "universal":
-        return provider.model, provider.env_var, provider.extra
+        return provider.model, provider.env_var, provider.extra, provider.fallback
     prefix = answers.universal_prefix or "ollama"
     prefix_defaults = _UNIVERSAL_PREFIX_DEFAULTS[prefix]
     model_suffix = answers.universal_model or prefix_defaults.model
-    return f"{prefix}:{model_suffix}", prefix_defaults.env_var, provider.extra
+    model_string = f"{prefix}:{model_suffix}"
+    return model_string, prefix_defaults.env_var, provider.extra, model_string
 
 
 def _extra_env_lines(answers: _WizardAnswers) -> str:
