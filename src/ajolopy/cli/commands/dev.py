@@ -32,16 +32,17 @@ The handler:
    captured by tests using :class:`io.StringIO`).
 
 The orchestration is split into pure helpers (``_load_dotenv``,
-``_resolve_target``, ``_collect_watch_dirs``, ``_build_config``,
-``_render_banner``) so the test suite can assert against the produced
-:class:`uvicorn.Config` without booting a real socket. The blocking
-``server.run()`` call is isolated in :func:`cmd_dev`; the programmatic
-smoke test exercises :meth:`uvicorn.Server.serve` directly so it can
-interrupt cleanly.
+``_resolve_target``, ``_collect_watch_dirs``, ``_is_factory_target``,
+``_build_config``, ``_render_banner``) so the test suite can assert
+against the produced :class:`uvicorn.Config` without booting a real
+socket. The blocking ``server.run()`` call is isolated in
+:func:`cmd_dev`; the programmatic smoke test exercises
+:meth:`uvicorn.Server.serve` directly so it can interrupt cleanly.
 """
 
 import argparse  # noqa: TC003 -- argparse.Namespace is used at runtime by argparse itself
 import importlib
+import inspect
 import logging
 import os
 import sys
@@ -183,6 +184,8 @@ def _command(
         if cwd_str not in watch_dirs:
             watch_dirs.append(cwd_str)
 
+    is_factory = _is_factory_target(module_name=module_name, var_name=var_name)
+
     config = _build_config(
         module=module_name,
         var=var_name,
@@ -191,6 +194,7 @@ def _command(
         reload=reload_enabled,
         reload_dirs=watch_dirs,
         include_env=include_env,
+        factory=is_factory,
     )
 
     _render_banner(
@@ -490,11 +494,18 @@ def _build_config(
     reload: bool,
     reload_dirs: list[str],
     include_env: bool,
+    factory: bool = False,
 ) -> uvicorn.Config:
     """Build the :class:`uvicorn.Config` driving the dev server.
 
     Imported lazily so ``ajolopy --help`` does not pay uvicorn's
     import cost on every invocation.
+
+    ``factory=True`` tells uvicorn the target is a zero-arg callable
+    (coroutine or sync) that returns the ASGI app, suppressing the
+    "ASGI app factory detected" boot warning. Detection happens in
+    :func:`_is_factory_target` against the already-imported module so
+    pre-built ASGI apps keep ``factory=False``.
     """
     import uvicorn
 
@@ -503,6 +514,7 @@ def _build_config(
         "host": host,
         "port": port,
         "reload": reload,
+        "factory": factory,
     }
     if reload:
         kwargs["reload_dirs"] = list(reload_dirs)
@@ -512,6 +524,77 @@ def _build_config(
             # would bounce the server.
             kwargs["reload_includes"] = ["**/.env", "*.py"]
     return uvicorn.Config(**kwargs)
+
+
+def _is_factory_target(*, module_name: str, var_name: str) -> bool:
+    """Return ``True`` when ``module_name:var_name`` is a zero-arg factory.
+
+    Both :func:`_resolve_explicit` and :func:`_resolve_autodetect` have
+    already imported the target module by the time this runs, so the
+    lookup here is a cached :data:`sys.modules` read followed by an
+    attribute access — no second import cost.
+
+    Uvicorn treats any callable invoked with no arguments that returns
+    the app as a "factory" and emits the warning we are silencing. The
+    standard signal — and what uvicorn itself uses internally — combines
+    :func:`inspect.iscoroutinefunction` (matches ``async def app(): ...``,
+    the scaffold + every example) with an arity check, so an ASGI3
+    callable like ``async def app(scope, receive, send)`` is NOT
+    misclassified as a factory.
+
+    Detection rules:
+
+    - Plain ASGI app (``app = SomeAsgi()`` or ``app = object()``) →
+      not a function/coroutine → ``False``.
+    - ``async def app(scope, receive, send)`` (ASGI3 callable) → callable
+      with required positional args → ``False``.
+    - ``async def app()`` (the scaffolded factory) → zero-arg coroutine
+      function → ``True``.
+    - Sync ``def app()`` returning an ASGI app → zero-arg plain function
+      → ``True`` (matches uvicorn's own "factory" definition).
+    """
+    module = sys.modules.get(module_name)
+    if module is None:
+        # Defensive: caller already resolved the target. If the cache
+        # was evicted between resolution and config build, treat it as
+        # a plain ASGI app so we keep today's behaviour rather than
+        # asserting factory mode.
+        return False
+    target = getattr(module, var_name, None)
+    if target is None:
+        return False
+    if not (inspect.iscoroutinefunction(target) or inspect.isfunction(target)):
+        # Class instances, builtins, plain objects, etc. — not factories
+        # for our purposes; uvicorn will treat them as already-loaded
+        # ASGI apps and the warning will not fire.
+        return False
+    try:
+        signature = inspect.signature(target)
+    except TypeError, ValueError:
+        # Builtin / C-extension callables may refuse signature
+        # introspection; treat them as ASGI apps rather than guessing.
+        return False
+    return not _has_required_positional_args(signature)
+
+
+def _has_required_positional_args(signature: inspect.Signature) -> bool:
+    """Return ``True`` if any parameter must be supplied positionally.
+
+    A zero-arg-callable factory has *no* required parameters. The ASGI3
+    callable signature ``(scope, receive, send)`` has three, so this
+    helper distinguishes the two cleanly. ``*args`` / ``**kwargs`` are
+    permitted on a factory (they have no required slot).
+    """
+    for param in signature.parameters.values():
+        if param.kind in (
+            inspect.Parameter.VAR_POSITIONAL,
+            inspect.Parameter.VAR_KEYWORD,
+            inspect.Parameter.KEYWORD_ONLY,
+        ):
+            continue
+        if param.default is inspect.Parameter.empty:
+            return True
+    return False
 
 
 def _make_server(config: uvicorn.Config) -> uvicorn.Server:
