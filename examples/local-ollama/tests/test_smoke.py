@@ -10,7 +10,11 @@ regressions when the upstream framework moves.
 import asyncio
 from typing import Any, cast
 
+import pytest
 from local_ollama.agents.reviewer import CodeReviewer, ReviewRequest
+from local_ollama.app_module import AppModule
+
+from ajolopy import AjolopyFactory
 
 
 def test_reviewer_agent_is_decorated() -> None:
@@ -65,6 +69,27 @@ def test_stream_route_is_registered() -> None:
     assert metadata is not None, "expected @Stream metadata on CodeReviewer.respond"
     assert metadata.path == "/chat"
     assert metadata.method == "POST"
+
+
+@pytest.mark.asyncio
+async def test_app_boots_and_mounts_chat_route() -> None:
+    """AJ-98 regression: ``AjolopyFactory.create`` must boot + mount ``/chat``.
+
+    Drives the agent's ``@Stream("/chat")`` handler — whose
+    ``AsyncGenerator`` return annotation is the one that previously
+    crashed under PEP 649 — through the framework's ``mount_streams``
+    path. The assertion is that the route lands on ``app.http``;
+    without the AJ-98 fix the factory raises ``NameError`` before we
+    ever get here.
+    """
+    app = await AjolopyFactory.create(AppModule)
+    try:
+        paths = {getattr(route, "path", "") for route in app.http.routes}
+        assert "/chat" in paths, (
+            f"Expected /chat mounted on local-ollama app; got {sorted(p for p in paths if p)}"
+        )
+    finally:
+        await app.aclose()
 
 
 def test_lint_function_accepts_valid_code() -> None:

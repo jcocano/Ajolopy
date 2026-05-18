@@ -16,6 +16,7 @@ from contextual_rag.agents.researcher import (
     ResearcherAgent,
     get_retriever,
 )
+from contextual_rag.app_module import AppModule
 from contextual_rag.retriever import (
     KEYWORD_WEIGHT,
     SEMANTIC_WEIGHT,
@@ -23,6 +24,7 @@ from contextual_rag.retriever import (
 )
 from contextual_rag.scripts_runtime import embedding_hash
 
+from ajolopy import AjolopyFactory
 from ajolopy.rag import Retriever
 
 
@@ -96,6 +98,27 @@ def test_stream_route_is_registered() -> None:
     assert metadata is not None, "expected @Stream metadata on ResearcherAgent.respond"
     assert metadata.path == "/chat"
     assert metadata.method == "POST"
+
+
+@pytest.mark.asyncio
+async def test_app_boots_and_mounts_chat_route() -> None:
+    """AJ-98 regression: ``AjolopyFactory.create`` must boot + mount ``/chat``.
+
+    Drives the agent's ``@Stream("/chat")`` handler — whose
+    ``AsyncGenerator`` return annotation is the one that previously
+    crashed under PEP 649 — through the framework's ``mount_streams``
+    path. The assertion is that the route lands on ``app.http``;
+    without the AJ-98 fix the factory raises ``NameError`` before we
+    ever get here.
+    """
+    app = await AjolopyFactory.create(AppModule)
+    try:
+        paths = {getattr(route, "path", "") for route in app.http.routes}
+        assert "/chat" in paths, (
+            f"Expected /chat mounted on contextual-rag app; got {sorted(p for p in paths if p)}"
+        )
+    finally:
+        await app.aclose()
 
 
 def test_retriever_round_trip() -> None:

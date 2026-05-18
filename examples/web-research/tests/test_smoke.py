@@ -14,12 +14,15 @@ from web_research.agents.researcher import (
     Researcher,
     ResearchRequest,
 )
+from web_research.app_module import AppModule
 from web_research.tavily import (
     SearchResult,
     TavilyClient,
     TavilyConfigError,
     get_client,
 )
+
+from ajolopy import AjolopyFactory
 
 
 def test_researcher_is_decorated() -> None:
@@ -52,6 +55,27 @@ def test_stream_route_is_registered() -> None:
     assert metadata is not None, "expected @Stream metadata on Researcher.respond"
     assert metadata.path == "/chat"
     assert metadata.method == "POST"
+
+
+@pytest.mark.asyncio
+async def test_app_boots_and_mounts_chat_route() -> None:
+    """AJ-98 regression: ``AjolopyFactory.create`` must boot + mount ``/chat``.
+
+    Drives the agent's ``@Stream("/chat")`` handler — whose
+    ``AsyncGenerator`` return annotation is the one that previously
+    crashed under PEP 649 — through the framework's ``mount_streams``
+    path. The assertion is that the route lands on ``app.http``;
+    without the AJ-98 fix the factory raises ``NameError`` before we
+    ever get here.
+    """
+    app = await AjolopyFactory.create(AppModule)
+    try:
+        paths = {getattr(route, "path", "") for route in app.http.routes}
+        assert "/chat" in paths, (
+            f"Expected /chat mounted on web-research app; got {sorted(p for p in paths if p)}"
+        )
+    finally:
+        await app.aclose()
 
 
 def test_tavily_client_from_env_raises_on_missing_key(monkeypatch: pytest.MonkeyPatch) -> None:

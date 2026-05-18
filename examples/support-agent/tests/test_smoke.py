@@ -2,10 +2,16 @@
 
 The test deliberately does NOT call any LLM provider, does NOT
 ``monkeypatch`` the SDK, and does NOT spin up the HTTP server. It only
-asserts the decoration-time metadata is in place — enough to catch
-import-time regressions when the upstream framework moves.
+asserts the decoration-time metadata is in place plus a boot-level
+regression: ``AjolopyFactory.create(AppModule)`` succeeds and mounts
+``/chat``. The latter catches the AJ-98 class of failure — a
+``@Stream`` handler whose ``AsyncGenerator`` return annotation lives
+under ``if TYPE_CHECKING:`` blows up at boot via
+``NameError: name 'AsyncGenerator' is not defined`` once PEP 649 +
+the framework's ``mount_streams`` evaluate the forward ref.
 """
 
+import pytest
 from support_agent.agents.support import ChatRequest, Support
 from support_agent.agents.team import (
     Billing,
@@ -14,6 +20,8 @@ from support_agent.agents.team import (
     Technical,
     Triage,
 )
+
+from ajolopy import AjolopyFactory
 
 
 def test_support_agent_is_decorated() -> None:
@@ -56,3 +64,52 @@ def test_workflow_is_decorated() -> None:
     assert hasattr(SupportTeam, "_workflow_runtime")
     assert callable(getattr(SupportTeam, "run", None))
     assert callable(getattr(SupportTeam, "stream", None))
+
+
+@pytest.mark.asyncio
+async def test_team_mode_app_mounts_chat_route(monkeypatch: pytest.MonkeyPatch) -> None:
+    """AJ-98 regression: ``AjolopyFactory.create`` must boot + mount ``/chat``.
+
+    Forces ``SUPPORT_AGENT_MODE=team`` (the default) so the workflow's
+    ``@Stream("/chat")`` handler — whose ``AsyncGenerator`` return
+    annotation is the one that previously crashed under PEP 649 — goes
+    through the framework's ``mount_streams`` path. The assertion is
+    that the route lands on ``app.http``; without the AJ-98 fix the
+    factory raises ``NameError`` before we ever get here.
+    """
+    monkeypatch.setenv("SUPPORT_AGENT_MODE", "team")
+    # Re-import the module under the new env to pick up the team module.
+    import importlib
+
+    from support_agent import app_module as app_module_pkg
+
+    app_module_pkg = importlib.reload(app_module_pkg)
+
+    app = await AjolopyFactory.create(app_module_pkg.AppModule)
+    try:
+        paths = {getattr(route, "path", "") for route in app.http.routes}
+        assert "/chat" in paths, (
+            f"Expected /chat mounted on team-mode app; got {sorted(p for p in paths if p)}"
+        )
+    finally:
+        await app.aclose()
+
+
+@pytest.mark.asyncio
+async def test_single_mode_app_mounts_chat_route(monkeypatch: pytest.MonkeyPatch) -> None:
+    """AJ-98 regression: single-agent mode also boots and mounts ``/chat``."""
+    monkeypatch.setenv("SUPPORT_AGENT_MODE", "single")
+    import importlib
+
+    from support_agent import app_module as app_module_pkg
+
+    app_module_pkg = importlib.reload(app_module_pkg)
+
+    app = await AjolopyFactory.create(app_module_pkg.AppModule)
+    try:
+        paths = {getattr(route, "path", "") for route in app.http.routes}
+        assert "/chat" in paths, (
+            f"Expected /chat mounted on single-mode app; got {sorted(p for p in paths if p)}"
+        )
+    finally:
+        await app.aclose()
