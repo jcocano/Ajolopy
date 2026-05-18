@@ -1,5 +1,6 @@
 """Ajolopy — the Python framework for building AI-native applications in production."""
 
+from . import providers as _providers  # noqa: F401  # pyright: ignore[reportUnusedImport]
 from .agent import Agent, Tool
 from .di import Injectable
 from .eval import Eval, Metric
@@ -13,7 +14,7 @@ from .routes import Controller, Delete, Get, Patch, Post, Put
 from .stream import Stream
 from .workflow import Workflow
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 __all__ = [
     "MCP",
