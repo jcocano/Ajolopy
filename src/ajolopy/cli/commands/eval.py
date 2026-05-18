@@ -325,6 +325,7 @@ def _discover(targets: list[str]) -> list[type[Any]]:
     user-facing error so the caller can wrap them in a stable CLI
     message.
     """
+    _ensure_cwd_on_sys_path()
     seen: dict[int, None] = {}
     ordered: list[type[Any]] = []
     for target in targets:
@@ -334,6 +335,29 @@ def _discover(targets: list[str]) -> list[type[Any]]:
             seen[id(cls)] = None
             ordered.append(cls)
     return ordered
+
+
+def _ensure_cwd_on_sys_path() -> None:
+    """Prepend the cwd to ``sys.path`` so user packages resolve.
+
+    When the CLI is invoked from a project root via the
+    ``ajolopy`` console-script entry point, ``sys.path`` does not
+    include the cwd by default (unlike ``python -m`` invocations),
+    so ``importlib.import_module("evals")`` fails to find a local
+    ``evals/`` package. Match the behaviour of ``pytest`` / etc.
+    by inserting the empty string at position 0 — Python resolves
+    that lazily to the current working directory at import time.
+
+    The insert is idempotent: if ``""`` (or the resolved cwd) is
+    already on ``sys.path`` we leave the list untouched so repeated
+    calls in the same process (tests, REPL) don't stack duplicates.
+    """
+    if "" in sys.path:
+        return
+    cwd = str(Path.cwd())
+    if cwd in sys.path:
+        return
+    sys.path.insert(0, "")
 
 
 def _resolve_target(target: str) -> list[type[Any]]:
