@@ -6,6 +6,12 @@
 FROM python:3.14-slim AS deps
 WORKDIR /app
 
+# Put uv's project venv on PATH so ``uvicorn`` (installed there by
+# ``uv sync``) resolves directly from the CMD without ``uv run`` wrapping
+# or ``.venv/bin/`` prefixes. Applies to every stage that inherits FROM
+# ``deps``.
+ENV PATH="/app/.venv/bin:${PATH}"
+
 # Install uv (the fastest Python package manager).
 RUN pip install --no-cache-dir uv
 
@@ -40,6 +46,14 @@ FROM deps AS production
 
 COPY . .
 
+# Re-sync after copying the docsbot source so the package itself
+# (not just its dependencies) lands in the venv. The first ``uv sync``
+# in the deps stage only had pyproject.toml + uv.lock available — no
+# ``src/docsbot/`` to install — so the venv was deps-only. Without this
+# second sync, ``uvicorn docsbot.main:app`` fails at boot with
+# ``ModuleNotFoundError: No module named 'docsbot'``.
+RUN uv sync --no-dev --no-sources
+
 # Non-root user (required by k8s PSA/PSP and a general best practice).
 RUN useradd -m appuser && chown -R appuser /app
 USER appuser
@@ -49,4 +63,9 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:3000/health || exit 1
 
-CMD ["uvicorn", "docsbot.main:app", "--host", "0.0.0.0", "--port", "3000", "--workers", "4", "--no-access-log"]
+# Single worker — the fly machine is 256MB and each uvicorn worker
+# eagerly imports the four built-in LLM SDKs (anthropic/openai/gemini/
+# universal-openai per AJ-80), pushing per-worker RSS to ~200-250MB.
+# Four workers would OOM-kill silently on boot. Single worker fits and
+# the docsbot's QPS does not need horizontal concurrency in-process.
+CMD ["uvicorn", "docsbot.main:app", "--host", "0.0.0.0", "--port", "3000", "--workers", "1", "--no-access-log"]
