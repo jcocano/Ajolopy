@@ -4,7 +4,11 @@ version = "0.0.1"
 description = "Ajolopy's own docs bot — dogfood app #1 (AJ-54)."
 requires-python = ">=3.14"
 dependencies = [
-    "ajolopy",
+    # >=0.1.5 — AJ-87 fix that mounts @Stream on @Agent classes. Older
+    # versions silently skip the /chat route under bare uvicorn (the
+    # production path), so any docker build pulling pre-0.1.5 ajolopy
+    # from PyPI deploys a 404-on-/chat bot.
+    "ajolopy>=0.1.5",
     "pydantic>=2.13.4",
 ]
 

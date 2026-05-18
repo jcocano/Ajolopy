@@ -12,18 +12,23 @@ Drift note — observability:
     vars (``OTEL_EXPORTER_OTLP_ENDPOINT``, ``OTEL_SERVICE_NAME``, …).
 """
 
+# NOTE: ``AsyncGenerator`` MUST be imported at runtime (not under
+# ``if TYPE_CHECKING:``). Python 3.14 + PEP 649 defers annotation
+# evaluation until something calls ``get_annotations()`` /
+# ``inspect.signature()``; the framework's ``@Stream`` mount path does
+# exactly that on the ``respond`` handler below to wire up the route.
+# If this symbol is only visible to static analysers, the mount step
+# explodes with ``NameError: name 'AsyncGenerator' is not defined`` at
+# server boot — a regression that first surfaced post-AJ-87.
+from collections.abc import AsyncGenerator  # noqa: TC003
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from pydantic import BaseModel
 
 from ajolopy import Agent, Stream, Tool
 from ajolopy.http import Body
 from docsbot.retriever import InMemoryDocsRetriever
-
-if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
-
 
 # ---------------------------------------------------------------------------
 # Retriever singleton.

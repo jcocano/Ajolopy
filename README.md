@@ -191,11 +191,12 @@ that would require an eleventh decorator goes to v0.2+.
   `docker-compose.yml` (app + Redis) and a 5-row eval suite whose
   `memory_isolation` metric catches cross-session leaks.
 - **[`dogfood/docsbot/`](./dogfood/docsbot/)** — Ajolopy's own docs bot,
-  the first dogfood app. Answers questions about the framework using an
-  in-memory `Retriever` subclass over the project's own `docs/` tree.
-  Exercises `@Agent` + `@Tool` + `@Stream` + `@Eval` end-to-end and ships
-  pre-generated `Dockerfile.prod` + `fly.toml` so it can be deployed in
-  one `fly deploy`.
+  the first dogfood app. **Live at <https://ajolopy-docsbot.fly.dev>.**
+  Answers questions about the framework using an in-memory `Retriever`
+  subclass over the project's own `docs/` tree. Exercises `@Agent` +
+  `@Tool` + `@Stream` + `@Eval` + cross-provider fallback end-to-end
+  and ships pre-generated `Dockerfile.prod` + `fly.toml` so it can be
+  deployed in one `fly deploy`.
 - **[`examples/contextual-rag/`](./examples/contextual-rag/)** —
   production-grade RAG agent with contextual chunking, hybrid
   retrieval, and citation-enforcing evals over a synthetic handbook.
