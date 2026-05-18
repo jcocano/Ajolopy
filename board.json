@@ -2406,7 +2406,7 @@
       "slug": "scaffold-baseconfig",
       "type": "fix",
       "title": "Scaffold should emit BaseConfig subclass + env vars; doctor + env:show fail today on every fresh project",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "p0",
       "milestone": null,
       "labels": [],
