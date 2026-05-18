@@ -2412,7 +2412,7 @@
       "labels": [],
       "owner": "jesus.cocano@gmail.com",
       "branch": "fix/aj-94-scaffold-baseconfig",
-      "pr": null,
+      "pr": "https://github.com/jcocano/Ajolopy/pull/161",
       "spec": "specs/scaffold-baseconfig.md",
       "blocks": [],
       "blocked_by": [],
