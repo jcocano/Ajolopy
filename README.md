@@ -173,7 +173,7 @@ that would require an eleventh decorator goes to v0.2+.
 - **[`examples/oncall-agent/`](./examples/oncall-agent/)** — focused
   demo of the `@MCP` primitive against a real external server.
   Spawns the canonical
-  [`@modelcontextprotocol/server-github`](https://github.com/modelcontextprotocol/servers/tree/main/src/github)
+  [`github-mcp-server`](https://github.com/github/github-mcp-server)
   over stdio so the on-call agent can search issues, PRs, and commits
   while triaging incidents. Pairs a local `@Tool` with the MCP tools
   to show how Ajolopy resolves name collisions in favour of local code.
