@@ -2,7 +2,16 @@
 
 The handler:
 
-1. **Resolves** the entry point.
+1. **Auto-loads ``.env``** from cwd (AJ-88). Variables already set in
+   the shell environment win, matching the precedence rule documented
+   in the ``ajolopy new`` wizard's "Next steps" output. Without this
+   step, providers like Anthropic / OpenAI / Gemini that read
+   ``ANTHROPIC_API_KEY`` / ``OPENAI_API_KEY`` / ``GOOGLE_API_KEY``
+   directly via :func:`os.environ.get` would crash at user-module
+   import time, *before* the framework's own ``ConfigService`` got a
+   chance to load ``.env``.
+
+2. **Resolves** the entry point.
 
    - ``--app <module>:<var>`` overrides everything. Both halves are
      stripped of whitespace, the module is imported, and ``var`` is
@@ -11,32 +20,36 @@ The handler:
      convention runs: ``src/<package>/main.py`` must exist with an
      ``app`` attribute, with EXACTLY ONE package under ``src/``.
 
-2. **Builds a** :class:`uvicorn.Config` with the resolved target and
+3. **Builds a** :class:`uvicorn.Config` with the resolved target and
    the requested host / port / reload directories. ``.env`` watching
    is layered on top by adding the cwd to ``reload_dirs`` and
    filtering with ``reload_includes=["**/.env", "*.py"]`` so unrelated
    sibling files do not trigger a reload.
 
-3. **Prints a banner** describing the resolved target + watched paths
+4. **Prints a banner** describing the resolved target + watched paths
    before handing off to :meth:`uvicorn.Server.run`. The banner skips
    emoji + colors on a non-TTY stdout (e.g. when piped to a file or
    captured by tests using :class:`io.StringIO`).
 
-The orchestration is split into pure helpers (``_resolve_target``,
-``_collect_watch_dirs``, ``_build_config``, ``_render_banner``) so
-the test suite can assert against the produced :class:`uvicorn.Config`
-without booting a real socket. The blocking ``server.run()`` call is
-isolated in :func:`cmd_dev`; the programmatic smoke test exercises
-:meth:`uvicorn.Server.serve` directly so it can interrupt cleanly.
+The orchestration is split into pure helpers (``_load_dotenv``,
+``_resolve_target``, ``_collect_watch_dirs``, ``_build_config``,
+``_render_banner``) so the test suite can assert against the produced
+:class:`uvicorn.Config` without booting a real socket. The blocking
+``server.run()`` call is isolated in :func:`cmd_dev`; the programmatic
+smoke test exercises :meth:`uvicorn.Server.serve` directly so it can
+interrupt cleanly.
 """
 
 import argparse  # noqa: TC003 -- argparse.Namespace is used at runtime by argparse itself
 import importlib
+import logging
+import os
 import sys
 from pathlib import Path
 from typing import IO, TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
+    from collections.abc import MutableMapping
     from types import ModuleType
 
     import uvicorn
@@ -48,6 +61,9 @@ __all__ = [
     "cmd_dev",
     "register",
 ]
+
+
+_logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -141,6 +157,13 @@ def _command(
     cwd: Path,
 ) -> int:
     """Resolve, configure, render the banner, and run the server."""
+    # AJ-88 — load ``.env`` BEFORE importing the user module so providers
+    # that read API keys directly via ``os.environ`` (Anthropic, OpenAI,
+    # Gemini) see them at construction time. Must happen before
+    # ``_resolve_target`` since autodetect imports ``<pkg>.main`` which in
+    # turn calls ``AjolopyFactory.create(...)``.
+    _load_dotenv(cwd=cwd, environ=os.environ)
+
     resolution = _resolve_target(args, cwd=cwd, stderr=stderr)
     if isinstance(resolution, int):
         return resolution
@@ -183,6 +206,75 @@ def _command(
     server = _make_server(config)
     server.run()
     return EXIT_OK
+
+
+# ---------------------------------------------------------------------------
+# .env auto-loading (AJ-88)
+# ---------------------------------------------------------------------------
+
+
+def _load_dotenv(*, cwd: Path, environ: MutableMapping[str, str]) -> bool:
+    """Load ``cwd/.env`` into ``environ`` without clobbering existing keys.
+
+    The contract:
+
+    - Only ``cwd/.env`` is read (no parent-directory walk). This matches
+      what ``ajolopy new`` documents in its "Next steps" block and what
+      :class:`ajolopy.config.BaseConfig` loads internally via
+      ``pydantic-settings``.
+    - Shell-exported variables ALWAYS win. If ``KEY`` is already in
+      ``environ``, the ``.env`` value is ignored. The standard precedence
+      is ``shell > .env`` — exactly how ``pydantic-settings`` and
+      ``docker compose`` behave.
+    - Returns ``True`` when ``.env`` existed and was processed (even if
+      every key was skipped because the shell already had them). Returns
+      ``False`` when no ``.env`` file was present.
+    - Parsing is delegated to :func:`dotenv.dotenv_values`. ``python-dotenv``
+      is a hard transitive dependency of ``pydantic-settings`` (a direct
+      framework dep), so importing it costs nothing extra and keeps the
+      parse semantics consistent with what the framework's own
+      ``ConfigService`` uses at bootstrap.
+
+    Args:
+        cwd: The directory to look for ``.env`` in. The dev command
+            passes :func:`Path.cwd`; tests pass a ``tmp_path``.
+        environ: The mutable mapping to populate. Production passes
+            :data:`os.environ`; tests pass a plain ``dict[str, str]`` so
+            the process env stays untouched.
+
+    Returns:
+        ``True`` if ``cwd/.env`` exists, ``False`` otherwise.
+    """
+    env_path = cwd / ".env"
+    if not env_path.is_file():
+        _logger.debug("ajolopy dev: no .env file at %s; continuing.", env_path)
+        return False
+
+    # Lazy import: keeps ``ajolopy --help`` snappy and isolates the
+    # dotenv parser dep behind the actual code path that needs it.
+    from dotenv import dotenv_values
+
+    loaded = dotenv_values(env_path)
+    applied = 0
+    for key, value in loaded.items():
+        if value is None:
+            # dotenv emits ``None`` for bare ``KEY=`` (no value) — skip
+            # so we never clobber a shell-exported value with empty
+            # string by accident.
+            continue
+        if key in environ:
+            # Shell wins. This is the documented precedence and matches
+            # ``pydantic-settings`` + ``docker compose``.
+            continue
+        environ[key] = value
+        applied += 1
+    _logger.debug(
+        "ajolopy dev: loaded %s from %s (%d new vars; shell overrides preserved).",
+        env_path.name,
+        env_path,
+        applied,
+    )
+    return True
 
 
 # ---------------------------------------------------------------------------
