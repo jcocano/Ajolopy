@@ -2,7 +2,7 @@
   "$schema": "./.board-schema.json",
   "version": 1,
   "updated_at": "2026-05-18",
-  "next_id": 79,
+  "next_id": 80,
   "items": [
     {
       "id": "AJ-1",
@@ -2073,6 +2073,29 @@
       "created_at": "2026-05-18",
       "updated_at": "2026-05-18",
       "closed_at": "2026-05-18"
+    },
+    {
+      "id": "AJ-79",
+      "slug": "e2e-smoke-v0-1-3-pre-launch",
+      "type": "chore",
+      "title": "E2E functional smoke of v0.1.3 from PyPI before HN launch",
+      "status": "ready",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "launch-readiness",
+        "qa"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": "specs/e2e-smoke-v0-1-3-pre-launch.md",
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-18",
+      "updated_at": "2026-05-18",
+      "closed_at": null
     }
   ]
 }
