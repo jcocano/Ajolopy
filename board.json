@@ -2268,20 +2268,23 @@
       "slug": "dev-autoload-dotenv",
       "type": "fix",
       "title": "ajolopy dev should auto-load .env before importing user module (Brief v4.0 requirement)",
-      "status": "backlog",
+      "status": "done",
       "priority": "p0",
-      "milestone": null,
-      "labels": [],
-      "owner": null,
-      "branch": null,
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "launch-readiness"
+      ],
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "fix/aj-88-dev-autoload-dotenv",
       "pr": null,
-      "spec": null,
+      "spec": "specs/dev-autoload-dotenv.md",
       "blocks": [],
       "blocked_by": [],
       "estimate": null,
       "created_at": "2026-05-18",
       "updated_at": "2026-05-18",
-      "closed_at": null
+      "closed_at": "2026-05-18"
     },
     {
       "id": "AJ-89",
@@ -2311,20 +2314,23 @@
       "slug": "scaffold-matches-killer-demo",
       "type": "fix",
       "title": "ajolopy new/generate scaffolds should match the README killer demo verbatim",
-      "status": "backlog",
+      "status": "done",
       "priority": "p0",
-      "milestone": null,
-      "labels": [],
-      "owner": null,
-      "branch": null,
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "launch-readiness"
+      ],
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "fix/aj-90-scaffold-matches-killer-demo",
       "pr": null,
-      "spec": null,
+      "spec": "specs/scaffold-matches-killer-demo.md",
       "blocks": [],
       "blocked_by": [],
       "estimate": null,
       "created_at": "2026-05-18",
       "updated_at": "2026-05-18",
-      "closed_at": null
+      "closed_at": "2026-05-18"
     },
     {
       "id": "AJ-91",
