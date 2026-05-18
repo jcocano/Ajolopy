@@ -19,11 +19,14 @@ element before argparse sees it so both forms invoke the same handler.
 """
 
 import argparse
+import os
 import sys
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ajolopy import __version__
 
+from ._dotenv import load_dotenv
 from .commands import register_subcommands
 
 if TYPE_CHECKING:
@@ -87,6 +90,12 @@ def main(argv: list[str] | None = None) -> int:
     effective = _rewrite_colon_aliases(effective)
     parser = build_parser()
     args = parser.parse_args(effective)
+    # AJ-93 — load ``cwd/.env`` BEFORE the subcommand handler runs so
+    # every CLI subcommand that imports user code (``dev``, ``eval``,
+    # ``doctor``, ``env:*``, ``generate``) sees the same env vars a
+    # production server would. Idempotent — safe even if a specific
+    # subcommand also calls ``load_dotenv`` internally.
+    load_dotenv(cwd=Path.cwd(), environ=os.environ)
     func: Callable[[argparse.Namespace], int] = args.func
     return func(args)
 
