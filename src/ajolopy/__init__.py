@@ -13,7 +13,7 @@ from .routes import Controller, Delete, Get, Patch, Post, Put
 from .stream import Stream
 from .workflow import Workflow
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 __all__ = [
     "MCP",
