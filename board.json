@@ -2288,20 +2288,23 @@
       "slug": "eval-cwd-on-sys-path",
       "type": "fix",
       "title": "ajolopy eval should add cwd to sys.path before importing target (no PYTHONPATH fiddling)",
-      "status": "backlog",
+      "status": "done",
       "priority": "p0",
-      "milestone": null,
-      "labels": [],
-      "owner": null,
-      "branch": null,
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "launch-readiness"
+      ],
+      "owner": "jesus.cocano@gmail.com",
+      "branch": "fix/aj-89-eval-cwd-on-sys-path",
       "pr": null,
-      "spec": null,
+      "spec": "specs/eval-cwd-on-sys-path.md",
       "blocks": [],
       "blocked_by": [],
       "estimate": null,
       "created_at": "2026-05-18",
       "updated_at": "2026-05-18",
-      "closed_at": null
+      "closed_at": "2026-05-18"
     },
     {
       "id": "AJ-90",
