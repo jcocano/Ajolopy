@@ -218,12 +218,16 @@ class AjolopyFactory:
             except Exception as exc:
                 raise FactoryStartupError("mount_routes", f"{type(exc).__name__}: {exc}") from exc
 
-        # 7. Mount streams — controllers may declare @Stream methods
-        #    alongside their @Get/@Post handlers. mount_streams refuses
-        #    classes with no @Stream methods (would shadow a real bug),
-        #    so the factory filters to controllers that *do* have at
-        #    least one before forwarding the list.
-        stream_carriers = [cls for cls in compiled.controllers if any(iter_stream_methods(cls))]
+        # 7. Mount streams — @Stream is valid on @Controller, @Agent, and
+        #    @Workflow classes (AJ-87). The scan must cover the union of
+        #    all three because compile_module keeps them in separate
+        #    tuples. Filter to classes that actually declare at least
+        #    one @Stream method so mount_streams does not refuse them.
+        stream_carriers = [
+            cls
+            for cls in (*compiled.controllers, *compiled.agents, *compiled.workflows)
+            if any(iter_stream_methods(cls))
+        ]
         if stream_carriers:
             try:
                 mount_streams(http_app, stream_carriers)

@@ -1,5 +1,6 @@
 """Ajolopy — the Python framework for building AI-native applications in production."""
 
+from . import providers as _providers  # noqa: F401  # pyright: ignore[reportUnusedImport]
 from .agent import Agent, Tool
 from .di import Injectable
 from .eval import Eval, Metric
