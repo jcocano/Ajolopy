@@ -1,8 +1,8 @@
 {
   "$schema": "./.board-schema.json",
   "version": 1,
-  "updated_at": "2026-05-18",
-  "next_id": 100,
+  "updated_at": "2026-05-21",
+  "next_id": 101,
   "items": [
     {
       "id": "AJ-1",
@@ -2520,6 +2520,29 @@
       "created_at": "2026-05-18",
       "updated_at": "2026-05-18",
       "closed_at": "2026-05-18"
+    },
+    {
+      "id": "AJ-100",
+      "slug": "scaffold-feature-module-layout",
+      "type": "refactor",
+      "title": "Restructure new/generate scaffolds to feature-per-@Module layout",
+      "status": "ready",
+      "priority": "p0",
+      "milestone": "v0.1",
+      "labels": [
+        "cli",
+        "launch-readiness"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": "specs/scaffold-feature-module-layout.md",
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-21",
+      "updated_at": "2026-05-21",
+      "closed_at": null
     }
   ]
 }
