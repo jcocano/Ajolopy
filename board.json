@@ -1,8 +1,8 @@
 {
   "$schema": "./.board-schema.json",
   "version": 1,
-  "updated_at": "2026-05-18",
-  "next_id": 100,
+  "updated_at": "2026-05-22",
+  "next_id": 117,
   "items": [
     {
       "id": "AJ-1",
@@ -494,7 +494,9 @@
       "pr": "https://github.com/jcocano/Ajolopy/pull/54",
       "spec": "specs/guards.md",
       "blocks": [
-        "AJ-60"
+        "AJ-60",
+        "AJ-111",
+        "AJ-112"
       ],
       "blocked_by": [
         "AJ-15"
@@ -863,11 +865,12 @@
       "type": "feature",
       "title": "Custom metrics API (metric.timer/counter/gauge)",
       "status": "backlog",
-      "priority": "p2",
+      "priority": "p1",
       "milestone": "v0.1",
       "labels": [
         "observability",
-        "v0.1"
+        "v0.1",
+        "tiki-driven"
       ],
       "owner": null,
       "branch": null,
@@ -879,7 +882,7 @@
       ],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-12",
+      "updated_at": "2026-05-22",
       "closed_at": null
     },
     {
@@ -1046,11 +1049,12 @@
       "type": "feature",
       "title": "ajolopy build (Dockerfile.prod + .dockerignore + instructions)",
       "status": "backlog",
-      "priority": "p1",
+      "priority": "p3",
       "milestone": "v0.1",
       "labels": [
         "cli",
-        "v0.1"
+        "v0.1",
+        "tiki-driven"
       ],
       "owner": null,
       "branch": null,
@@ -1062,7 +1066,7 @@
       ],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-12",
+      "updated_at": "2026-05-22",
       "closed_at": null
     },
     {
@@ -1071,11 +1075,12 @@
       "type": "feature",
       "title": "ajolopy info (version, config, modules, deps)",
       "status": "backlog",
-      "priority": "p2",
+      "priority": "p3",
       "milestone": "v0.1",
       "labels": [
         "cli",
-        "v0.1"
+        "v0.1",
+        "tiki-driven"
       ],
       "owner": null,
       "branch": null,
@@ -1085,7 +1090,7 @@
       "blocked_by": [],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-12",
+      "updated_at": "2026-05-22",
       "closed_at": null
     },
     {
@@ -1258,20 +1263,23 @@
       "milestone": "v0.1",
       "labels": [
         "testing",
-        "v0.1"
+        "v0.1",
+        "tiki-driven"
       ],
       "owner": null,
       "branch": null,
       "pr": null,
       "spec": null,
-      "blocks": [],
+      "blocks": [
+        "AJ-108"
+      ],
       "blocked_by": [
         "AJ-11",
         "AJ-14"
       ],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-12",
+      "updated_at": "2026-05-22",
       "closed_at": null
     },
     {
@@ -1304,7 +1312,7 @@
       "id": "AJ-48",
       "slug": "docs-tutorial-3-steps",
       "type": "docs",
-      "title": "Tutorial — killer demo arc (3 steps: hello, evals, team)",
+      "title": "Tutorial \u2014 killer demo arc (3 steps: hello, evals, team)",
       "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
@@ -1415,13 +1423,15 @@
       "id": "AJ-52",
       "slug": "docs-deploy-recipes",
       "type": "docs",
-      "title": "Deploy recipes (Fly, Railway, Render, Vercel, Docker)",
+      "title": "Deploy recipes (Fly + Docker custom only; Railway/Render/Vercel out of Tiki scope)",
       "status": "backlog",
-      "priority": "p1",
+      "priority": "p3",
       "milestone": "v0.1",
       "labels": [
         "docs",
-        "v0.1"
+        "v0.1",
+        "tiki-driven",
+        "scope-reduced"
       ],
       "owner": null,
       "branch": null,
@@ -1433,7 +1443,7 @@
       ],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-12",
+      "updated_at": "2026-05-22",
       "closed_at": null
     },
     {
@@ -1498,11 +1508,12 @@
       "type": "story",
       "title": "Dogfood app #2: Code Review Agent for GitHub (mes 7-9)",
       "status": "backlog",
-      "priority": "p1",
+      "priority": "p3",
       "milestone": "v0.1",
       "labels": [
         "dogfood",
-        "v0.1"
+        "v0.1",
+        "backlog-oss"
       ],
       "owner": null,
       "branch": null,
@@ -1519,7 +1530,7 @@
       ],
       "estimate": null,
       "created_at": "2026-05-12",
-      "updated_at": "2026-05-12",
+      "updated_at": "2026-05-22",
       "closed_at": null
     },
     {
@@ -1660,7 +1671,8 @@
       "milestone": "v0.1",
       "labels": [
         "primitive",
-        "v0.1"
+        "v0.1",
+        "tiki-driven"
       ],
       "owner": null,
       "branch": null,
@@ -1672,7 +1684,7 @@
       ],
       "estimate": null,
       "created_at": "2026-05-14",
-      "updated_at": "2026-05-14",
+      "updated_at": "2026-05-22",
       "closed_at": null
     },
     {
@@ -1962,13 +1974,14 @@
       "type": "feature",
       "title": "Interop with code agents (AGENTS.md + per-agent slash commands + .mcp.json + docs)",
       "status": "backlog",
-      "priority": "p1",
+      "priority": "p3",
       "milestone": "v0.1.x",
       "labels": [
         "feature",
         "interop",
         "scaffold",
-        "docs"
+        "docs",
+        "backlog-oss"
       ],
       "owner": null,
       "branch": null,
@@ -1978,7 +1991,7 @@
       "blocked_by": [],
       "estimate": null,
       "created_at": "2026-05-15",
-      "updated_at": "2026-05-15",
+      "updated_at": "2026-05-22",
       "closed_at": null
     },
     {
@@ -2101,7 +2114,7 @@
       "id": "AJ-80",
       "slug": "provider-auto-register",
       "type": "fix",
-      "title": "ajolopy dev crashes on fresh install — providers not registered without explicit subpackage import",
+      "title": "ajolopy dev crashes on fresh install \u2014 providers not registered without explicit subpackage import",
       "status": "done",
       "priority": "p0",
       "milestone": null,
@@ -2227,17 +2240,21 @@
       "title": "Add app-level rate limit to docsbot /chat to cap DoS/budget-drain at the edge",
       "status": "backlog",
       "priority": "p1",
-      "milestone": null,
-      "labels": [],
+      "milestone": "v0.1.x",
+      "labels": [
+        "tiki-driven"
+      ],
       "owner": null,
       "branch": null,
       "pr": null,
       "spec": null,
-      "blocks": [],
+      "blocks": [
+        "AJ-106"
+      ],
       "blocked_by": [],
       "estimate": null,
       "created_at": "2026-05-18",
-      "updated_at": "2026-05-18",
+      "updated_at": "2026-05-22",
       "closed_at": null
     },
     {
@@ -2467,9 +2484,11 @@
       "type": "fix",
       "title": "ajolopy doctor prints Exit code: 1 but exits 0 (cosmetic, post-launch)",
       "status": "backlog",
-      "priority": "p2",
-      "milestone": null,
-      "labels": [],
+      "priority": "p3",
+      "milestone": "v0.1.x",
+      "labels": [
+        "tiki-driven"
+      ],
       "owner": null,
       "branch": null,
       "pr": null,
@@ -2478,14 +2497,14 @@
       "blocked_by": [],
       "estimate": null,
       "created_at": "2026-05-18",
-      "updated_at": "2026-05-18",
+      "updated_at": "2026-05-22",
       "closed_at": null
     },
     {
       "id": "AJ-98",
       "slug": "examples-asyncgenerator-hoist",
       "type": "fix",
-      "title": "Examples (support-agent, oncall-agent) crash at boot — AsyncGenerator annotation under TYPE_CHECKING",
+      "title": "Examples (support-agent, oncall-agent) crash at boot \u2014 AsyncGenerator annotation under TYPE_CHECKING",
       "status": "done",
       "priority": "p0",
       "milestone": "v0.1",
@@ -2505,7 +2524,7 @@
       "id": "AJ-99",
       "slug": "examples-main-pre-build-asgi",
       "type": "fix",
-      "title": "Examples main.py uses async factory pattern (uvicorn cannot await) — apply AJ-92 pattern to all 6",
+      "title": "Examples main.py uses async factory pattern (uvicorn cannot await) \u2014 apply AJ-92 pattern to all 6",
       "status": "done",
       "priority": "p0",
       "milestone": null,
@@ -2520,6 +2539,439 @@
       "created_at": "2026-05-18",
       "updated_at": "2026-05-18",
       "closed_at": "2026-05-18"
+    },
+    {
+      "id": "AJ-100",
+      "slug": "multi-tenancy-scope",
+      "type": "feature",
+      "title": "Multi-tenancy primitive: @Module(scope=workspace) + automatic workspace_id context propagation (LLM/tool/memory/RAG/logs/metrics)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "primitive",
+        "multi-tenancy"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-106",
+        "AJ-114"
+      ],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-101",
+      "slug": "workflow-durability",
+      "type": "feature",
+      "title": "@Workflow durability: distributed pickup + replay safety + persistent state (architecture decision pending: built-in vs Restate sidecar vs Temporal)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "workflow",
+        "durability"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-102",
+      "slug": "audit-log",
+      "type": "feature",
+      "title": "Audit log entity: structured table + @Tool(audited=True) hook (workspace_id, actor, tool, input, output, reasoning_trace, conversation_id, trace_id)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "primitive",
+        "observability"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-103",
+      "slug": "byok-per-workspace",
+      "type": "feature",
+      "title": "Per-workspace LLM provider + secrets management (BYOK): provider/keys/fallback chain configurable per workspace, not env-global",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "multi-tenancy",
+        "providers"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-104",
+      "slug": "runtime-agent-registry",
+      "type": "feature",
+      "title": "Runtime agent + tool registry: DB-defined agents, hot-reload prompts/tools/provider/memory without code redeploy",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "registry"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-110",
+        "AJ-113"
+      ],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-105",
+      "slug": "channel-whatsapp",
+      "type": "feature",
+      "title": "@Channel module: WhatsApp adapter (Twilio/360dialog webhook + workspace routing + WhatsApp Business templates + media handling)",
+      "status": "backlog",
+      "priority": "p0",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "primitive",
+        "channels"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-109"
+      ],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-106",
+      "slug": "per-tenant-rate-limit",
+      "type": "feature",
+      "title": "Per-tenant rate limit + cost budget hard cap (workspace_id dimension, block or degrade when exceeded)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "multi-tenancy",
+        "observability"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-86",
+        "AJ-100"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-107",
+      "slug": "hitl-approval",
+      "type": "feature",
+      "title": "HITL approval primitive: @Tool(approval_required=True) + approval queue + timeout policies",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "primitive",
+        "hitl"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-108",
+      "slug": "eval-pipeline-prod",
+      "type": "feature",
+      "title": "Eval pipeline in production: annotated dataset management + regression detection against live traffic (not only CI)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "eval"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [
+        "AJ-116"
+      ],
+      "blocked_by": [
+        "AJ-46"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-109",
+      "slug": "channel-ig-messenger",
+      "type": "feature",
+      "title": "@Channel module: Instagram + Messenger adapters",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "channels"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-105"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-110",
+      "slug": "agent-versioning-canary",
+      "type": "feature",
+      "title": "Agent versioning + canary rollout primitive (snapshots, traffic split, rollback)",
+      "status": "backlog",
+      "priority": "p1",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "registry",
+        "eval"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-104"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-111",
+      "slug": "rbac-roles",
+      "type": "feature",
+      "title": "RBAC: @Roles decorator + permission scopes (extend @UseGuards; already flagged v0.2 in guards spec)",
+      "status": "backlog",
+      "priority": "p3",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "auth",
+        "enterprise"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-17"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-112",
+      "slug": "sso-saml",
+      "type": "feature",
+      "title": "SSO/SAML enterprise authentication",
+      "status": "backlog",
+      "priority": "p3",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "auth",
+        "enterprise"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-17"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-113",
+      "slug": "tool-sandbox",
+      "type": "feature",
+      "title": "Tool sandboxing for third-party MCP servers and customer-uploaded code (gVisor / Firecracker / WASM)",
+      "status": "backlog",
+      "priority": "p3",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "security",
+        "registry"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-104"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-114",
+      "slug": "data-retention-deletion",
+      "type": "feature",
+      "title": "Retention policies + data deletion primitives (GDPR / LFPDPPP per workspace)",
+      "status": "backlog",
+      "priority": "p3",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "compliance",
+        "memory"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-100"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-115",
+      "slug": "multi-modal-memory",
+      "type": "feature",
+      "title": "Multi-modal memory primitive (audio + image + text) for WhatsApp media inputs",
+      "status": "backlog",
+      "priority": "p3",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "memory",
+        "channels"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
+    },
+    {
+      "id": "AJ-116",
+      "slug": "prompt-optimization",
+      "type": "feature",
+      "title": "Eval-driven prompt optimization (DSPy-style automatic prompt tuning)",
+      "status": "backlog",
+      "priority": "p3",
+      "milestone": "v0.2",
+      "labels": [
+        "tiki-driven",
+        "eval"
+      ],
+      "owner": null,
+      "branch": null,
+      "pr": null,
+      "spec": null,
+      "blocks": [],
+      "blocked_by": [
+        "AJ-108"
+      ],
+      "estimate": null,
+      "created_at": "2026-05-22",
+      "updated_at": "2026-05-22",
+      "closed_at": null
     }
   ]
 }
